@@ -1,9 +1,9 @@
 package com.example.mon
 
 import androidx.compose.runtime.Composable
-import com.example.mon.ui.screens.home.HomeScreen
-import com.example.mon.ui.screens.home.HomeViewModel
-import com.example.mon.ui.theme.MonTheme
+import com.example.mon.core.ui.theme.MonTheme
+import com.example.mon.feature.home.HomeScreen
+import com.example.mon.feature.home.HomeViewModel
 import org.koin.compose.koinInject
 
 @Composable

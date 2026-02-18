@@ -33,3 +33,8 @@ plugins {
 }
 
 include(":composeApp")
+include(":core:domain")
+include(":core:data")
+include(":feature:home")
+include(":core:ui")
+include(":core:model")
