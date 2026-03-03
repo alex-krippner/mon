@@ -27,7 +27,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.mon.core.domain"
+    namespace = "com.akrippner.mon.core.domain"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

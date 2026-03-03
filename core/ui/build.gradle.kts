@@ -29,7 +29,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.mon.core.ui"
+    namespace = "com.akrippner.mon.core.ui"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

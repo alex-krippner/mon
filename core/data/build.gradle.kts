@@ -26,7 +26,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.mon.core.data"
+    namespace = "com.akrippner.mon.core.data"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

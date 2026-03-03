@@ -23,7 +23,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.mon.core.model"
+    namespace = "com.akrippner.mon.core.model"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

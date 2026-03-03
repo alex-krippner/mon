@@ -78,11 +78,11 @@ kotlin {
     }}
 
 android {
-    namespace = "com.example.mon"
+    namespace = "com.akrippner.mon"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.example.mon"
+        applicationId = "com.akrippner.mon"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -110,11 +110,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.example.mon.MainKt"
+        mainClass = "com.akrippner.mon.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.example.mon"
+            packageName = "com.akrippner.mon"
             packageVersion = "1.0.0"
         }
     }

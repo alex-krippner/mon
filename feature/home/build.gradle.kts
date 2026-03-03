@@ -40,7 +40,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.mon.feature.home"
+    namespace = "com.akrippner.mon.feature.home"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
