@@ -181,7 +181,7 @@ private fun LookupFoundContent(
         onSave = { onSave(noteText) }
     )
     Spacer(Modifier.height(12.dp))
-    KanjiDetailLink(surface = entry.surface, onClick = {
+    KanjiDetailLink( onClick = {
         //TODO: Navigate to kanji detail
     }
     )

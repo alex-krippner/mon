@@ -1,5 +1,7 @@
 package com.akrippner.mon.core.ui.lookup
 
+import com.akrippner.mon.core.ui.JmdictEntry
+
 
 sealed interface LookupUiState {
     data object Loading : LookupUiState

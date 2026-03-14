@@ -36,6 +36,7 @@ kotlin {
                 implementation(project(":feature:home"))
                 implementation(project(":core:data"))
                 implementation(project(":core:ui"))
+                implementation(project(":core:designsystem"))
 
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.foundation)
