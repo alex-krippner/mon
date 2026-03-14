@@ -23,6 +23,7 @@ kotlin {
                 implementation(project(":core:domain"))
                 implementation(project(":core:ui"))
                 implementation(project(":core:model"))
+                implementation(project(":core:designsystem"))
 
                 api(libs.compose.runtime)
                 api(libs.compose.foundation)

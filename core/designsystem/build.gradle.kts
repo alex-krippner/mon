@@ -15,17 +15,18 @@ kotlin {
         }
     }
 
+    jvm()
+
     sourceSets {
         val commonMain by getting {
             dependencies {
                 api(libs.koin.core)
-
                 api(libs.compose.runtime)
                 api(libs.compose.foundation)
                 api(libs.compose.material3)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
-                implementation(compose.components.uiToolingPreview)
+                implementation(libs.compose.uiToolingPreview)
             }
         }
     }
@@ -41,4 +42,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+}
+
+dependencies {
+    debugImplementation(libs.compose.uiTooling)
 }

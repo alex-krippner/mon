@@ -12,7 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.ui.theme.MonTheme
+import com.akrippner.mon.core.designsystem.theme.YomuTheme
 import com.akrippner.mon.core.data.model.DictionaryRepository
 import com.akrippner.mon.core.model.data.MyDictionary
 import com.akrippner.mon.core.model.data.MyToken
@@ -39,7 +39,7 @@ fun HomeScreen(viewModel: HomeViewModel) {
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    MonTheme {
+    YomuTheme {
         val fakeDictionary = object : MyDictionary {
             override fun tokenize(text: String): List<MyToken> {
                 return listOf(
