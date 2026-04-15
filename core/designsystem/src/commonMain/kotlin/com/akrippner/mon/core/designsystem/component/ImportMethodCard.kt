@@ -3,6 +3,7 @@ package com.akrippner.mon.core.designsystem.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,11 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.akrippner.mon.core.designsystem.CardStyle
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun ImportMethodCard(
@@ -38,18 +39,18 @@ fun ImportMethodCard(
     val bgModifier = when (style) {
         CardStyle.Primary -> modifier
             .clip(shape)
-            .background(YomuColors.Ink)
+            .background(MonTheme.colors.backgroundSecondary)
 
         CardStyle.Secondary -> modifier
             .clip(shape)
-            .background(YomuColors.Ink.copy(alpha = 0.05f))
-            .border(1.dp, YomuColors.Ink.copy(alpha = 0.13f), shape)
+            .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.05f))
+            .border(1.dp, MonTheme.colors.backgroundSecondary.copy(alpha = 0.13f), shape)
     }
-    val titleColor = if (style == CardStyle.Primary) Color.White else YomuColors.Ink
+    val titleColor = if (style == CardStyle.Primary) Color.White else MonTheme.colors.textPrimary
     val metaColor =
-        if (style == CardStyle.Primary) Color.White.copy(alpha = 0.55f) else YomuColors.InkSubtle
+        if (style == CardStyle.Primary) Color.White.copy(alpha = 0.55f) else MonTheme.colors.textSecondary
     val chevronColor =
-        if (style == CardStyle.Primary) Color.White.copy(alpha = 0.28f) else YomuColors.Ink.copy(
+        if (style == CardStyle.Primary) Color.White.copy(alpha = 0.28f) else MonTheme.colors.backgroundSecondary.copy(
             alpha = 0.18f
         )
 
@@ -63,14 +64,14 @@ fun ImportMethodCard(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
-                style = YomuType.Body.copy(color = titleColor, fontWeight = FontWeight.SemiBold))
+                style = MonTheme.typography.bodyMedium.copy(color = titleColor, fontWeight = FontWeight.SemiBold))
             Spacer(Modifier.height(2.dp))
-            Text(text = description, style = YomuType.Meta.copy(color = metaColor))
+            Text(text = description, style = MonTheme.typography.labelSmall.copy(color = metaColor))
             if (previewText != null && style == CardStyle.Primary) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = previewText,
-                    style = YomuType.Meta.copy(
+                    style = MonTheme.typography.labelSmall.copy(
                         color = Color.White.copy(alpha = 0.30f),
                         fontStyle = FontStyle.Italic,
                         fontSize = 9.sp
@@ -82,7 +83,33 @@ fun ImportMethodCard(
         }
         Text(
             text = "›",
-            style = YomuType.Body.copy(color = chevronColor, fontSize = 20.sp),
+            style = MonTheme.typography.labelSmall.copy(color = chevronColor, fontSize = 20.sp),
         )
+    }
+}
+
+
+@Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
+@Composable
+private fun PreviewImportMethodCards() {
+    MonTheme{
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            ImportMethodCard(
+                label = "Clipboard",
+                description = "Paste text you've copied",
+                style = CardStyle.Primary,
+                previewText = "私はその人を常に先生と…",
+                onClick = {},
+            )
+            ImportMethodCard(
+                label = "File",
+                description = "Open .txt or .epub file",
+                style = CardStyle.Secondary,
+                onClick = {},
+            )
+        }
     }
 }

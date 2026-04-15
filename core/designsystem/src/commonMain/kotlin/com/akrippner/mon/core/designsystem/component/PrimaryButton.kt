@@ -18,8 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuPrimaryButton(
@@ -31,14 +30,16 @@ fun YomuPrimaryButton(
 ) {
     val bg = if (enabled) {
         Brush.horizontalGradient(
-            colors = listOf(YomuColors.Vermilion, YomuColors.VermilionLight
+            colors = listOf(
+                MonTheme.colors.secondary, MonTheme.colors.accentGradientEnd
 
-        ))
+            )
+        )
     } else {
         Brush.horizontalGradient(
             colors = listOf(
-                YomuColors.Ink.copy(alpha = 0.13f),
-                YomuColors.Ink.copy(alpha = 0.13f)
+                MonTheme.colors.backgroundSecondary.copy(alpha = 0.13f),
+                MonTheme.colors.backgroundSecondary.copy(alpha = 0.13f)
             )
         )
     }
@@ -52,12 +53,14 @@ fun YomuPrimaryButton(
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Column (horizontalAlignment = Alignment.CenterHorizontally){
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = label,
-                style = YomuType.Body.copy(
+                style = MonTheme.typography.bodyMedium.copy(
                     fontSize = 15.sp,
-                    color = if (enabled) Color.White else YomuColors.InkDisabled,
+                    color = if (enabled) MonTheme.colors.sheetTextPrimary else MonTheme.colors.textPrimary.copy(
+                        alpha = 0.25f
+                    ),
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
@@ -66,9 +69,9 @@ fun YomuPrimaryButton(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = subtitle,
-                    style = YomuType.Meta.copy(
+                    style = MonTheme.typography.bodyMedium.copy(
                         color = if (enabled) Color.White.copy(alpha = 0.65f)
-                        else YomuColors.Ink.copy(alpha = 0.20f),
+                        else MonTheme.colors.textPrimary.copy(alpha = 0.20f),
                         fontSize = 9.sp
                     )
                 )

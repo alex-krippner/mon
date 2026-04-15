@@ -17,14 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.akrippner.mon.core.designsystem.component.AnnotationDot
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun TextToken(
@@ -51,19 +51,18 @@ fun TextToken(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .tokenBackground(token.state)
-                .tokenUnderline(token.state)
+                .tokenBackground(token.state, selectedColor = MonTheme.colors.tokenizedText.background)
                 .padding(horizontal = 2.dp)
         ) {
             Box(modifier = Modifier.height(14.dp), contentAlignment = Alignment.BottomCenter) {
                 if (showFurigana && token.reading.isNotEmpty() && !isPunctuation) {
                     Text(
                         text = token.reading,
-                        style = YomuType.Furigana.copy(
+                        style = MonTheme.typography.bodyMedium.copy(
                             color = when (token.state) {
-                                is TokenState.Selected -> YomuColors.Vermilion.copy(alpha = 0.90f)
-                                is TokenState.Annotated -> YomuColors.Vermilion.copy(alpha = 0.70f)
-                                else -> YomuColors.Vermilion.copy(alpha = 0.75f)
+                                is TokenState.Selected -> MonTheme.colors.secondary.copy(alpha = 0.90f)
+                                is TokenState.Annotated -> MonTheme.colors.secondary.copy(alpha = 0.70f)
+                                else -> MonTheme.colors.secondary.copy(alpha = 0.75f)
                             }
                         ),
                         textAlign = TextAlign.Center
@@ -72,10 +71,10 @@ fun TextToken(
             }
             Text(
                 text = token.surface,
-                style = YomuType.ReaderBody.copy(
+                style = MonTheme.typography.bodyMedium.copy(
                     color = when (token.state) {
-                        is TokenState.Selected -> YomuColors.Vermilion
-                        else -> YomuColors.Ink
+                        is TokenState.Selected -> MonTheme.colors.secondary
+                        else -> MonTheme.colors.textPrimary
                     },
                     fontWeight = when (token.state) {
                         is TokenState.Selected -> FontWeight.SemiBold
@@ -95,10 +94,11 @@ fun TextToken(
     }
 }
 
-private fun Modifier.tokenUnderline(state: TokenState): Modifier = drawBehind {
+@Composable
+private fun Modifier.tokenUnderline(state: TokenState, selectedColor: Color, annotatedColor: Color): Modifier = drawBehind {
     when (state) {
         is TokenState.Selected -> drawLine(
-            color = YomuColors.Vermilion,
+            color = selectedColor,
             start = Offset(0f, size.height),
             end = Offset(size.width, size.height),
             strokeWidth = 2.dp.toPx(),
@@ -106,40 +106,23 @@ private fun Modifier.tokenUnderline(state: TokenState): Modifier = drawBehind {
         )
 
         is TokenState.Annotated -> drawLine(
-            color = YomuColors.Vermilion.copy(alpha = 0.55f),
+            color = annotatedColor,
             start = Offset(0f, size.height),
             end = Offset(size.width, size.height),
             strokeWidth = 1.5.dp.toPx(),
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 5f))
         )
 
-        is TokenState.Noted -> drawLine(
-            color = YomuColors.Ink.copy(alpha = 0.35f),
-            start = Offset(0f, size.height),
-            end = Offset(size.width, size.height),
-            strokeWidth = 1.5.dp.toPx()
-        )
 
         else -> Unit
     }
 }
 
-private fun Modifier.tokenBackground(state: TokenState): Modifier =
+private fun Modifier.tokenBackground(state: TokenState, selectedColor: Color): Modifier =
     when (state) {
         is TokenState.Selected -> background(
-            YomuColors.Vermilion.copy(alpha = 0.12f),
+            selectedColor,
             RoundedCornerShape(5.dp),
         )
-
-        is TokenState.Annotated -> background(
-            YomuColors.Vermilion.copy(alpha = 0.06f),
-            RoundedCornerShape(5.dp),
-        )
-
-        is TokenState.Noted -> background(
-            YomuColors.Ink.copy(alpha = 0.04f),
-            RoundedCornerShape(5.dp),
-        )
-
         else -> this
     }

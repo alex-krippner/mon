@@ -18,9 +18,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.theme.GeorgiaFamily
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.RobotoMono
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun TextPreviewBox(
@@ -34,15 +33,15 @@ fun TextPreviewBox(
         Box(
             modifier = Modifier.fillMaxWidth().height(320.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(YomuColors.Ink.copy(alpha = 0.04f))
-                .border(1.dp, YomuColors.Ink.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
+                .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.04f))
+                .border(1.dp, MonTheme.colors.backgroundSecondary.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
 
 
         ) {
             Text(
                 text = text,
-                style = YomuType.ListItemTitle.copy(
-                    fontFamily = GeorgiaFamily,
+                style = MonTheme.typography.bodyMedium.copy(
+                    fontFamily = RobotoMono,
                     lineHeight = 28.sp
                 ),
                 modifier = Modifier.padding(20.dp)
@@ -54,7 +53,7 @@ fun TextPreviewBox(
                     .align(Alignment.BottomCenter)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, YomuColors.Parchment)
+                            colors = listOf(Color.Transparent, MonTheme.colors.surfaceSecondary)
                         )
                     )
             )
@@ -63,12 +62,12 @@ fun TextPreviewBox(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(13.dp))
-                .background(YomuColors.Ink.copy(alpha = 0.06f))
+                .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.06f))
                 .padding(horizontal = 14.dp, vertical = 5.dp)
         ) {
             Text(
                 text = "~$wordCount words detected",
-                style = YomuType.Meta,
+                style = MonTheme.typography.bodyMedium,
             )
         }
     }

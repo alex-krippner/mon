@@ -14,48 +14,66 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.icon.Icon
+import com.akrippner.mon.core.designsystem.icon.IconSize
+import com.akrippner.mon.core.designsystem.icon.MonIcon
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun YomuSearchBar(
+fun MonSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search words..."
+    placeholder: String = "Search words...",
+    startIcon: @Composable (() -> Unit)? = null,
+    endIcon: @Composable (() -> Unit)? = null
 ) {
     BasicTextField(
         value = query,
         onValueChange = onQueryChange,
-        textStyle = YomuType.Body.copy(color = YomuColors.Ink),
-        cursorBrush = SolidColor(YomuColors.Vermilion),
+        textStyle = MonTheme.typography.bodyMedium.copy(color = MonTheme.colors.textPrimary),
+        cursorBrush = SolidColor(MonTheme.colors.input.cursor),
         singleLine = true,
 
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(YomuColors.Ink.copy(alpha = 0.05f))
-            .border(1.dp, YomuColors.Ink.copy(alpha = 0.09f), RoundedCornerShape(20.dp))
+            .background(MonTheme.colors.input.background)
+            .border(1.dp, MonTheme.colors.input.border, RoundedCornerShape(20.dp))
             .padding(horizontal = 16.dp, vertical = 10.dp),
         decorationBox = { innerTextField ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "⌕",//TODO: This should be an icon
-                    style = YomuType.Body.copy(color = YomuColors.InkSubtle, fontSize = 16.sp)
-
-                )
+                startIcon?.let { startIcon() }
                 Spacer(Modifier.width(8.dp))
                 if (query.isEmpty()) {
                     Text(
                         text = placeholder,
-                        style = YomuType.Body.copy(color = YomuColors.Ink.copy(alpha = 0.28f))
-
+                        style = MonTheme.typography.labelMedium.copy(color = MonTheme.colors.input.placeholder),
                     )
                 }
                 innerTextField()
+                endIcon?.let { endIcon() }
             }
         }
 
     )
+}
+
+@Preview
+@Composable
+private fun MonSearchBarPreview() {
+    MonTheme {
+        MonSearchBar(
+            query = "",
+            onQueryChange = {},
+            startIcon = {
+                MonIcon(
+                    id = Icon.Core.Search,
+                    primaryColor = MonTheme.colors.input.placeholder,
+                    size = IconSize.ExtraSmall
+                )
+            }
+        )
+    }
 }

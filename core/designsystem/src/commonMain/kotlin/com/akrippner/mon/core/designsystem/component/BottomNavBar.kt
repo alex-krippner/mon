@@ -1,48 +1,61 @@
 package com.akrippner.mon.core.designsystem.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.NavTab
-import com.akrippner.mon.core.designsystem.theme.YomuColors
+import com.akrippner.mon.core.designsystem.icon.Icon
+import com.akrippner.mon.core.designsystem.icon.IconId
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuBottomNavBar(
-    selectedTab: NavTab,
-    onTabSelected: (NavTab) -> Unit,
+    selectedTab: String,
+    onTabSelected: (String) -> Unit,
+    navTabs: List<IconId>,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = YomuColors.Night,
-        tonalElevation = 0.dp,
-        shadowElevation = 4.dp,
+    Row(
+        modifier = modifier.fillMaxWidth().height(56.dp).navigationBarsPadding().background(MonTheme.colors.navigation.background),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column() {
-            HorizontalDivider(color = YomuColors.InkDivider, thickness = 0.5.dp)
-            Row(
-                modifier = Modifier.fillMaxWidth().height(56.dp).navigationBarsPadding(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                NavTab.entries.forEach { tab ->
-                    YomuNavTabItem(
-                        modifier = Modifier.weight(1f),
-                        tab = tab,
-                        selected = tab == selectedTab,
-                        onClick = { onTabSelected(tab)}
-                    )
-                }
-            }
+        navTabs.forEach { tab ->
+            YomuNavTabItem(
+                iconId = tab,
+                selected = tab.category + tab.name == selectedTab,
+                onClick = { onTabSelected(tab.category + tab.name) }
+            )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewBottomNavBar() {
+
+    val navTabs = listOf(Icon.Core.Furigana, Icon.Core.Library, Icon.Core.Settings, Icon.Core.Vocabulary)
+    var selectedTab by remember { mutableStateOf("") }
+
+    fun onSelected(tab: String) {
+        selectedTab = tab
+    }
+    MonTheme {
+        YomuBottomNavBar(
+            selectedTab = selectedTab,
+            navTabs = navTabs,
+            onTabSelected = { onSelected(it) },
+        )
     }
 }

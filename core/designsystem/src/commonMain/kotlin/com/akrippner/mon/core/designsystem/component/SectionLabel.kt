@@ -4,8 +4,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun SectionLabel(
@@ -15,8 +14,8 @@ fun SectionLabel(
 ) {
     Text(
         text = text,
-        style = YomuType.SectionLabel.copy(
-            color = if (onDark) Color.White.copy(alpha = 0.35f) else YomuColors.InkSubtle,
+        style = MonTheme.typography.titleMedium.copy(
+            color = if (onDark) Color.White.copy(alpha = 0.35f) else MonTheme.colors.textSecondary,
         ),
         modifier = modifier,
     )

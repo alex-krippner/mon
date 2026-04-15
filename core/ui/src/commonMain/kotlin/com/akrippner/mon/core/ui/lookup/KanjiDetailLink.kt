@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun KanjiDetailLink(
@@ -29,7 +29,7 @@ fun KanjiDetailLink(
     ) {
         Text(
             text = "View kanji breakdown →",
-            style = YomuType.Meta.copy(
+            style = MonTheme.typography.bodyMedium.copy(
                 color = Color.White.copy(alpha = 0.40f),
                 letterSpacing = 1.sp
             ),

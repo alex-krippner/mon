@@ -2,13 +2,15 @@ package com.akrippner.mon.core.ui.lookup
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.BadgeTheme
 import com.akrippner.mon.core.designsystem.component.JlptBadge
 import com.akrippner.mon.core.designsystem.component.PosBadge
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun BadgeRow(
@@ -22,10 +24,24 @@ fun BadgeRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (jlptLevel != null) {
-            JlptBadge(level = jlptLevel, theme = BadgeTheme.Dark)
+            JlptBadge(level = jlptLevel)
         }
         if (pos != null) {
             PosBadge(pos = pos)
         }
+    }
+}
+
+
+
+@Preview(showBackground = true, backgroundColor = 0xFF1C1C2E)
+@Composable
+private fun PreviewBadgeRow() {
+    MonTheme {
+        BadgeRow(
+            jlptLevel = "N5",
+            pos = "名詞",
+            modifier = Modifier.padding(24.dp),
+        )
     }
 }

@@ -1,5 +1,7 @@
 package com.akrippner.mon.core.designsystem.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,11 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.BadgeTheme
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuSpacing
-import com.akrippner.mon.core.designsystem.theme.YomuTheme
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuPageHeader(
@@ -31,7 +29,7 @@ fun YomuPageHeader(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = YomuColors.Paper,
+        color = MonTheme.colors.surfacePrimary,
         shadowElevation = 1.dp,
     )
 
@@ -41,15 +39,15 @@ fun YomuPageHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = YomuSpacing.screenPadding, vertical = 12.dp),
+                .padding(horizontal = MonTheme.space.spacing6, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
 
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = kanjiTitle, style = YomuType.PageTitle)
+                Text(text = kanjiTitle, style = MonTheme.typography.bodyMedium)
                 Text(
                     text = latinLabel,
-                    style = YomuType.SectionLabel.copy(
+                    style = MonTheme.typography.bodyMedium.copy(
                         fontSize = 9.sp,
                         letterSpacing = 3.sp
                     )
@@ -62,24 +60,22 @@ fun YomuPageHeader(
     }
 }
 
-@Preview
+@Preview(showBackground = true, backgroundColor = 0xFFFDFAF4)
 @Composable
-fun YomuPageHeaderPreview() {
-    YomuTheme {
+private fun PreviewPageHeader() {
+    MonTheme {
         YomuPageHeader(
-            kanjiTitle = "単語帳",
-            latinLabel = "VOCABULARY",
+            kanjiTitle = "本棚",
+            latinLabel = "LIBRARY",
             badge = {
-                JlptBadge(level = "N5", theme = BadgeTheme.Light)
-            },
-            action = {
-                YomuIconButton(onClick = {}) {
-                    Text(
-                        text = "＋",
-                        style = YomuType.NavTitle.copy(fontSize = 20.sp)
-                    )
+                Box(
+                    modifier = Modifier
+                        .background(MonTheme.colors.backgroundSecondary, androidx.compose.foundation.shape.CircleShape)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text("3", style = MonTheme.typography.bodyMedium.copy(color = MonTheme.colors.sheetTextPrimary))
                 }
-            }
+            },
         )
     }
 }

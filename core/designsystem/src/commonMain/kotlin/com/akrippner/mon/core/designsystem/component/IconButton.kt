@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.theme.YomuColors
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuIconButton(
@@ -25,7 +25,7 @@ fun YomuIconButton(
         modifier = modifier
             .size(36.dp)
             .clip(CircleShape)
-            .background(YomuColors.Ink.copy(alpha = 0.05f)) //TODO: Define universal alphas
+            .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.05f)) //TODO: Define universal alphas
             .clickable(
                 interactionSource = remember { MutableInteractionSource() }, //TODO: Check why interactionSource is set here
                 indication = ripple(bounded = true, radius = 18.dp),

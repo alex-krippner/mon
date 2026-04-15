@@ -24,6 +24,7 @@ kotlin {
                 api(libs.compose.material3)
                 api(libs.compose.ui)
 
+                implementation(libs.compose.uiToolingPreview)
                 implementation(project(":core:designsystem"))
             }
         }

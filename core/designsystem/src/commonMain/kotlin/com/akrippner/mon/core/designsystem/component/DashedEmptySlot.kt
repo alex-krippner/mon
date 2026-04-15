@@ -10,8 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.akrippner.mon.core.designsystem.dashedBorder
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun DashedEmptySlot(
@@ -23,7 +22,7 @@ fun DashedEmptySlot(
             .fillMaxWidth()
             .height(44.dp)
             .dashedBorder(
-                color = YomuColors.Ink.copy(alpha = 0.12f),
+                color = MonTheme.colors.sheetBackground.copy(alpha = 0.12f),
                 strokeWidth = 1.dp,
                 dashedLength = 6.dp,
                 gapLength = 4.dp,
@@ -33,8 +32,8 @@ fun DashedEmptySlot(
     ) {
         Text(
             text = label,
-            style = YomuType.Meta.copy(
-                color = YomuColors.Ink.copy(alpha = 0.30f),
+            style = MonTheme.typography.labelSmall.copy(
+                color = MonTheme.colors.textPrimary.copy(alpha = 0.30f),
                 letterSpacing = 1.sp
             )
         )

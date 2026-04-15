@@ -3,10 +3,10 @@ package com.akrippner.mon.core.designsystem.component
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.theme.GeorgiaFamily
+import com.akrippner.mon.core.designsystem.theme.RobotoMono
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun KanjiWaterMark(
@@ -17,9 +17,9 @@ fun KanjiWaterMark(
     Text(
         text = kanji,
         style = TextStyle(
-            fontFamily = GeorgiaFamily,
+            fontFamily = RobotoMono,
             fontSize= 110.sp,
-            color = Color.White.copy(alpha = alpha)
+            color = MonTheme.colors.sheetTextPrimary.copy(alpha = alpha)
         ),
         modifier = modifier
     )

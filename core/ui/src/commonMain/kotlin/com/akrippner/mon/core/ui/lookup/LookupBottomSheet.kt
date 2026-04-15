@@ -32,8 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.akrippner.mon.core.designsystem.PillVariant
 import com.akrippner.mon.core.designsystem.component.YomuPillButton
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 import com.akrippner.mon.core.ui.lookup.BadgeRow
 import com.akrippner.mon.core.ui.lookup.KanjiDetailLink
 import com.akrippner.mon.core.ui.lookup.LookupUiState
@@ -54,7 +53,7 @@ fun LookupBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = YomuColors.Night,
+        containerColor = MonTheme.colors.sheetBackground,
         contentColor = Color.White,
         dragHandle = {
             // Custom handle — matches 60×4dp design spec
@@ -99,7 +98,7 @@ private fun LookupLoadingContent() {
             .height(200.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = YomuColors.Vermilion)
+        CircularProgressIndicator(color = MonTheme.colors.secondary)
     }
 }
 
@@ -114,12 +113,12 @@ private fun LookupNotFoundContent(surface: String) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = surface,
-                style = YomuType.VocabKanji.copy(color = Color.White.copy(alpha = 0.40f))
+                style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.40f))
             )
             Spacer(Modifier.height(8.dp))
             Text(
                 text = "No dictionary entry found",
-                style = YomuType.Meta.copy(color = Color.White.copy(alpha = 0.35f)),
+                style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.35f)),
                 textAlign = TextAlign.Center
             )
         }
@@ -137,7 +136,7 @@ private fun LookupErrorContent(onRetry: () -> Unit) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "Could not load entry",
-                style = YomuType.Meta.copy(color = Color.White.copy(alpha = 0.45f)),
+                style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.45f)),
             )
             Spacer(Modifier.height(12.dp))
             YomuPillButton(label = "Retry", variant = PillVariant.Outline, onClick = onRetry)

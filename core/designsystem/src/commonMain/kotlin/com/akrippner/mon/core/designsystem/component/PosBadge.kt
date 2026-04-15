@@ -12,7 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun PosBadge(
@@ -30,7 +30,7 @@ fun PosBadge(
     ) {
         Text(
             text = pos,
-            style = YomuType.Badge.copy(
+            style = MonTheme.typography.bodyMedium.copy(
                 color = Color.White.copy(alpha = 0.50f),
                 fontWeight = FontWeight.Normal
             )

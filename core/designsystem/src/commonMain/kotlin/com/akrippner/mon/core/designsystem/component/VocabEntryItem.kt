@@ -17,15 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.BadgeTheme
 import com.akrippner.mon.core.designsystem.VocabEntry
-import com.akrippner.mon.core.designsystem.theme.YomuColors
-import com.akrippner.mon.core.designsystem.theme.YomuTheme
-import com.akrippner.mon.core.designsystem.theme.YomuType
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun VocabEntryItem(
@@ -34,64 +29,49 @@ fun VocabEntryItem(
     modifier: Modifier = Modifier
 ) {
     val accentColor = if (entry.jlptLevel != null) {
-        YomuColors.Vermilion.copy(alpha = if (entry.userNote != null) 1f else 0.50f)
+        MonTheme.colors.secondary.copy(alpha = if (entry.userNote != null) 1f else 0.50f)
     } else {
-        YomuColors.Ink.copy(alpha = 0.16f)
+        MonTheme.colors.backgroundSecondary.copy(alpha = 0.16f)
     }
 
     Row (
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(YomuColors.Ink.copy(alpha = 0.04f))
+            .background(MonTheme.colors.vocabEntry.background)
             .clickable(onClick = onClick)
             .height(IntrinsicSize.Min)
     ){
-        AccentBar(color = accentColor)
         Column (
             modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 10.dp)
         ){
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = entry.surface)
+                Text(text = entry.surface, style = MonTheme.typography.titleMedium.copy(color = MonTheme.colors.vocabEntry.title))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = entry.reading,
-                    style = YomuType.Furigana.copy(
-                        fontSize = 11.sp,
-                        color = if (entry.userNote != null) YomuColors.Vermilion.copy(alpha = 0.85f) else YomuColors.InkSubtle
+                    style = MonTheme.typography.bodySmall.copy(
+                        color = MonTheme.colors.vocabEntry.reading
                     ),
                 )
                 Spacer(Modifier.weight(1f))
                 if (entry.jlptLevel != null) {
-                    JlptBadge(level = entry.jlptLevel, theme = BadgeTheme.Light)
+                    JlptBadge(level = entry.jlptLevel)
                 }
             }
             Spacer(Modifier.height(4.dp))
-            Text(text = entry.definition, style = YomuType.Meta)
+            Text(text = entry.definition, style = MonTheme.typography.labelSmall.copy(color = MonTheme.colors.vocabEntry.subtitle))
             if (entry.userNote != null) {
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = "— ${entry.userNote}",
-                    style = YomuType.Meta.copy(
-                        color = YomuColors.Vermilion.copy(alpha = 0.75f),
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 9.sp
+                    style = MonTheme.typography.bodyExtraSmall.copy(
+                        color = MonTheme.colors.vocabEntry.note,
                     )
                 )
             }
         }
-        if (entry.sourceTitle != null) {
-            Text(
-                text = entry.sourceTitle,
-                style = YomuType.Meta.copy(
-                    color = YomuColors.Ink.copy(alpha = 0.28f),
-                    fontSize = 9.sp
-                ),
-                modifier = Modifier
-                    .align(Alignment.Bottom)
-                    .padding(end = 10.dp, bottom = 10.dp)
-            )
-        }
+
     }
 }
 
@@ -99,7 +79,7 @@ fun VocabEntryItem(
 @Preview
 @Composable
 fun VocabEntryItemPreview() {
-    YomuTheme {
+    MonTheme {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

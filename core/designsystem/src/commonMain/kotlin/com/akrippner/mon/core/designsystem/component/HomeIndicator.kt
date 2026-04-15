@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.theme.YomuColors
+import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun HomeIndicator(modifier: Modifier = Modifier) {
@@ -16,6 +16,6 @@ fun HomeIndicator(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(width = 90.dp, height = 4.dp)
             .clip(RoundedCornerShape(2.dp))
-            .background(YomuColors.Ink.copy(alpha = 0.20f))
+            .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.20f))
     )
 }
