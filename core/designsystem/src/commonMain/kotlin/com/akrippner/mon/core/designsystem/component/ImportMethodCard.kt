@@ -28,88 +28,88 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun ImportMethodCard(
-    label: String,
-    description: String,
-    style: CardStyle,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    previewText: String? = null
+  label: String,
+  description: String,
+  style: CardStyle,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  previewText: String? = null,
 ) {
-    val shape = RoundedCornerShape(16.dp)
-    val bgModifier = when (style) {
-        CardStyle.Primary -> modifier
-            .clip(shape)
-            .background(MonTheme.colors.backgroundSecondary)
+  val shape = RoundedCornerShape(16.dp)
+  val bgModifier =
+    when (style) {
+      CardStyle.Primary -> modifier.clip(shape).background(MonTheme.colors.backgroundSecondary)
 
-        CardStyle.Secondary -> modifier
-            .clip(shape)
-            .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.05f))
-            .border(1.dp, MonTheme.colors.backgroundSecondary.copy(alpha = 0.13f), shape)
+      CardStyle.Secondary ->
+        modifier
+          .clip(shape)
+          .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.05f))
+          .border(1.dp, MonTheme.colors.backgroundSecondary.copy(alpha = 0.13f), shape)
     }
-    val titleColor = if (style == CardStyle.Primary) Color.White else MonTheme.colors.textPrimary
-    val metaColor =
-        if (style == CardStyle.Primary) Color.White.copy(alpha = 0.55f) else MonTheme.colors.textSecondary
-    val chevronColor =
-        if (style == CardStyle.Primary) Color.White.copy(alpha = 0.28f) else MonTheme.colors.backgroundSecondary.copy(
-            alpha = 0.18f
-        )
+  val titleColor = if (style == CardStyle.Primary) Color.White else MonTheme.colors.textPrimary
+  val metaColor =
+    if (style == CardStyle.Primary) Color.White.copy(alpha = 0.55f)
+    else MonTheme.colors.textSecondary
+  val chevronColor =
+    if (style == CardStyle.Primary) Color.White.copy(alpha = 0.28f)
+    else MonTheme.colors.backgroundSecondary.copy(alpha = 0.18f)
 
-    Row(
-        modifier = bgModifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = label,
-                style = MonTheme.typography.bodyMedium.copy(color = titleColor, fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.height(2.dp))
-            Text(text = description, style = MonTheme.typography.labelSmall.copy(color = metaColor))
-            if (previewText != null && style == CardStyle.Primary) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = previewText,
-                    style = MonTheme.typography.labelSmall.copy(
-                        color = Color.White.copy(alpha = 0.30f),
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 9.sp
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
+  Row(
+    modifier =
+      bgModifier
+        .fillMaxWidth()
+        .clickable(onClick = onClick)
+        .padding(horizontal = 20.dp, vertical = 14.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Column(modifier = Modifier.weight(1f)) {
+      Text(
+        text = label,
+        style =
+          MonTheme.typography.bodyMedium.copy(color = titleColor, fontWeight = FontWeight.SemiBold),
+      )
+      Spacer(Modifier.height(2.dp))
+      Text(text = description, style = MonTheme.typography.labelSmall.copy(color = metaColor))
+      if (previewText != null && style == CardStyle.Primary) {
+        Spacer(Modifier.height(4.dp))
         Text(
-            text = "›",
-            style = MonTheme.typography.labelSmall.copy(color = chevronColor, fontSize = 20.sp),
+          text = previewText,
+          style =
+            MonTheme.typography.labelSmall.copy(
+              color = Color.White.copy(alpha = 0.30f),
+              fontStyle = FontStyle.Italic,
+              fontSize = 9.sp,
+            ),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
         )
+      }
     }
+    Text(
+      text = "›",
+      style = MonTheme.typography.labelSmall.copy(color = chevronColor, fontSize = 20.sp),
+    )
+  }
 }
-
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
 private fun PreviewImportMethodCards() {
-    MonTheme{
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            ImportMethodCard(
-                label = "Clipboard",
-                description = "Paste text you've copied",
-                style = CardStyle.Primary,
-                previewText = "私はその人を常に先生と…",
-                onClick = {},
-            )
-            ImportMethodCard(
-                label = "File",
-                description = "Open .txt or .epub file",
-                style = CardStyle.Secondary,
-                onClick = {},
-            )
-        }
+  MonTheme {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      ImportMethodCard(
+        label = "Clipboard",
+        description = "Paste text you've copied",
+        style = CardStyle.Primary,
+        previewText = "私はその人を常に先生と…",
+        onClick = {},
+      )
+      ImportMethodCard(
+        label = "File",
+        description = "Open .txt or .epub file",
+        style = CardStyle.Secondary,
+        onClick = {},
+      )
     }
+  }
 }

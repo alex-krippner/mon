@@ -15,25 +15,22 @@ import androidx.compose.ui.unit.dp
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun PosBadge(
-    pos: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(
-                Color.White.copy(alpha = 0.07f)
-            ).padding(horizontal = 8.dp, vertical = 3.dp)
-        , contentAlignment = Alignment.Center
-
-    ) {
-        Text(
-            text = pos,
-            style = MonTheme.typography.bodyMedium.copy(
-                color = Color.White.copy(alpha = 0.50f),
-                fontWeight = FontWeight.Normal
-            )
-        )
-    }
+fun PosBadge(pos: String, modifier: Modifier = Modifier) {
+  Box(
+    modifier =
+      modifier
+        .clip(RoundedCornerShape(4.dp))
+        .background(Color.White.copy(alpha = 0.07f))
+        .padding(horizontal = 8.dp, vertical = 3.dp),
+    contentAlignment = Alignment.Center,
+  ) {
+    Text(
+      text = pos,
+      style =
+        MonTheme.typography.bodyMedium.copy(
+          color = Color.White.copy(alpha = 0.50f),
+          fontWeight = FontWeight.Normal,
+        ),
+    )
+  }
 }

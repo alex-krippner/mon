@@ -13,29 +13,28 @@ import com.akrippner.mon.core.designsystem.dashedBorder
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun DashedEmptySlot(
-    label: String,
-    modifier: Modifier= Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .dashedBorder(
-                color = MonTheme.colors.sheetBackground.copy(alpha = 0.12f),
-                strokeWidth = 1.dp,
-                dashedLength = 6.dp,
-                gapLength = 4.dp,
-                cornerRadius = 12.dp
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            style = MonTheme.typography.labelSmall.copy(
-                color = MonTheme.colors.textPrimary.copy(alpha = 0.30f),
-                letterSpacing = 1.sp
-            )
-        )
-    }
+fun DashedEmptySlot(label: String, modifier: Modifier = Modifier) {
+  Box(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .height(44.dp)
+        .dashedBorder(
+          color = MonTheme.colors.sheetBackground.copy(alpha = 0.12f),
+          strokeWidth = 1.dp,
+          dashedLength = 6.dp,
+          gapLength = 4.dp,
+          cornerRadius = 12.dp,
+        ),
+    contentAlignment = Alignment.Center,
+  ) {
+    Text(
+      text = label,
+      style =
+        MonTheme.typography.labelSmall.copy(
+          color = MonTheme.colors.textPrimary.copy(alpha = 0.30f),
+          letterSpacing = 1.sp,
+        ),
+    )
+  }
 }

@@ -15,41 +15,37 @@ import com.akrippner.mon.core.designsystem.icon.MonIcon
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun FuriganaToggle(
-    enabled: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val containerColor =
-        if (enabled) MonTheme.colors.furiganaToggle.background else MonTheme.colors.furiganaToggle.disabled
+fun FuriganaToggle(enabled: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+  val containerColor =
+    if (enabled) MonTheme.colors.furiganaToggle.background
+    else MonTheme.colors.furiganaToggle.disabled
 
-    Button(
-        colors = ButtonColors(
-            containerColor = containerColor,
-            disabledContainerColor = MonTheme.colors.furiganaToggle.disabled,
-            contentColor = MonTheme.colors.furiganaToggle.icon,
-            disabledContentColor = MonTheme.colors.furiganaToggle.icon
-        ), onClick = onToggle,
-        modifier = modifier
-    ) {
-        MonIcon(
-            id = Icon.Core.Furigana,
-            size = IconSize.ExtraSmall,
-            primaryColor = MonTheme.colors.furiganaToggle.icon
-        )
-    }
+  Button(
+    colors =
+      ButtonColors(
+        containerColor = containerColor,
+        disabledContainerColor = MonTheme.colors.furiganaToggle.disabled,
+        contentColor = MonTheme.colors.furiganaToggle.icon,
+        disabledContentColor = MonTheme.colors.furiganaToggle.icon,
+      ),
+    onClick = onToggle,
+    modifier = modifier,
+  ) {
+    MonIcon(
+      id = Icon.Core.Furigana,
+      size = IconSize.ExtraSmall,
+      primaryColor = MonTheme.colors.furiganaToggle.icon,
+    )
+  }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
 private fun PreviewFuriganaToggle() {
-    MonTheme {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            FuriganaToggle(enabled = true, onToggle = {})
-            FuriganaToggle(enabled = false, onToggle = {})
-        }
+  MonTheme {
+    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+      FuriganaToggle(enabled = true, onToggle = {})
+      FuriganaToggle(enabled = false, onToggle = {})
     }
+  }
 }

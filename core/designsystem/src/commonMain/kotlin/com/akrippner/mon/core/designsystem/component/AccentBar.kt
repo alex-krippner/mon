@@ -12,15 +12,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AccentBar(
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .width(3.dp)
-            .fillMaxHeight()
-            .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
-            .background(color)
-    )
+fun AccentBar(color: Color, modifier: Modifier = Modifier) {
+  Box(
+    modifier =
+      modifier
+        .width(3.dp)
+        .fillMaxHeight()
+        .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
+        .background(color)
+  )
 }

@@ -9,57 +9,57 @@ import androidx.compose.ui.unit.Dp
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 enum class IconSize {
-    ExtraSmall,
-    Small,
-    Medium,
-    Large,
-    ExtraLarge
-}
-
-
-@Composable
-fun MonIcon(
-    id: IconId,
-    primaryColor: Color,
-    modifier: Modifier = Modifier,
-    secondaryColor: Color = Color.Unspecified,
-    requiredSize: Dp,
-    contentDescription: String? = null
-) {
-    val catalog = LocalIconCatalog.current
-    val imageVector = catalog.get(id, primaryColor, secondaryColor)
-
-    Icon(
-        imageVector = imageVector,
-        contentDescription = contentDescription,
-        modifier = modifier.requiredSize(requiredSize),
-        tint = Color.Unspecified
-    )
+  ExtraSmall,
+  Small,
+  Medium,
+  Large,
+  ExtraLarge,
 }
 
 @Composable
 fun MonIcon(
-    id: IconId,
-    primaryColor: Color,
-    modifier: Modifier = Modifier,
-    secondaryColor: Color = Color.Unspecified,
-    size: IconSize,
-    contentDescription: String? = null
+  id: IconId,
+  primaryColor: Color,
+  modifier: Modifier = Modifier,
+  secondaryColor: Color = Color.Unspecified,
+  requiredSize: Dp,
+  contentDescription: String? = null,
 ) {
-    val size = when (size) {
-        IconSize.ExtraSmall -> MonTheme.sizes.iconExtraSmall
-        IconSize.Small -> MonTheme.sizes.iconSmall
-        IconSize.Medium -> MonTheme.sizes.iconMedium
-        IconSize.Large -> MonTheme.sizes.iconLarge
-        IconSize.ExtraLarge -> MonTheme.sizes.iconExtraLarge
+  val catalog = LocalIconCatalog.current
+  val imageVector = catalog.get(id, primaryColor, secondaryColor)
+
+  Icon(
+    imageVector = imageVector,
+    contentDescription = contentDescription,
+    modifier = modifier.requiredSize(requiredSize),
+    tint = Color.Unspecified,
+  )
+}
+
+@Composable
+fun MonIcon(
+  id: IconId,
+  primaryColor: Color,
+  modifier: Modifier = Modifier,
+  secondaryColor: Color = Color.Unspecified,
+  size: IconSize,
+  contentDescription: String? = null,
+) {
+  val size =
+    when (size) {
+      IconSize.ExtraSmall -> MonTheme.sizes.iconExtraSmall
+      IconSize.Small -> MonTheme.sizes.iconSmall
+      IconSize.Medium -> MonTheme.sizes.iconMedium
+      IconSize.Large -> MonTheme.sizes.iconLarge
+      IconSize.ExtraLarge -> MonTheme.sizes.iconExtraLarge
     }
 
-    MonIcon(
-        id = id,
-        primaryColor = primaryColor,
-        secondaryColor = secondaryColor,
-        requiredSize = size,
-        modifier = modifier,
-        contentDescription = contentDescription
-    )
+  MonIcon(
+    id = id,
+    primaryColor = primaryColor,
+    secondaryColor = secondaryColor,
+    requiredSize = size,
+    modifier = modifier,
+    contentDescription = contentDescription,
+  )
 }

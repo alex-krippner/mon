@@ -8,8 +8,8 @@ import org.koin.compose.koinInject
 
 @Composable
 fun App() {
-    MonTheme {
-        val viewModel: HomeViewModel = koinInject()
-        HomeScreen(viewModel)
-    }
+  MonTheme {
+    val viewModel: HomeViewModel = koinInject()
+    HomeScreen(viewModel)
+  }
 }

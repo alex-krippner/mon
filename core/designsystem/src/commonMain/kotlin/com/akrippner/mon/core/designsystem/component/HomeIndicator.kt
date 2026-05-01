@@ -12,10 +12,11 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun HomeIndicator(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(width = 90.dp, height = 4.dp)
-            .clip(RoundedCornerShape(2.dp))
-            .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.20f))
-    )
+  Box(
+    modifier =
+      modifier
+        .size(width = 90.dp, height = 4.dp)
+        .clip(RoundedCornerShape(2.dp))
+        .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.20f))
+  )
 }

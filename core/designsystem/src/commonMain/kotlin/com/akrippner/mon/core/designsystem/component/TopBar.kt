@@ -2,7 +2,6 @@
 
 package com.akrippner.mon.core.designsystem.component
 
-
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -25,57 +24,57 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonTopAppBar(
-    title: String,
-    navigationIconId: IconId,
-    actions: @Composable (RowScope.() -> Unit) = {},
-    onNavigationClick: () -> Unit = {},
-    onActionClick: () -> Unit = {}
+  title: String,
+  navigationIconId: IconId,
+  actions: @Composable (RowScope.() -> Unit) = {},
+  onNavigationClick: () -> Unit = {},
+  onActionClick: () -> Unit = {},
 ) {
-    CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = title,
-                style = MonTheme.typography.titleMedium,
-                color = MonTheme.colors.navigation.text
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onNavigationClick) {
-                MonIcon(
-                    id = navigationIconId,
-                    primaryColor = MonTheme.colors.navigation.text,
-                    size = IconSize.ExtraSmall
-                )
-            }
-        },
-        actions = actions,
-        colors = TopAppBarColors(
-            containerColor = MonTheme.colors.navigation.background,
-            navigationIconContentColor = MonTheme.colors.navigation.text,
-            scrolledContainerColor = Color.Unspecified,
-            titleContentColor = Color.Unspecified,
-            subtitleContentColor = Color.Unspecified,
-            actionIconContentColor = Color.Unspecified
+  CenterAlignedTopAppBar(
+    title = {
+      Text(
+        text = title,
+        style = MonTheme.typography.titleMedium,
+        color = MonTheme.colors.navigation.text,
+      )
+    },
+    navigationIcon = {
+      IconButton(onClick = onNavigationClick) {
+        MonIcon(
+          id = navigationIconId,
+          primaryColor = MonTheme.colors.navigation.text,
+          size = IconSize.ExtraSmall,
         )
-    )
+      }
+    },
+    actions = actions,
+    colors =
+      TopAppBarColors(
+        containerColor = MonTheme.colors.navigation.background,
+        navigationIconContentColor = MonTheme.colors.navigation.text,
+        scrolledContainerColor = Color.Unspecified,
+        titleContentColor = Color.Unspecified,
+        subtitleContentColor = Color.Unspecified,
+        actionIconContentColor = Color.Unspecified,
+      ),
+  )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview("Top App Bar")
 @Composable
 private fun MonTopAppBarPreview() {
-    MonTheme {
-        MonTopAppBar(
-            title = "Reading",
-            navigationIconId = Icon.Core.ChevronLeft,
-            actions = {
-                FuriganaToggle(
-                    onToggle = {},
-                    enabled = true,
-                    modifier = Modifier.height(30.dp).width(50.dp)
-                )
-            }
-
+  MonTheme {
+    MonTopAppBar(
+      title = "Reading",
+      navigationIconId = Icon.Core.ChevronLeft,
+      actions = {
+        FuriganaToggle(
+          onToggle = {},
+          enabled = true,
+          modifier = Modifier.height(30.dp).width(50.dp),
         )
-    }
+      },
+    )
+  }
 }

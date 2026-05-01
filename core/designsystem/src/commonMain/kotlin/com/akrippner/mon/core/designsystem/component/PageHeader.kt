@@ -21,61 +21,60 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuPageHeader(
-    kanjiTitle: String,
-    latinLabel: String,
-    modifier: Modifier = Modifier,
-    badge: @Composable () -> Unit = {},
-    action: @Composable () -> Unit = {}
+  kanjiTitle: String,
+  latinLabel: String,
+  modifier: Modifier = Modifier,
+  badge: @Composable () -> Unit = {},
+  action: @Composable () -> Unit = {},
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MonTheme.colors.surfacePrimary,
-        shadowElevation = 1.dp,
-    )
-
-
-    {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = MonTheme.space.spacing6, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = kanjiTitle, style = MonTheme.typography.bodyMedium)
-                Text(
-                    text = latinLabel,
-                    style = MonTheme.typography.bodyMedium.copy(
-                        fontSize = 9.sp,
-                        letterSpacing = 3.sp
-                    )
-                )
-            }
-            badge()
-            Spacer(Modifier.width(8.dp))
-            action()
-        }
+  Surface(
+    modifier = modifier.fillMaxWidth(),
+    color = MonTheme.colors.surfacePrimary,
+    shadowElevation = 1.dp,
+  ) {
+    Row(
+      modifier =
+        Modifier.fillMaxWidth()
+          .statusBarsPadding()
+          .padding(horizontal = MonTheme.space.spacing6, vertical = 12.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Column(modifier = Modifier.weight(1f)) {
+        Text(text = kanjiTitle, style = MonTheme.typography.bodyMedium)
+        Text(
+          text = latinLabel,
+          style = MonTheme.typography.bodyMedium.copy(fontSize = 9.sp, letterSpacing = 3.sp),
+        )
+      }
+      badge()
+      Spacer(Modifier.width(8.dp))
+      action()
     }
+  }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFFDFAF4)
 @Composable
 private fun PreviewPageHeader() {
-    MonTheme {
-        YomuPageHeader(
-            kanjiTitle = "本棚",
-            latinLabel = "LIBRARY",
-            badge = {
-                Box(
-                    modifier = Modifier
-                        .background(MonTheme.colors.backgroundSecondary, androidx.compose.foundation.shape.CircleShape)
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                ) {
-                    Text("3", style = MonTheme.typography.bodyMedium.copy(color = MonTheme.colors.sheetTextPrimary))
-                }
-            },
-        )
-    }
+  MonTheme {
+    YomuPageHeader(
+      kanjiTitle = "本棚",
+      latinLabel = "LIBRARY",
+      badge = {
+        Box(
+          modifier =
+            Modifier.background(
+                MonTheme.colors.backgroundSecondary,
+                androidx.compose.foundation.shape.CircleShape,
+              )
+              .padding(horizontal = 10.dp, vertical = 4.dp)
+        ) {
+          Text(
+            "3",
+            style = MonTheme.typography.bodyMedium.copy(color = MonTheme.colors.sheetTextPrimary),
+          )
+        }
+      },
+    )
+  }
 }

@@ -17,22 +17,28 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuIconButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  content: @Composable () -> Unit,
 ) {
-    Box(
-        modifier = modifier
-            .size(36.dp)
-            .clip(CircleShape)
-            .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.05f)) //TODO: Define universal alphas
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() }, //TODO: Check why interactionSource is set here
-                indication = ripple(bounded = true, radius = 18.dp),
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        content()
-    }
+  Box(
+    modifier =
+      modifier
+        .size(36.dp)
+        .clip(CircleShape)
+        .background(
+          MonTheme.colors.backgroundSecondary.copy(alpha = 0.05f)
+        ) // TODO: Define universal alphas
+        .clickable(
+          interactionSource =
+            remember {
+              MutableInteractionSource()
+            }, // TODO: Check why interactionSource is set here
+          indication = ripple(bounded = true, radius = 18.dp),
+          onClick = onClick,
+        ),
+    contentAlignment = Alignment.Center,
+  ) {
+    content()
+  }
 }

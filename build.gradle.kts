@@ -7,4 +7,15 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.androidMultiplatformLibrary) apply false
+    alias(libs.plugins.spotless)
+}
+
+configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    kotlin {
+        target("**/*.kt")
+        targetExclude("**/build/**")
+        ktfmt(libs.versions.ktfmt.get()).googleStyle()
+    }
+
+
 }

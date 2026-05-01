@@ -15,26 +15,21 @@ import androidx.compose.ui.unit.sp
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun KanjiDetailLink(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape((8.dp))),
-        color = Color.White.copy(alpha = 0.05f),
-        onClick = onClick
-
-    ) {
-        Text(
-            text = "View kanji breakdown →",
-            style = MonTheme.typography.bodyMedium.copy(
-                color = Color.White.copy(alpha = 0.40f),
-                letterSpacing = 1.sp
-            ),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 10.dp)
-        )
-    }
+fun KanjiDetailLink(onClick: () -> Unit, modifier: Modifier = Modifier) {
+  Surface(
+    modifier = modifier.fillMaxWidth().clip(RoundedCornerShape((8.dp))),
+    color = Color.White.copy(alpha = 0.05f),
+    onClick = onClick,
+  ) {
+    Text(
+      text = "View kanji breakdown →",
+      style =
+        MonTheme.typography.bodyMedium.copy(
+          color = Color.White.copy(alpha = 0.40f),
+          letterSpacing = 1.sp,
+        ),
+      textAlign = TextAlign.Center,
+      modifier = Modifier.padding(vertical = 10.dp),
+    )
+  }
 }

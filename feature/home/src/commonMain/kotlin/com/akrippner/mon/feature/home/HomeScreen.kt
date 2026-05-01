@@ -12,49 +12,49 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.theme.MonTheme
 import com.akrippner.mon.core.data.model.DictionaryRepository
+import com.akrippner.mon.core.designsystem.theme.MonTheme
+import com.akrippner.mon.core.domain.usecase.TokenizeTextUseCase
 import com.akrippner.mon.core.model.data.MyDictionary
 import com.akrippner.mon.core.model.data.MyToken
-import com.akrippner.mon.core.domain.usecase.TokenizeTextUseCase
 
 @Composable
 fun HomeScreen(viewModel: HomeViewModel) {
-    val state by viewModel.state.collectAsState()
+  val state by viewModel.state.collectAsState()
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
-    ) {
-        items(state.tokens) { token ->
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                Text(text = "Surface: ${token.surface}")
-                Text(text = "Parts of Speech: ${token.partOfSpeech.joinToString()}")
-                Text(text = "Normalized: ${token.normalizedForm}")
-                Text(text = "Reading: ${token.reading}")
-            }
-        }
+  LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    items(state.tokens) { token ->
+      Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(text = "Surface: ${token.surface}")
+        Text(text = "Parts of Speech: ${token.partOfSpeech.joinToString()}")
+        Text(text = "Normalized: ${token.normalizedForm}")
+        Text(text = "Reading: ${token.reading}")
+      }
     }
+  }
 }
 
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    MonTheme {
-        val fakeDictionary = object : MyDictionary {
-            override fun tokenize(text: String): List<MyToken> {
-                return listOf(
-                    MyToken("すもも", listOf("名詞"), "李", "スモモ"),
-                    MyToken("も", listOf("助詞"), "も", "モ"),
-                    MyToken("もも", listOf("名詞"), "桃", "モモ")
-                )
-            }
+  MonTheme {
+    val fakeDictionary =
+      object : MyDictionary {
+        override fun tokenize(text: String): List<MyToken> {
+          return listOf(
+            MyToken("すもも", listOf("名詞"), "李", "スモモ"),
+            MyToken("も", listOf("助詞"), "も", "モ"),
+            MyToken("もも", listOf("名詞"), "桃", "モモ"),
+          )
         }
-        val fakeRepository = object : DictionaryRepository {
-            override fun getDictionary(): MyDictionary = fakeDictionary
-        }
-        val fakeUseCase = TokenizeTextUseCase(fakeRepository)
-        val fakeViewModel = HomeViewModel(fakeUseCase)
+      }
+    val fakeRepository =
+      object : DictionaryRepository {
+        override fun getDictionary(): MyDictionary = fakeDictionary
+      }
+    val fakeUseCase = TokenizeTextUseCase(fakeRepository)
+    val fakeViewModel = HomeViewModel(fakeUseCase)
 
-        HomeScreen(viewModel = fakeViewModel)
-    }
+    HomeScreen(viewModel = fakeViewModel)
+  }
 }

@@ -19,27 +19,26 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuNavTabItem(
-    iconId: IconId,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+  iconId: IconId,
+  selected: Boolean,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    val contentColor =
-        if (selected) MonTheme.colors.navigation.selected else MonTheme.colors.navigation.default
-    val backgroundColor = if (selected) MonTheme.colors.navigation.selectedBackground else Color.Transparent
+  val contentColor =
+    if (selected) MonTheme.colors.navigation.selected else MonTheme.colors.navigation.default
+  val backgroundColor =
+    if (selected) MonTheme.colors.navigation.selectedBackground else Color.Transparent
 
-    Box(
-        modifier = modifier
-            .width(40.dp)
-            .height(32.dp)
-            .clip(RoundedCornerShape(20))
-            .clickable(
-                onClick = onClick
-            ).background(backgroundColor),
-        contentAlignment = Alignment.Center
-
-    ) {
-        MonIcon(id = iconId, primaryColor = contentColor, size = IconSize.ExtraSmall)
-    }
-
+  Box(
+    modifier =
+      modifier
+        .width(40.dp)
+        .height(32.dp)
+        .clip(RoundedCornerShape(20))
+        .clickable(onClick = onClick)
+        .background(backgroundColor),
+    contentAlignment = Alignment.Center,
+  ) {
+    MonIcon(id = iconId, primaryColor = contentColor, size = IconSize.ExtraSmall)
+  }
 }

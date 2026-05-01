@@ -21,41 +21,47 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun YomuBottomNavBar(
-    selectedTab: String,
-    onTabSelected: (String) -> Unit,
-    navTabs: List<IconId>,
-    modifier: Modifier = Modifier,
+  selectedTab: String,
+  onTabSelected: (String) -> Unit,
+  navTabs: List<IconId>,
+  modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth().height(56.dp).navigationBarsPadding().background(MonTheme.colors.navigation.background),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        navTabs.forEach { tab ->
-            YomuNavTabItem(
-                iconId = tab,
-                selected = tab.category + tab.name == selectedTab,
-                onClick = { onTabSelected(tab.category + tab.name) }
-            )
-        }
+  Row(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .height(56.dp)
+        .navigationBarsPadding()
+        .background(MonTheme.colors.navigation.background),
+    horizontalArrangement = Arrangement.SpaceAround,
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    navTabs.forEach { tab ->
+      YomuNavTabItem(
+        iconId = tab,
+        selected = tab.category + tab.name == selectedTab,
+        onClick = { onTabSelected(tab.category + tab.name) },
+      )
     }
+  }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PreviewBottomNavBar() {
 
-    val navTabs = listOf(Icon.Core.Furigana, Icon.Core.Library, Icon.Core.Settings, Icon.Core.Vocabulary)
-    var selectedTab by remember { mutableStateOf("") }
+  val navTabs =
+    listOf(Icon.Core.Furigana, Icon.Core.Library, Icon.Core.Settings, Icon.Core.Vocabulary)
+  var selectedTab by remember { mutableStateOf("") }
 
-    fun onSelected(tab: String) {
-        selectedTab = tab
-    }
-    MonTheme {
-        YomuBottomNavBar(
-            selectedTab = selectedTab,
-            navTabs = navTabs,
-            onTabSelected = { onSelected(it) },
-        )
-    }
+  fun onSelected(tab: String) {
+    selectedTab = tab
+  }
+  MonTheme {
+    YomuBottomNavBar(
+      selectedTab = selectedTab,
+      navTabs = navTabs,
+      onTabSelected = { onSelected(it) },
+    )
+  }
 }

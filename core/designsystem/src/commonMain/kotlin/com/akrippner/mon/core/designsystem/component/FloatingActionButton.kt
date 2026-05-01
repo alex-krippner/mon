@@ -15,33 +15,25 @@ import com.akrippner.mon.core.designsystem.icon.MonIcon
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun YomuFAB(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    FloatingActionButton(
-        onClick = onClick,
-        shape = CircleShape,
-        containerColor = MonTheme.colors.buttonPrimary.background,
-        contentColor = MonTheme.colors.buttonPrimary.icon,
-        elevation = FloatingActionButtonDefaults.elevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 12.dp
-        ),
-    ) {
-        MonIcon(id = Icon.Core.Plus, size = IconSize.Small, primaryColor = MonTheme.colors.buttonPrimary.icon)
-    }
-
+fun YomuFAB(onClick: () -> Unit, modifier: Modifier = Modifier) {
+  FloatingActionButton(
+    onClick = onClick,
+    shape = CircleShape,
+    containerColor = MonTheme.colors.buttonPrimary.background,
+    contentColor = MonTheme.colors.buttonPrimary.icon,
+    elevation =
+      FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp, pressedElevation = 12.dp),
+  ) {
+    MonIcon(
+      id = Icon.Core.Plus,
+      size = IconSize.Small,
+      primaryColor = MonTheme.colors.buttonPrimary.icon,
+    )
+  }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
 private fun PreviewFAB() {
-    MonTheme{
-        Surface {
-
-
-            YomuFAB(onClick = {}, modifier = Modifier.padding(16.dp))
-        }
-    }
+  MonTheme { Surface { YomuFAB(onClick = {}, modifier = Modifier.padding(16.dp)) } }
 }

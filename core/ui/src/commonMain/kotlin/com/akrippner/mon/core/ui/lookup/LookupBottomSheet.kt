@@ -43,145 +43,132 @@ import com.akrippner.mon.core.ui.lookup.WordDisplay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LookupBottomSheet(
-    token: DisplayToken,
-    lookupState: LookupUiState,
-    onSave: (note: String) -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true) //TODO: Check if setting state here is correct
+  token: DisplayToken,
+  lookupState: LookupUiState,
+  onSave: (note: String) -> Unit,
+  onDismiss: () -> Unit,
+  modifier: Modifier = Modifier,
+  sheetState: SheetState =
+    rememberModalBottomSheetState(
+      skipPartiallyExpanded = true
+    ), // TODO: Check if setting state here is correct
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MonTheme.colors.sheetBackground,
-        contentColor = Color.White,
-        dragHandle = {
-            // Custom handle — matches 60×4dp design spec
-            Box(
-                modifier = Modifier
-                    .padding(top = 12.dp, bottom = 8.dp)
-                    .size(width = 60.dp, height = 4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Color.White.copy(alpha = 0.18f)),
-            )
-        },
-        modifier = modifier,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+  ModalBottomSheet(
+    onDismissRequest = onDismiss,
+    sheetState = sheetState,
+    containerColor = MonTheme.colors.sheetBackground,
+    contentColor = Color.White,
+    dragHandle = {
+      // Custom handle — matches 60×4dp design spec
+      Box(
+        modifier =
+          Modifier.padding(top = 12.dp, bottom = 8.dp)
+            .size(width = 60.dp, height = 4.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(Color.White.copy(alpha = 0.18f))
+      )
+    },
+    modifier = modifier,
+    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+  ) {
+    Column(
+      modifier =
+        Modifier.fillMaxWidth()
+          .verticalScroll(rememberScrollState())
+          .padding(horizontal = 24.dp)
+          .padding(bottom = 32.dp) // TODO: Check if two padding modificaitons are needed
+          .navigationBarsPadding()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState() )
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp) //TODO: Check if two padding modificaitons are needed
-                .navigationBarsPadding(),
-        ) {
-            when (lookupState) {
-                is LookupUiState.Loading -> LookupLoadingContent()
-                is LookupUiState.NotFound ->  LookupNotFoundContent(surface = token.surface)
-                is LookupUiState.Error -> LookupErrorContent(onRetry = lookupState.onRetry)
-                is LookupUiState.Found -> LookupFoundContent (
-                    entry = lookupState.entry,
-                    savedToVocab = lookupState.savedToVocab,
-                    onSave = onSave
-                )
-            }
-        }
+      when (lookupState) {
+        is LookupUiState.Loading -> LookupLoadingContent()
+        is LookupUiState.NotFound -> LookupNotFoundContent(surface = token.surface)
+        is LookupUiState.Error -> LookupErrorContent(onRetry = lookupState.onRetry)
+        is LookupUiState.Found ->
+          LookupFoundContent(
+            entry = lookupState.entry,
+            savedToVocab = lookupState.savedToVocab,
+            onSave = onSave,
+          )
+      }
     }
+  }
 }
 
 @Composable
 private fun LookupLoadingContent() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(color = MonTheme.colors.secondary)
-    }
+  Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+    CircularProgressIndicator(color = MonTheme.colors.secondary)
+  }
 }
 
 @Composable
 private fun LookupNotFoundContent(surface: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = surface,
-                style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.40f))
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "No dictionary entry found",
-                style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.35f)),
-                textAlign = TextAlign.Center
-            )
-        }
+  Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+      Text(
+        text = surface,
+        style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.40f)),
+      )
+      Spacer(Modifier.height(8.dp))
+      Text(
+        text = "No dictionary entry found",
+        style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.35f)),
+        textAlign = TextAlign.Center,
+      )
     }
+  }
 }
 
 @Composable
 private fun LookupErrorContent(onRetry: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "Could not load entry",
-                style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.45f)),
-            )
-            Spacer(Modifier.height(12.dp))
-            YomuPillButton(label = "Retry", variant = PillVariant.Outline, onClick = onRetry)
-        }
+  Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+      Text(
+        text = "Could not load entry",
+        style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.45f)),
+      )
+      Spacer(Modifier.height(12.dp))
+      YomuPillButton(label = "Retry", variant = PillVariant.Outline, onClick = onRetry)
     }
+  }
 }
 
 @Composable
 private fun LookupFoundContent(
-    entry: JmdictEntry,
-    savedToVocab: Boolean,
-    onSave: (note: String) -> Unit
+  entry: JmdictEntry,
+  savedToVocab: Boolean,
+  onSave: (note: String) -> Unit,
 ) {
-    var noteText by remember { mutableStateOf("") }
+  var noteText by remember { mutableStateOf("") }
 
-    WordDisplay(surface = entry.surface, reading = entry.reading)
-    Spacer(Modifier.height(8.dp))
+  WordDisplay(surface = entry.surface, reading = entry.reading)
+  Spacer(Modifier.height(8.dp))
 
-    BadgeRow(
-        jlptLevel = entry.jlptLevel,
-        pos = entry.senses.firstOrNull()?.posLabel,
-    )
-    Spacer(Modifier.height(16.dp))
+  BadgeRow(jlptLevel = entry.jlptLevel, pos = entry.senses.firstOrNull()?.posLabel)
+  Spacer(Modifier.height(16.dp))
 
-    HorizontalDivider(color = Color.White.copy(alpha = 0.10f), thickness = 0.5.dp)
+  HorizontalDivider(color = Color.White.copy(alpha = 0.10f), thickness = 0.5.dp)
 
-    entry.senses.forEachIndexed { index, sense ->
-        Spacer(Modifier.height(12.dp))
-        SenseBlock(index = index + 1, sense = sense)
-        if (index < entry.senses.lastIndex) {
-            Spacer(Modifier.height(12.dp))
-            HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
-        }
-    }
-
-    Spacer(Modifier.height(20.dp))
-    SaveRow(
-        noteText = noteText,
-        onNoteChange = { noteText = it },
-        savedToVocab = savedToVocab,
-        onSave = { onSave(noteText) }
-    )
+  entry.senses.forEachIndexed { index, sense ->
     Spacer(Modifier.height(12.dp))
-    KanjiDetailLink( onClick = {
-        //TODO: Navigate to kanji detail
+    SenseBlock(index = index + 1, sense = sense)
+    if (index < entry.senses.lastIndex) {
+      Spacer(Modifier.height(12.dp))
+      HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
     }
-    )
+  }
+
+  Spacer(Modifier.height(20.dp))
+  SaveRow(
+    noteText = noteText,
+    onNoteChange = { noteText = it },
+    savedToVocab = savedToVocab,
+    onSave = { onSave(noteText) },
+  )
+  Spacer(Modifier.height(12.dp))
+  KanjiDetailLink(
+    onClick = {
+      // TODO: Navigate to kanji detail
+    }
+  )
 }

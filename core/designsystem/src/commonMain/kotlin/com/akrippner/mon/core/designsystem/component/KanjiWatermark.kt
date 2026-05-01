@@ -5,22 +5,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.theme.RobotoMono
 import com.akrippner.mon.core.designsystem.theme.MonTheme
+import com.akrippner.mon.core.designsystem.theme.RobotoMono
 
 @Composable
-fun KanjiWaterMark(
-    kanji: String,
-    modifier: Modifier = Modifier,
-    alpha: Float = 0.04f
-) {
-    Text(
-        text = kanji,
-        style = TextStyle(
-            fontFamily = RobotoMono,
-            fontSize= 110.sp,
-            color = MonTheme.colors.sheetTextPrimary.copy(alpha = alpha)
-        ),
-        modifier = modifier
-    )
+fun KanjiWaterMark(kanji: String, modifier: Modifier = Modifier, alpha: Float = 0.04f) {
+  Text(
+    text = kanji,
+    style =
+      TextStyle(
+        fontFamily = RobotoMono,
+        fontSize = 110.sp,
+        color = MonTheme.colors.sheetTextPrimary.copy(alpha = alpha),
+      ),
+    modifier = modifier,
+  )
 }

@@ -8,9 +8,5 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun DotDivider(style: TextStyle?, modifier: Modifier = Modifier) {
-    Text(
-        text = "·",
-        style = style ?: MonTheme.typography.bodySmall,
-        modifier = modifier
-    )
+  Text(text = "·", style = style ?: MonTheme.typography.bodySmall, modifier = modifier)
 }

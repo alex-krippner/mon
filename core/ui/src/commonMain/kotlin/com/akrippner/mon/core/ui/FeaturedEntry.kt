@@ -22,66 +22,66 @@ import androidx.compose.ui.unit.dp
 import com.akrippner.mon.core.designsystem.component.DotDivider
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
-//TODO: Move to library feature
+// TODO: Move to library feature
 @Composable
 fun FeaturedEntry(
-    title: String,
-    wordCount: Int,
-    vocabCount: Int,
-    onOpen: () -> Unit,
-    modifier: Modifier = Modifier,
+  title: String,
+  wordCount: Int,
+  vocabCount: Int,
+  onOpen: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(
-                MonTheme.colors.featured.background
-            )
-            .clickable(onClick = onOpen)
+  Box(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .height(100.dp)
+        .clip(RoundedCornerShape(18.dp))
+        .background(MonTheme.colors.featured.background)
+        .clickable(onClick = onOpen)
+  ) {
+    Column(
+      modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp),
+      verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+      Column {
+        Text(
+          text = title,
+          style = MonTheme.typography.headlineSmall,
+          color = MonTheme.colors.featured.title,
         )
-        {
-            Column {
-                Text(
-                    text = title,
-                    style = MonTheme.typography.headlineSmall,
-                    color = MonTheme.colors.featured.title
-                )
-                Spacer(Modifier.height(4.dp))
-                Row {
-                    Text(
-                        text = "$wordCount words",
-                        style = MonTheme.typography.labelSmall,
-                        color = MonTheme.colors.featured.subtitle
-                    )
-                    Spacer(Modifier.width(2.dp))
-                    DotDivider(style = MonTheme.typography.labelSmall.copy(color = MonTheme.colors.featured.subtitle))
-                    Text(
-                        text = "$vocabCount vocabulary",
-                        style = MonTheme.typography.labelSmall,
-                        color = MonTheme.colors.featured.subtitle
-                    )
-                }
-            }
+        Spacer(Modifier.height(4.dp))
+        Row {
+          Text(
+            text = "$wordCount words",
+            style = MonTheme.typography.labelSmall,
+            color = MonTheme.colors.featured.subtitle,
+          )
+          Spacer(Modifier.width(2.dp))
+          DotDivider(
+            style = MonTheme.typography.labelSmall.copy(color = MonTheme.colors.featured.subtitle)
+          )
+          Text(
+            text = "$vocabCount vocabulary",
+            style = MonTheme.typography.labelSmall,
+            color = MonTheme.colors.featured.subtitle,
+          )
         }
+      }
     }
+  }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
 private fun PreviewFeaturedEntry() {
-    MonTheme {
-        FeaturedEntry(
-            title = "こころ",
-            wordCount = 25,
-            vocabCount = 12,
-            onOpen = {},
-            modifier = Modifier.padding(16.dp),
-        )
-    }
+  MonTheme {
+    FeaturedEntry(
+      title = "こころ",
+      wordCount = 25,
+      vocabCount = 12,
+      onOpen = {},
+      modifier = Modifier.padding(16.dp),
+    )
+  }
 }

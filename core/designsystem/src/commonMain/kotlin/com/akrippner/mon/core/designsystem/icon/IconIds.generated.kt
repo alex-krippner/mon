@@ -6,18 +6,22 @@ package com.akrippner.mon.core.designsystem.icon
 import androidx.compose.runtime.Immutable
 
 @Immutable
-sealed interface IconId { val category: String; val name: String }
+sealed interface IconId {
+  val category: String
+  val name: String
+}
+
 private data class IconIdImpl(override val category: String, override val name: String) : IconId
 
 object Icon {
- object Core {
-  val ChevronLeft: IconId = IconIdImpl("Core", "ChevronLeft")
-  val ChevronRight: IconId = IconIdImpl("Core", "ChevronRight")
-  val Furigana: IconId = IconIdImpl("Core", "Furigana")
-  val Library: IconId = IconIdImpl("Core", "Library")
-  val Plus: IconId = IconIdImpl("Core", "Plus")
-  val Search: IconId = IconIdImpl("Core", "Search")
-  val Settings: IconId = IconIdImpl("Core", "Settings")
-  val Vocabulary: IconId = IconIdImpl("Core", "Vocabulary")
- }
+  object Core {
+    val ChevronLeft: IconId = IconIdImpl("Core", "ChevronLeft")
+    val ChevronRight: IconId = IconIdImpl("Core", "ChevronRight")
+    val Furigana: IconId = IconIdImpl("Core", "Furigana")
+    val Library: IconId = IconIdImpl("Core", "Library")
+    val Plus: IconId = IconIdImpl("Core", "Plus")
+    val Search: IconId = IconIdImpl("Core", "Search")
+    val Settings: IconId = IconIdImpl("Core", "Settings")
+    val Vocabulary: IconId = IconIdImpl("Core", "Vocabulary")
+  }
 }

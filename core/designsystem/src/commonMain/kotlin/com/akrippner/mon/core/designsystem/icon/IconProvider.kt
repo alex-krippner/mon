@@ -12,7 +12,7 @@ val LocalIconCatalog = staticCompositionLocalOf<IconCatalog> { DefaultIconCatalo
 
 @Composable
 fun MonIcons(iconCatalog: IconCatalog = DefaultIconCatalog, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalIcons provides Icons, LocalIconCatalog provides iconCatalog) {
-        content()
-    }
+  CompositionLocalProvider(LocalIcons provides Icons, LocalIconCatalog provides iconCatalog) {
+    content()
+  }
 }

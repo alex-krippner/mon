@@ -13,35 +13,23 @@ import com.akrippner.mon.core.designsystem.component.PosBadge
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun BadgeRow(
-    jlptLevel: String?,
-    pos: String?,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (jlptLevel != null) {
-            JlptBadge(level = jlptLevel)
-        }
-        if (pos != null) {
-            PosBadge(pos = pos)
-        }
+fun BadgeRow(jlptLevel: String?, pos: String?, modifier: Modifier = Modifier) {
+  Row(
+    modifier = modifier,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    if (jlptLevel != null) {
+      JlptBadge(level = jlptLevel)
     }
+    if (pos != null) {
+      PosBadge(pos = pos)
+    }
+  }
 }
-
-
 
 @Preview(showBackground = true, backgroundColor = 0xFF1C1C2E)
 @Composable
 private fun PreviewBadgeRow() {
-    MonTheme {
-        BadgeRow(
-            jlptLevel = "N5",
-            pos = "名詞",
-            modifier = Modifier.padding(24.dp),
-        )
-    }
+  MonTheme { BadgeRow(jlptLevel = "N5", pos = "名詞", modifier = Modifier.padding(24.dp)) }
 }

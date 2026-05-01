@@ -19,35 +19,35 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
 fun JlptBadge(
-    level: String, //TODO: Create enum?
-    modifier: Modifier = Modifier,
+  level: String, // TODO: Create enum?
+  modifier: Modifier = Modifier,
 ) {
 
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(MonTheme.colors.tag.background)
-            .border(1.dp, Color.Unspecified, RoundedCornerShape(4.dp))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = level, style = MonTheme.typography.labelSmall.copy(color = MonTheme.colors.tag.text))
-    }
+  Box(
+    modifier =
+      modifier
+        .clip(RoundedCornerShape(4.dp))
+        .background(MonTheme.colors.tag.background)
+        .border(1.dp, Color.Unspecified, RoundedCornerShape(4.dp))
+        .padding(horizontal = 8.dp, vertical = 3.dp),
+    contentAlignment = Alignment.Center,
+  ) {
+    Text(
+      text = level,
+      style = MonTheme.typography.labelSmall.copy(color = MonTheme.colors.tag.text),
+    )
+  }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PreviewJlptBadgesLight() {
-    MonTheme {
-        Row (
-            modifier = Modifier.padding(20.dp).background(MonTheme.colors.vocabEntry.background),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-
-        ) {
-            listOf("N5", "N4", "N3", "N2", "N1").forEach {
-                JlptBadge(level = it)
-            }
-        }
+  MonTheme {
+    Row(
+      modifier = Modifier.padding(20.dp).background(MonTheme.colors.vocabEntry.background),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      listOf("N5", "N4", "N3", "N2", "N1").forEach { JlptBadge(level = it) }
     }
+  }
 }

@@ -18,57 +18,51 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.akrippner.mon.core.designsystem.theme.RobotoMono
 import com.akrippner.mon.core.designsystem.theme.MonTheme
+import com.akrippner.mon.core.designsystem.theme.RobotoMono
 
 @Composable
-fun TextPreviewBox(
-    text: String,
-    wordCount: Int,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        SectionLabel(text = "PREVIEW")
-        Spacer(Modifier.height(8.dp))
-        Box(
-            modifier = Modifier.fillMaxWidth().height(320.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.04f))
-                .border(1.dp, MonTheme.colors.backgroundSecondary.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
-
-
-        ) {
-            Text(
-                text = text,
-                style = MonTheme.typography.bodyMedium.copy(
-                    fontFamily = RobotoMono,
-                    lineHeight = 28.sp
-                ),
-                modifier = Modifier.padding(20.dp)
+fun TextPreviewBox(text: String, wordCount: Int, modifier: Modifier = Modifier) {
+  Column(modifier = modifier) {
+    SectionLabel(text = "PREVIEW")
+    Spacer(Modifier.height(8.dp))
+    Box(
+      modifier =
+        Modifier.fillMaxWidth()
+          .height(320.dp)
+          .clip(RoundedCornerShape(14.dp))
+          .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.04f))
+          .border(
+            1.dp,
+            MonTheme.colors.backgroundSecondary.copy(alpha = 0.08f),
+            RoundedCornerShape(14.dp),
+          )
+    ) {
+      Text(
+        text = text,
+        style = MonTheme.typography.bodyMedium.copy(fontFamily = RobotoMono, lineHeight = 28.sp),
+        modifier = Modifier.padding(20.dp),
+      )
+      Box(
+        modifier =
+          Modifier.fillMaxWidth()
+            .height(64.dp)
+            .align(Alignment.BottomCenter)
+            .background(
+              Brush.verticalGradient(
+                colors = listOf(Color.Transparent, MonTheme.colors.surfaceSecondary)
+              )
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, MonTheme.colors.surfaceSecondary)
-                        )
-                    )
-            )
-        }
-        Spacer(Modifier.height(10.dp))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(13.dp))
-                .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.06f))
-                .padding(horizontal = 14.dp, vertical = 5.dp)
-        ) {
-            Text(
-                text = "~$wordCount words detected",
-                style = MonTheme.typography.bodyMedium,
-            )
-        }
+      )
     }
+    Spacer(Modifier.height(10.dp))
+    Box(
+      modifier =
+        Modifier.clip(RoundedCornerShape(13.dp))
+          .background(MonTheme.colors.backgroundSecondary.copy(alpha = 0.06f))
+          .padding(horizontal = 14.dp, vertical = 5.dp)
+    ) {
+      Text(text = "~$wordCount words detected", style = MonTheme.typography.bodyMedium)
+    }
+  }
 }

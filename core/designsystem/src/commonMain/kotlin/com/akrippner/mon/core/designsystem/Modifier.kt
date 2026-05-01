@@ -9,25 +9,20 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 
 fun Modifier.dashedBorder(
-    color: Color,
-    strokeWidth: Dp,
-    dashedLength: Dp,
-    gapLength: Dp,
-    cornerRadius: Dp,
+  color: Color,
+  strokeWidth: Dp,
+  dashedLength: Dp,
+  gapLength: Dp,
+  cornerRadius: Dp,
 ): Modifier = drawBehind {
-    val stroke = strokeWidth.toPx()
-    val dash = dashedLength.toPx()
-    val gap = gapLength.toPx()
-    val r = cornerRadius.toPx()
-    drawRoundRect(
-        color = color,
-        size = size,
-        cornerRadius = CornerRadius(r),
-        style = Stroke(
-            width = stroke,
-            pathEffect = dashPathEffect(
-                floatArrayOf(dash, gap)
-            )
-        )
-    )
+  val stroke = strokeWidth.toPx()
+  val dash = dashedLength.toPx()
+  val gap = gapLength.toPx()
+  val r = cornerRadius.toPx()
+  drawRoundRect(
+    color = color,
+    size = size,
+    cornerRadius = CornerRadius(r),
+    style = Stroke(width = stroke, pathEffect = dashPathEffect(floatArrayOf(dash, gap))),
+  )
 }

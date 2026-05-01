@@ -23,55 +23,49 @@ import com.akrippner.mon.core.designsystem.icon.MonIcon
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun TextListItem(
-    title: String,
-    meta: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun TextListItem(title: String, meta: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MonTheme.colors.listItem.background)
-            .clickable(onClick = onClick)
-            .height(IntrinsicSize.Min),
-        verticalAlignment = Alignment.CenterVertically
-
+  Row(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .clip(RoundedCornerShape(12.dp))
+        .background(MonTheme.colors.listItem.background)
+        .clickable(onClick = onClick)
+        .height(IntrinsicSize.Min),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Column(
+      modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 10.dp),
+      verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            Text(text = title, style = MonTheme.typography.titleSmall, color = MonTheme.colors.listItem.title)
-            Text(text = meta, style = MonTheme.typography.labelSmall, color = MonTheme.colors.listItem.subtitle)
-        }
-
-        MonIcon(id = Icon.Core.ChevronRight, size = IconSize.ExtraSmall, primaryColor = MonTheme.colors.listItem.iconEnd)
+      Text(
+        text = title,
+        style = MonTheme.typography.titleSmall,
+        color = MonTheme.colors.listItem.title,
+      )
+      Text(
+        text = meta,
+        style = MonTheme.typography.labelSmall,
+        color = MonTheme.colors.listItem.subtitle,
+      )
     }
+
+    MonIcon(
+      id = Icon.Core.ChevronRight,
+      size = IconSize.ExtraSmall,
+      primaryColor = MonTheme.colors.listItem.iconEnd,
+    )
+  }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
 private fun PreviewTextListItem() {
-    MonTheme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TextListItem(
-                title = "NHK ニュース記事",
-                meta = "89 words · 3 annotations",
-                onClick = {},
-            )
-            TextListItem(
-                title = "吾輩は猫である",
-                meta = "512 words · not started",
-                onClick = {},
-            )
-        }
+  MonTheme {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      TextListItem(title = "NHK ニュース記事", meta = "89 words · 3 annotations", onClick = {})
+      TextListItem(title = "吾輩は猫である", meta = "512 words · not started", onClick = {})
     }
+  }
 }

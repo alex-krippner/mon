@@ -25,83 +25,78 @@ import androidx.compose.ui.unit.sp
 import com.akrippner.mon.core.designsystem.PillVariant
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
-
 @Composable
 fun YomuPillButton(
-    label: String,
-    variant: PillVariant,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    sublabel: String? = null,
-    enabled: Boolean = true
+  label: String,
+  variant: PillVariant,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  sublabel: String? = null,
+  enabled: Boolean = true,
 ) {
-    val bgColor = when {
-        !enabled -> MonTheme.colors.textPrimary.copy(alpha = 0.08f)
-        variant == PillVariant.Filled -> MonTheme.colors.secondary
-        else -> Color.Transparent
+  val bgColor =
+    when {
+      !enabled -> MonTheme.colors.textPrimary.copy(alpha = 0.08f)
+      variant == PillVariant.Filled -> MonTheme.colors.secondary
+      else -> Color.Transparent
+    }
+  val labelColor =
+    when {
+      !enabled -> MonTheme.colors.textPrimary.copy(alpha = 0.25f)
+      variant == PillVariant.Filled -> Color.White
+      else -> MonTheme.colors.textSecondary
+    }
+  val borderColor =
+    when {
+      variant == PillVariant.Outline -> MonTheme.colors.textPrimary.copy(alpha = 0.25f)
+      else -> Color.Transparent
+    }
+  val shape = RoundedCornerShape(if (sublabel !== null) 14.dp else 15.dp)
+  val height = if (sublabel != null) 36.dp else 30.dp
 
+  Box(
+    modifier =
+      modifier
+        .height(height)
+        .clip(shape)
+        .background(bgColor)
+        .border(1.5.dp, borderColor, shape)
+        .clickable(
+          enabled = enabled,
+          interactionSource = remember { MutableInteractionSource() },
+          indication = ripple(bounded = true),
+          onClick = onClick,
+        )
+        .padding(horizontal = 18.dp),
+    contentAlignment = Alignment.Center,
+  ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+      Text(
+        text = label,
+        style = MonTheme.typography.bodyMedium.copy(fontSize = 11.sp, color = labelColor),
+      )
+      if (sublabel != null) {
+        Text(
+          text = sublabel,
+          style =
+            MonTheme.typography.bodyMedium.copy(
+              fontSize = 8.sp,
+              color = labelColor.copy(alpha = 0.70f),
+            ),
+        )
+      }
     }
-    val labelColor = when {
-        !enabled -> MonTheme.colors.textPrimary.copy( alpha = 0.25f)
-        variant == PillVariant.Filled -> Color.White
-        else -> MonTheme.colors.textSecondary
-    }
-    val borderColor = when {
-        variant == PillVariant.Outline -> MonTheme.colors.textPrimary.copy(alpha = 0.25f)
-        else -> Color.Transparent
-    }
-    val shape = RoundedCornerShape(if (sublabel !== null) 14.dp else 15.dp)
-    val height = if (sublabel != null) 36.dp else 30.dp
-
-    Box(
-        modifier = modifier
-            .height(height)
-            .clip(shape)
-            .background(bgColor)
-            .border(1.5.dp, borderColor, shape)
-            .clickable(
-                enabled = enabled,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(bounded = true),
-                onClick = onClick
-            )
-            .padding(horizontal = 18.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = label,
-                style = MonTheme.typography.bodyMedium.copy(
-                    fontSize = 11.sp,
-                    color = labelColor,
-                )
-            )
-            if (sublabel != null) {
-                Text(
-                    text = sublabel,
-                    style = MonTheme.typography.bodyMedium.copy(
-                        fontSize = 8.sp,
-                        color = labelColor.copy(alpha = 0.70f),
-                    )
-                )
-            }
-        }
-    }
-
+  }
 }
-
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
 private fun PreviewPillButtons() {
-    MonTheme {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            YomuPillButton(label = "読む", variant = PillVariant.Filled, onClick = {})
-            YomuPillButton(label = "保存", sublabel = "Save", variant = PillVariant.Filled, onClick = {})
-            YomuPillButton(label = "Cancel", variant = PillVariant.Outline, onClick = {})
-        }
+  MonTheme {
+    Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+      YomuPillButton(label = "読む", variant = PillVariant.Filled, onClick = {})
+      YomuPillButton(label = "保存", sublabel = "Save", variant = PillVariant.Filled, onClick = {})
+      YomuPillButton(label = "Cancel", variant = PillVariant.Outline, onClick = {})
     }
+  }
 }
