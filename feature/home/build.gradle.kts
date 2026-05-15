@@ -28,6 +28,7 @@ kotlin {
                 implementation(project(":core:ui"))
                 implementation(project(":core:model"))
                 implementation(project(":core:designsystem"))
+                implementation(project(":core:tokenizer"))
 
                 api(libs.compose.runtime)
                 api(libs.compose.foundation)

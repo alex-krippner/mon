@@ -5,4 +5,5 @@ data class MyToken(
   val partOfSpeech: List<String>,
   val normalizedForm: String,
   val reading: String,
+  val dictForm: String,
 )

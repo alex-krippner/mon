@@ -17,7 +17,7 @@ class HomeViewModel(private val tokenizeTextUseCase: TokenizeTextUseCase) :
 
   private fun tokenizeSampleText() {
     viewModelScope.launch {
-      val sampleText = "すもももももももものうち"
+      val sampleText = "新幹線"
       val tokens = tokenizeTextUseCase.execute(sampleText)
       mutableState.value = mutableState.value.copy(tokens = tokens)
     }

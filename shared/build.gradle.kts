@@ -43,14 +43,15 @@ kotlin {
 //    wasmJs {
 //        browser()
 //    }
+sourceSets {
 
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    dependencies {
+    commonMain.dependencies {
         implementation(project(":core:domain"))
         implementation(project(":feature:home"))
         implementation(project(":core:data"))
         implementation(project(":core:ui"))
         implementation(project(":core:designsystem"))
+        implementation(project(":core:tokenizer"))
 
         implementation(libs.compose.runtime)
         implementation(libs.compose.foundation)
@@ -62,6 +63,8 @@ kotlin {
         api(libs.koin.core)
 
     }
+}
+
 }
 
 dependencies {

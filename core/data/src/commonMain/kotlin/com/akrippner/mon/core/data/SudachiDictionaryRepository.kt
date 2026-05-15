@@ -12,12 +12,13 @@ class SudachiDictionaryRepository : DictionaryRepository {
   override fun getDictionary(): MyDictionary {
     return object : MyDictionary {
       override fun tokenize(text: String): List<MyToken> {
-        return sudachi.create().tokenize(Tokenizer.SplitMode.C, text).map { morpheme ->
+        return sudachi.create().tokenize(Tokenizer.SplitMode.A, text).map { morpheme ->
           MyToken(
             surface = morpheme.surface(),
             partOfSpeech = morpheme.partOfSpeech(),
             normalizedForm = morpheme.normalizedForm(),
             reading = morpheme.readingForm(),
+            dictForm = morpheme.dictionaryForm(),
           )
         }
       }

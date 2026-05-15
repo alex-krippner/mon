@@ -25,6 +25,7 @@ kotlin {
                 api(libs.koin.core)
                 implementation(project(":core:model"))
                 implementation(project(":core:data"))
+                implementation(project(":core:tokenizer"))
             }
         }
     }
