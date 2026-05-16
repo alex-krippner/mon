@@ -10,7 +10,7 @@ import org.koin.java.KoinJavaComponent.get
 fun createSudachiDictionary(): Dictionary {
   val context = get<Context>(Context::class.java)
   val sudachiJson = "sudachi.json"
-  val systemDict = "system.dic"
+  val systemDict = "system_core.dic"
 
   val config = Config.fromClasspath(sudachiJson)
 

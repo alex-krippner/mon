@@ -23,7 +23,6 @@ kotlin {
             dependencies {
                 implementation(project(":core:model"))
                 api(libs.koin.core)
-                implementation(libs.sudachi.core)
             }
         }
     }

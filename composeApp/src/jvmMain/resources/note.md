@@ -1,1 +1,0 @@
-move system_core.dic to shared or to a core directory

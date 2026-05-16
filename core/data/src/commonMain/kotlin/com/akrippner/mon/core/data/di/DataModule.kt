@@ -1,7 +1,6 @@
 package com.akrippner.mon.core.data.di
 
-import com.akrippner.mon.core.data.SudachiDictionaryRepository
-import com.akrippner.mon.core.data.model.DictionaryRepository
+import com.akrippner.mon.core.data.JapaneseDictionaryRepository
 import org.koin.dsl.module
 
-val dataModule = module { single<DictionaryRepository> { SudachiDictionaryRepository() } }
+val dataModule = module { single { JapaneseDictionaryRepository() } }
