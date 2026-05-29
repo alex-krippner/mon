@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.androidMultiplatformLibrary) apply false
     alias(libs.plugins.spotless)
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.androidx.room) apply false
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
