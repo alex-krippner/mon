@@ -22,6 +22,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(project(":core:model"))
+                implementation(project(":core:database"))
                 api(libs.koin.core)
             }
         }

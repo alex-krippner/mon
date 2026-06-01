@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity
 data class ReadingEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
-  val japanese: String,
+  val text: String,
   val translation: String,
   val title: String,
 )

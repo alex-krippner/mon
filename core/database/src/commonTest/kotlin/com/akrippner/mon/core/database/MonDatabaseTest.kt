@@ -34,7 +34,7 @@ class MonDatabaseTest {
     val dao = db.getReadingDao()
 
     // Replace with your actual Entity and DAO methods
-    val entity = ReadingEntity(japanese = "こんにちは", translation = "Hello", title = "Hello World")
+    val entity = ReadingEntity(text = "こんにちは", translation = "Hello", title = "Hello World")
     dao.insert(entity)
     val result = dao.getAll()
     assertEquals(1, result.size)
@@ -43,7 +43,7 @@ class MonDatabaseTest {
   @Test
   fun updateTest() = runTest {
     val dao = db.getReadingDao()
-    val entity = ReadingEntity(japanese = "こんにちは", translation = "Hello", title = "Hello World")
+    val entity = ReadingEntity(text = "こんにちは", translation = "Hello", title = "Hello World")
     val id = dao.insert(entity)
     val updatedEntity = entity.copy(translation = "Hallo", id = id)
     dao.update(updatedEntity)
@@ -54,7 +54,7 @@ class MonDatabaseTest {
   @Test
   fun deleteTest() = runTest {
     val dao = db.getReadingDao()
-    val entity = ReadingEntity(japanese = "こんにちは", translation = "Hello", title = "Hello World")
+    val entity = ReadingEntity(text = "こんにちは", translation = "Hello", title = "Hello World")
     val id = dao.insert(entity)
     dao.delete(entity.copy(id = id))
     val result = dao.getAll()
