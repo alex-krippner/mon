@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,6 +5,7 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -46,6 +45,7 @@ kotlin {
 sourceSets {
 
     commonMain.dependencies {
+        implementation(project(":core:navigation"))
         implementation(project(":core:domain"))
         implementation(project(":feature:home"))
         implementation(project(":core:data"))
@@ -62,6 +62,9 @@ sourceSets {
         implementation(libs.compose.uiToolingPreview)
         implementation(libs.androidx.lifecycle.runtimeCompose)
         api(libs.koin.core)
+        implementation(libs.koin.compose)
+        implementation(libs.navigation3.ui)
+        implementation(libs.kotlinx.serialization.json)
 
     }
 }
