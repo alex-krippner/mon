@@ -11,6 +11,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -66,6 +67,24 @@ class MonDatabaseTest {
 
     assertEquals("user-1", first.id)
     assertEquals(first, second)
+  }
+
+  @Test
+  fun getLocalUser_returnsEarliestCreatedUser() = runTest {
+    val dao = db.getUserDao()
+    dao.insert(UserEntity("b", createdAt = 2))
+    dao.insert(UserEntity("a", createdAt = 1))
+
+    assertEquals("a", dao.getLocalUser()?.id)
+  }
+
+  @Test
+  fun insertUsage_forMissingReading_throws() = runTest {
+    val user = createUser()
+
+    assertFailsWith<Exception> {
+      db.getReadingUsageDao().insertUsage(ReadingUsageEntity("u1", user.id, "missing", usedAt = 1))
+    }
   }
 
   @Test

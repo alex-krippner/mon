@@ -8,7 +8,8 @@ import com.akrippner.mon.core.database.entity.UserEntity
 
 @Dao
 abstract class UserDao {
-  @Query("SELECT * FROM user LIMIT 1") abstract suspend fun getLocalUser(): UserEntity?
+  @Query("SELECT * FROM user ORDER BY createdAt, id LIMIT 1")
+  abstract suspend fun getLocalUser(): UserEntity?
 
   @Insert abstract suspend fun insert(user: UserEntity)
 
