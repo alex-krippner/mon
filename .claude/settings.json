@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew spotlessCheck:*)",
+      "Bash(./gradlew spotlessApply:*)",
+      "Bash(./gradlew -q --console=plain spotlessCheck:*)",
+      "Bash(./gradlew -q --console=plain spotlessApply:*)",
+      "Bash(./gradlew -q --console=plain :core:database:jvmTest:*)",
+      "Bash(./gradlew :core:database:jvmTest:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ],
+    "deny": [
+      "Read(./shared/src/commonMain/resources/**/*.dic)",
+      "Read(./**/build/**)",
+      "Read(./.gradle/**)",
+      "Read(./.kotlin/**)",
+      "Read(./.idea/**)",
+      "Read(./core/designsystem/**/*.generated.kt)",
+      "Read(./local.properties)"
+    ]
+  },
+  "model": "opusplan",
+  "enabledPlugins": {
+    "kotlin-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/format-kotlin.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
