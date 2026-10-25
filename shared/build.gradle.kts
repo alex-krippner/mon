@@ -48,6 +48,7 @@ sourceSets {
         implementation(project(":core:navigation"))
         implementation(project(":core:domain"))
         implementation(project(":feature:library"))
+        implementation(project(":feature:addreading"))
         implementation(project(":core:data"))
         implementation(project(":core:ui"))
         implementation(project(":core:designsystem"))

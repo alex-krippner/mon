@@ -24,8 +24,15 @@ kotlin {
                 // Domain layer dependencies
                 api(libs.koin.core)
                 implementation(project(":core:model"))
+                implementation(project(":core:data"))
                 implementation(project(":core:tokenizer"))
+                implementation(libs.kotlinx.coroutines.core)
             }
+        }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
