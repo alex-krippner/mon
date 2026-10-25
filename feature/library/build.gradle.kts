@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "com.akrippner.mon.feature.home"
+        namespace = "com.akrippner.mon.feature.library"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions {
@@ -24,13 +24,9 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(project(":core:data"))
-                implementation(project(":core:domain"))
-                implementation(project(":core:ui"))
-                implementation(project(":core:model"))
                 implementation(project(":core:designsystem"))
-                implementation(project(":core:tokenizer"))
                 api(project(":core:arch"))
-
+                implementation(project(":core:model"))
                 api(libs.compose.runtime)
                 api(libs.compose.foundation)
                 api(libs.compose.material3)

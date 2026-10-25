@@ -47,7 +47,7 @@ sourceSets {
     commonMain.dependencies {
         implementation(project(":core:navigation"))
         implementation(project(":core:domain"))
-        implementation(project(":feature:home"))
+        implementation(project(":feature:library"))
         implementation(project(":core:data"))
         implementation(project(":core:ui"))
         implementation(project(":core:designsystem"))

@@ -5,4 +5,4 @@ import kotlinx.serialization.Serializable
 
 @Serializable sealed interface MonNavKey : NavKey
 
-@Serializable data object Home : MonNavKey
+@Serializable data object Library : MonNavKey
