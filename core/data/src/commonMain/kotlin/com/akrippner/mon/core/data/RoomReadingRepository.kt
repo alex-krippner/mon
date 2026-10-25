@@ -2,7 +2,7 @@ package com.akrippner.mon.core.data
 
 import com.akrippner.mon.core.data.internal.newId
 import com.akrippner.mon.core.data.internal.nowMillis
-import com.akrippner.mon.core.data.mapper.toDomain
+import com.akrippner.mon.core.data.mapper.toDomainOrNull
 import com.akrippner.mon.core.data.mapper.toEntity
 import com.akrippner.mon.core.database.dao.ReadingDao
 import com.akrippner.mon.core.database.dao.ReadingUsageDao
@@ -26,7 +26,7 @@ internal class RoomReadingRepository(
     val userId = userRepository.currentUserId()
     emitAll(
       readingDao.observeReadingsWithTokens(userId).map { readings ->
-        readings.map { it.toDomain() }
+        readings.mapNotNull { it.toDomainOrNull() }
       }
     )
   }

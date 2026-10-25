@@ -6,17 +6,21 @@ import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
 
-internal fun ReadingWithTokens.toDomain(): Reading =
-  Reading(
+/** Returns null if the stored languages are not supported, so one bad row cannot hide the rest. */
+internal fun ReadingWithTokens.toDomainOrNull(): Reading? {
+  val sourceLanguage = Language.fromTagOrNull(reading.sourceLanguage) ?: return null
+  val translationLanguage = Language.fromTagOrNull(reading.translationLanguage) ?: return null
+  return Reading(
     id = reading.id,
     title = reading.title,
     text = reading.text,
     translation = reading.translation,
-    sourceLanguage = Language.fromTag(reading.sourceLanguage),
-    translationLanguage = Language.fromTag(reading.translationLanguage),
+    sourceLanguage = sourceLanguage,
+    translationLanguage = translationLanguage,
     tokens = tokens.sortedBy { it.tokenIndex }.map { it.toDomain() },
     createdAt = reading.createdAt,
   )
+}
 
 internal fun ReadingTokenEntity.toDomain(): MonToken =
   MonToken(

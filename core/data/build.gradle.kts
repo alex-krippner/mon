@@ -21,11 +21,15 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":core:model"))
+                api(project(":core:model"))
                 implementation(project(":core:database"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.koin.core)
             }
+        }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }
