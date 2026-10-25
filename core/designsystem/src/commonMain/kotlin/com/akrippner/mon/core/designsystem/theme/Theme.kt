@@ -16,6 +16,9 @@ object MonTheme {
   val typography: TypographyTokens
     @Composable get() = LocalMonTheme.current.typography
 
+  val radii: Radii
+    @Composable get() = LocalMonTheme.current.radii
+
   val sizes: Sizes
     @Composable get() = LocalMonTheme.current.sizes
 
@@ -27,7 +30,13 @@ object MonTheme {
 fun MonTheme(content: @Composable () -> Unit) {
   val colors = lightMonColors
   val theme =
-    MonThemeData(colors = colors, typography = MonTypography, sizes = sizes, space = space)
+    MonThemeData(
+      colors = colors,
+      typography = MonTypography,
+      sizes = sizes,
+      space = space,
+      radii = radii,
+    )
 
   CompositionLocalProvider(LocalMonTheme provides theme) { content() }
 }

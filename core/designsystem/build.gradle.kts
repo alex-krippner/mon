@@ -196,11 +196,8 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(libs.compose.uiToolingPreview)
+                implementation(libs.compose.uiTooling)
             }
         }
     }
 }
-
-
-
-

@@ -9,6 +9,9 @@ data class Sizes(
   val iconMedium: Dp,
   val iconLarge: Dp,
   val iconExtraLarge: Dp,
+  val buttonSmall: Dp,
+  val buttonMedium: Dp,
+  val buttonLarge: Dp,
 )
 
 val sizes =
@@ -18,4 +21,7 @@ val sizes =
     iconMedium = 48.dp,
     iconLarge = 64.dp,
     iconExtraLarge = 80.dp,
+    buttonSmall = 24.dp,
+    buttonMedium = 32.dp,
+    buttonLarge = 48.dp,
   )

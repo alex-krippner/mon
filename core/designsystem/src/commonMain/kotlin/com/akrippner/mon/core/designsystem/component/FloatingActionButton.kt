@@ -15,7 +15,7 @@ import com.akrippner.mon.core.designsystem.icon.MonIcon
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun YomuFAB(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun FloatingActionButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
   FloatingActionButton(
     onClick = onClick,
     shape = CircleShape,
@@ -34,6 +34,6 @@ fun YomuFAB(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
-private fun PreviewFAB() {
-  MonTheme { Surface { YomuFAB(onClick = {}, modifier = Modifier.padding(16.dp)) } }
+private fun PreviewFloatingActionButton() {
+  MonTheme { Surface { FloatingActionButton(onClick = {}, modifier = Modifier.padding(16.dp)) } }
 }

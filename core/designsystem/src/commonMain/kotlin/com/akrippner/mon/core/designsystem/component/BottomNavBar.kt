@@ -20,7 +20,7 @@ import com.akrippner.mon.core.designsystem.icon.IconId
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable
-fun YomuBottomNavBar(
+fun BottomNavBar(
   selectedTab: String,
   onTabSelected: (String) -> Unit,
   navTabs: List<IconId>,
@@ -58,10 +58,6 @@ private fun PreviewBottomNavBar() {
     selectedTab = tab
   }
   MonTheme {
-    YomuBottomNavBar(
-      selectedTab = selectedTab,
-      navTabs = navTabs,
-      onTabSelected = { onSelected(it) },
-    )
+    BottomNavBar(selectedTab = selectedTab, navTabs = navTabs, onTabSelected = { onSelected(it) })
   }
 }

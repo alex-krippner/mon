@@ -5,6 +5,7 @@ import androidx.compose.ui.text.TextStyle
 data class MonThemeData(
   val colors: MonColors,
   val typography: TypographyTokens,
+  val radii: Radii,
   val sizes: Sizes,
   val space: Space,
 )
