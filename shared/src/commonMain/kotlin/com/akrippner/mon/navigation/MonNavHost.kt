@@ -14,7 +14,7 @@ import com.akrippner.mon.feature.home.HomeViewModel
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 private val navSavedStateConfiguration = SavedStateConfiguration {
   serializersModule = SerializersModule {
@@ -34,7 +34,7 @@ fun MonNavHost() {
     entryProvider =
       entryProvider {
         entry<Home> {
-          val homeViewModel = koinInject<HomeViewModel>()
+          val homeViewModel = koinViewModel<HomeViewModel>()
           HomeScreen(viewModel = homeViewModel)
         }
       },

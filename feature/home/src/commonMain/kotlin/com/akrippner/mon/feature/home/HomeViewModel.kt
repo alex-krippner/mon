@@ -1,25 +1,24 @@
 package com.akrippner.mon.feature.home
 
+import androidx.lifecycle.viewModelScope
+import com.akrippner.mon.core.arch.mvi.BaseViewModel
 import com.akrippner.mon.core.domain.usecase.TokenizeTextUseCase
-import com.akrippner.mon.feature.home.viewmodel.BaseViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel(private val tokenizeTextUseCase: TokenizeTextUseCase) :
-  BaseViewModel<HomeState, HomeEffect>() {
-  override val mutableState = MutableStateFlow(HomeState())
-  override val effect = MutableSharedFlow<HomeEffect>()
+  BaseViewModel<HomeState, HomeIntent>(initialState = HomeState()) {
 
   init {
     tokenizeSampleText()
   }
 
+  override fun onIntent(intent: HomeIntent) = Unit
+
   private fun tokenizeSampleText() {
     viewModelScope.launch {
       val sampleText = "新幹線"
       val tokens = tokenizeTextUseCase.execute(sampleText)
-      mutableState.value = mutableState.value.copy(tokens = tokens)
+      updateState { copy(tokens = tokens) }
     }
   }
 }

@@ -29,6 +29,7 @@ kotlin {
                 implementation(project(":core:model"))
                 implementation(project(":core:designsystem"))
                 implementation(project(":core:tokenizer"))
+                api(project(":core:arch"))
 
                 api(libs.compose.runtime)
                 api(libs.compose.foundation)
@@ -38,6 +39,7 @@ kotlin {
 
                 api(libs.koin.core)
                 api(libs.koin.compose)
+                api(libs.koin.compose.viewmodel)
 
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
             }
