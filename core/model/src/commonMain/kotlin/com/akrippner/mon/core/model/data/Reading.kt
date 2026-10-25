@@ -5,8 +5,8 @@ data class Reading(
   val title: String,
   val text: String,
   val translation: String,
-  val sourceLanguage: String,
-  val translationLanguage: String,
+  val sourceLanguage: Language,
+  val translationLanguage: Language,
   val tokens: List<MonToken>,
   val createdAt: Long,
 )

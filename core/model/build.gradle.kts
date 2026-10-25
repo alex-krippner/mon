@@ -24,5 +24,9 @@ kotlin {
             dependencies {
                 api(libs.koin.core) }
         }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
     }
 }

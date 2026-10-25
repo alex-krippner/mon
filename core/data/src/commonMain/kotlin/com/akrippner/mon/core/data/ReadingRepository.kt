@@ -8,6 +8,7 @@ import com.akrippner.mon.core.database.dao.ReadingDao
 import com.akrippner.mon.core.database.dao.ReadingUsageDao
 import com.akrippner.mon.core.database.entity.ReadingEntity
 import com.akrippner.mon.core.database.entity.ReadingUsageEntity
+import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,8 +38,8 @@ class ReadingRepository(
     title: String,
     text: String,
     translation: String,
-    sourceLanguage: String,
-    translationLanguage: String,
+    sourceLanguage: Language,
+    translationLanguage: Language,
     tokens: List<MonToken>,
   ): String {
     val readingId = newId()
@@ -51,8 +52,8 @@ class ReadingRepository(
           title = title,
           text = text,
           translation = translation,
-          sourceLanguage = sourceLanguage,
-          translationLanguage = translationLanguage,
+          sourceLanguage = sourceLanguage.tag,
+          translationLanguage = translationLanguage.tag,
           createdAt = now,
           updatedAt = now,
         ),

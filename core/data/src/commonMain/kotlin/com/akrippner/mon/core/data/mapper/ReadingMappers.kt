@@ -2,6 +2,7 @@ package com.akrippner.mon.core.data.mapper
 
 import com.akrippner.mon.core.database.entity.ReadingTokenEntity
 import com.akrippner.mon.core.database.entity.ReadingWithTokens
+import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
 
@@ -11,8 +12,8 @@ internal fun ReadingWithTokens.toDomain(): Reading =
     title = reading.title,
     text = reading.text,
     translation = reading.translation,
-    sourceLanguage = reading.sourceLanguage,
-    translationLanguage = reading.translationLanguage,
+    sourceLanguage = Language.fromTag(reading.sourceLanguage),
+    translationLanguage = Language.fromTag(reading.translationLanguage),
     tokens = tokens.sortedBy { it.tokenIndex }.map { it.toDomain() },
     createdAt = reading.createdAt,
   )
