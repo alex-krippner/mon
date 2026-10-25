@@ -23,6 +23,7 @@ kotlin {
             dependencies {
                 implementation(project(":core:model"))
                 implementation(project(":core:database"))
+                api(libs.kotlinx.coroutines.core)
                 api(libs.koin.core)
             }
         }

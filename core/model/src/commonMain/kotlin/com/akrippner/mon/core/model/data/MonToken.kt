@@ -1,9 +1,8 @@
 package com.akrippner.mon.core.model.data
 
-data class MyToken(
+data class MonToken(
   val surface: String,
+  val dictionaryForm: String,
+  val pronunciation: String,
   val partOfSpeech: List<String>,
-  val normalizedForm: String,
-  val reading: String,
-  val dictForm: String,
 )

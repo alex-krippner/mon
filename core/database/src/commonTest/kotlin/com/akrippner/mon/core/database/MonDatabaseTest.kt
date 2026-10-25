@@ -4,10 +4,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.akrippner.mon.core.database.entity.ReadingEntity
+import com.akrippner.mon.core.database.entity.ReadingTokenEntity
+import com.akrippner.mon.core.database.entity.ReadingUsageEntity
+import com.akrippner.mon.core.database.entity.UserEntity
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 
 class MonDatabaseTest {
@@ -15,11 +20,9 @@ class MonDatabaseTest {
 
   @BeforeTest
   fun setup() {
-    // 1. Create the in-memory builder
     val builder: RoomDatabase.Builder<MonDatabase> =
       Room.inMemoryDatabaseBuilder<MonDatabase>(factory = MonDatabaseConstructor::initialize)
 
-    // 2. Configure the driver and build
     // We use BundledSQLiteDriver so the behavior is identical on Android and JVM
     db = builder.setDriver(BundledSQLiteDriver()).build()
   }
@@ -29,35 +32,100 @@ class MonDatabaseTest {
     db.close()
   }
 
-  @Test
-  fun insertAndReadTest() = runTest {
-    val dao = db.getReadingDao()
+  private suspend fun createUser(id: String = "user-1"): UserEntity {
+    return db.getUserDao().getOrCreateLocalUser(UserEntity(id = id, createdAt = 0))
+  }
 
-    // Replace with your actual Entity and DAO methods
-    val entity = ReadingEntity(text = "こんにちは", translation = "Hello", title = "Hello World")
-    dao.insert(entity)
-    val result = dao.getAll()
-    assertEquals(1, result.size)
+  private fun reading(id: String, userId: String = "user-1", createdAt: Long = 0) =
+    ReadingEntity(
+      id = id,
+      userId = userId,
+      title = "Title $id",
+      text = "こんにちは",
+      translation = "Hello",
+      sourceLanguage = "ja",
+      translationLanguage = "en",
+      createdAt = createdAt,
+      updatedAt = createdAt,
+    )
+
+  private fun token(readingId: String, index: Int, surface: String = "新幹線") =
+    ReadingTokenEntity(
+      readingId = readingId,
+      tokenIndex = index,
+      surface = surface,
+      pronunciation = "しんかんせん",
+      dictionaryForm = surface,
+      partOfSpeech = listOf("名詞", "普通名詞"),
+    )
+
+  @Test
+  fun getOrCreateLocalUser_isIdempotent() = runTest {
+    val first = createUser("user-1")
+    val second = createUser("user-2")
+
+    assertEquals("user-1", first.id)
+    assertEquals(first, second)
   }
 
   @Test
-  fun updateTest() = runTest {
+  fun insertReadingWithTokens_returnsTokensInOrder() = runTest {
+    val user = createUser()
     val dao = db.getReadingDao()
-    val entity = ReadingEntity(text = "こんにちは", translation = "Hello", title = "Hello World")
-    val id = dao.insert(entity)
-    val updatedEntity = entity.copy(translation = "Hallo", id = id)
-    dao.update(updatedEntity)
-    val result = dao.getAll()
-    assertEquals("Hallo", result[0].translation)
+
+    dao.insertReadingWithTokens(
+      reading("r1"),
+      listOf(token("r1", 1, "は"), token("r1", 0, "私"), token("r1", 2, "学生")),
+    )
+
+    val tokens = dao.getTokens("r1")
+    assertEquals(listOf("私", "は", "学生"), tokens.map { it.surface })
+    assertEquals(listOf("名詞", "普通名詞"), tokens[0].partOfSpeech)
+    assertEquals(user.id, dao.observeReadingsWithTokens(user.id).first().single().reading.userId)
   }
 
   @Test
-  fun deleteTest() = runTest {
+  fun observeReadingsWithTokens_returnsOnlyThatUsersReadingsNewestFirst() = runTest {
+    createUser("user-1")
+    db.getUserDao().insert(UserEntity("user-2", createdAt = 0))
     val dao = db.getReadingDao()
-    val entity = ReadingEntity(text = "こんにちは", translation = "Hello", title = "Hello World")
-    val id = dao.insert(entity)
-    dao.delete(entity.copy(id = id))
-    val result = dao.getAll()
-    assertEquals(0, result.size)
+
+    dao.insertReadingWithTokens(reading("old", createdAt = 1), listOf(token("old", 0)))
+    dao.insertReadingWithTokens(reading("new", createdAt = 2), listOf(token("new", 0)))
+    dao.insertReadingWithTokens(reading("other", "user-2"), emptyList())
+
+    val result = dao.observeReadingsWithTokens("user-1").first()
+    assertEquals(listOf("new", "old"), result.map { it.reading.id })
+    assertEquals(1, result[0].tokens.size)
+  }
+
+  @Test
+  fun deleteReading_cascadesToTokensAndUsage() = runTest {
+    val user = createUser()
+    val dao = db.getReadingDao()
+    val usageDao = db.getReadingUsageDao()
+    dao.insertReadingWithTokens(reading("r1"), listOf(token("r1", 0)))
+    usageDao.insertUsage(ReadingUsageEntity("u1", user.id, "r1", usedAt = 10))
+
+    dao.deleteById("r1")
+
+    assertEquals(emptyList(), dao.getTokens("r1"))
+    assertEquals(0, usageDao.getUsageCount("r1").first())
+    assertEquals(emptyList(), dao.observeReadingsWithTokens(user.id).first())
+  }
+
+  @Test
+  fun usage_tracksCountAndLastUsed() = runTest {
+    val user = createUser()
+    db.getReadingDao().insertReadingWithTokens(reading("r1"), emptyList())
+    val usageDao = db.getReadingUsageDao()
+    assertNull(usageDao.getLastUsedTimestamp("r1"))
+
+    usageDao.insertUsage(ReadingUsageEntity("u1", user.id, "r1", usedAt = 10))
+    usageDao.insertUsage(ReadingUsageEntity("u2", user.id, "r1", usedAt = 20))
+
+    assertEquals(2, usageDao.getUsageCount("r1").first())
+    assertEquals(20L, usageDao.getLastUsedTimestamp("r1"))
+    assertEquals(listOf("u2", "u1"), usageDao.getUsageHistoryForReading("r1").first().map { it.id })
   }
 }
