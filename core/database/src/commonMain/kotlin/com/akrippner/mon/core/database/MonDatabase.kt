@@ -40,7 +40,9 @@ fun getRoomDatabase(builder: RoomDatabase.Builder<MonDatabase>): MonDatabase {
   return builder
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)
-    // TODO: replace with real migrations before the first release.
-    .fallbackToDestructiveMigration(dropAllTables = true)
+    .addMigrations(*MIGRATIONS)
+    // Version 1 was a prototype schema whose data cannot be mapped to the current model. Every
+    // later version must be migrated, so that user data is never dropped.
+    .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1)
     .build()
 }

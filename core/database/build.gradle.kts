@@ -31,6 +31,10 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
 
+        jvmTest.dependencies {
+            implementation(libs.androidx.room.testing)
+        }
+
         androidMain.dependencies {
             // Optional when using Room SQLite Wrapper
             implementation(libs.androidx.room.sqlite.wrapper)
