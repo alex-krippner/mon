@@ -23,9 +23,9 @@ kotlin {
             dependencies {
                 // Domain layer dependencies
                 implementation(libs.koin.core)
-                implementation(project(":core:model"))
-                implementation(project(":core:data"))
-                implementation(project(":core:tokenizer"))
+                implementation(projects.core.model)
+                implementation(projects.core.data)
+                implementation(projects.core.tokenizer)
                 implementation(libs.kotlinx.coroutines.core)
             }
         }

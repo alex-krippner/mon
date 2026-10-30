@@ -23,10 +23,10 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":core:data"))
-                implementation(project(":core:designsystem"))
-                api(project(":core:arch"))
-                implementation(project(":core:model"))
+                implementation(projects.core.data)
+                implementation(projects.core.designsystem)
+                api(projects.core.arch)
+                implementation(projects.core.model)
                 api(libs.compose.runtime)
                 api(libs.compose.foundation)
                 api(libs.compose.material3)

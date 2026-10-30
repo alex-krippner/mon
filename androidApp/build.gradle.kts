@@ -14,7 +14,7 @@ kotlin {
     }
 
     dependencies {
-        implementation(project(":shared"))
+        implementation(projects.shared)
         implementation(libs.koin.core)
         implementation(libs.koin.android)
         implementation(libs.androidx.activity.compose)

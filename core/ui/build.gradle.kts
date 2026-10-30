@@ -29,7 +29,7 @@ kotlin {
                 api(libs.compose.ui)
 
                 implementation(libs.compose.uiToolingPreview)
-                implementation(project(":core:designsystem"))
+                implementation(projects.core.designsystem)
             }
         }
     }

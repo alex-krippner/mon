@@ -45,15 +45,15 @@ kotlin {
 sourceSets {
 
     commonMain.dependencies {
-        implementation(project(":core:navigation"))
-        implementation(project(":core:domain"))
-        implementation(project(":feature:library"))
-        implementation(project(":feature:addreading"))
-        implementation(project(":core:data"))
-        implementation(project(":core:ui"))
-        implementation(project(":core:designsystem"))
-        implementation(project(":core:tokenizer"))
-        implementation(project(":core:database"))
+        implementation(projects.core.navigation)
+        implementation(projects.core.domain)
+        implementation(projects.feature.library)
+        implementation(projects.feature.addreading)
+        implementation(projects.core.data)
+        implementation(projects.core.ui)
+        implementation(projects.core.designsystem)
+        implementation(projects.core.tokenizer)
+        implementation(projects.core.database)
 
         implementation(libs.compose.runtime)
         implementation(libs.compose.foundation)

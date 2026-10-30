@@ -34,7 +34,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
                 implementation(libs.koin.core)
-                api(project(":core:model"))
+                api(projects.core.model)
         }
 
         val jvmAndAndroidMain by getting {

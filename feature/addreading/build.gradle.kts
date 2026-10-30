@@ -19,9 +19,9 @@ kotlin {
 
   sourceSets {
     commonMain.dependencies {
-      implementation(project(":core:domain"))
-      implementation(project(":core:model"))
-      api(project(":core:arch"))
+      implementation(projects.core.domain)
+      implementation(projects.core.model)
+      api(projects.core.arch)
 
       implementation(libs.compose.runtime)
       implementation(libs.compose.foundation)
@@ -37,8 +37,8 @@ kotlin {
     commonTest.dependencies {
       implementation(kotlin("test"))
       implementation(libs.kotlinx.coroutines.test)
-      implementation(project(":core:data"))
-      implementation(project(":core:tokenizer"))
+      implementation(projects.core.data)
+      implementation(projects.core.tokenizer)
     }
   }
 }
