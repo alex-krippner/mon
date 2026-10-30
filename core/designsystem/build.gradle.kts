@@ -188,7 +188,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(libs.koin.core)
                 api(libs.compose.runtime)
                 api(libs.compose.foundation)
                 api(libs.compose.material3)

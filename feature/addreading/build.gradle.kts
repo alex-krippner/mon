@@ -23,15 +23,14 @@ kotlin {
       implementation(project(":core:model"))
       api(project(":core:arch"))
 
-      api(libs.compose.runtime)
-      api(libs.compose.foundation)
-      api(libs.compose.material3)
-      api(libs.compose.ui)
-      api(libs.compose.uiToolingPreview)
+      implementation(libs.compose.runtime)
+      implementation(libs.compose.foundation)
+      implementation(libs.compose.material3)
+      implementation(libs.compose.ui)
+      implementation(libs.compose.uiToolingPreview)
 
-      api(libs.koin.core)
-      api(libs.koin.compose)
-      api(libs.koin.compose.viewmodel)
+      implementation(libs.koin.core)
+      implementation(libs.koin.compose.viewmodel)
       implementation(libs.androidx.lifecycle.viewmodelCompose)
     }
 

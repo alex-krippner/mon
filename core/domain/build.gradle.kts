@@ -22,7 +22,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 // Domain layer dependencies
-                api(libs.koin.core)
+                implementation(libs.koin.core)
                 implementation(project(":core:model"))
                 implementation(project(":core:data"))
                 implementation(project(":core:tokenizer"))

@@ -34,8 +34,8 @@ kotlin {
                 api(libs.compose.uiToolingPreview)
 
                 api(libs.koin.core)
-                api(libs.koin.compose)
-                api(libs.koin.compose.viewmodel)
+                implementation(libs.koin.compose)
+                implementation(libs.koin.compose.viewmodel)
 
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
             }

@@ -33,7 +33,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-                api(libs.koin.core)
+                implementation(libs.koin.core)
                 api(project(":core:model"))
         }
 
