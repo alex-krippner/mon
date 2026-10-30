@@ -1,7 +1,6 @@
 package com.akrippner.mon.feature.addreading
 
 import com.akrippner.mon.core.domain.usecase.AddReadingUseCase
-import com.akrippner.mon.core.domain.usecase.TokenizeTextUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -27,7 +26,7 @@ class AddReadingViewModelTest {
     val useCase =
       AddReadingUseCase(
         repository = repository,
-        tokenizeText = TokenizeTextUseCase(FakeTokenizer()),
+        tokenizer = FakeTokenizer(),
         tokenizeDispatcher = testDispatcher,
       )
     viewModel = AddReadingViewModel(useCase)

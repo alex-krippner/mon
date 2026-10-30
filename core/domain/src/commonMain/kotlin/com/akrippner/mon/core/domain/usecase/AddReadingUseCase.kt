@@ -4,7 +4,7 @@ import com.akrippner.mon.core.data.ReadingRepository
 import com.akrippner.mon.core.domain.model.AddReadingInput
 import com.akrippner.mon.core.domain.model.AddReadingInputError
 import com.akrippner.mon.core.domain.model.AddReadingResult
-import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.tokenizer.Tokenizer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,7 +12,7 @@ import kotlinx.coroutines.withContext
 /** Validates a new reading, tokenizes its text and stores both. */
 class AddReadingUseCase(
   private val repository: ReadingRepository,
-  private val tokenizeText: TokenizeTextUseCase,
+  private val tokenizer: Tokenizer,
   private val tokenizeDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
   suspend fun execute(input: AddReadingInput): AddReadingResult {
@@ -26,16 +26,7 @@ class AddReadingUseCase(
     }
     if (errors.isNotEmpty()) return AddReadingResult.Invalid(errors)
 
-    val tokens =
-      withContext(tokenizeDispatcher) { tokenizeText.execute(text) }
-        .map { token ->
-          MonToken(
-            surface = token.text,
-            dictionaryForm = token.dictionaryForm,
-            pronunciation = token.readingForm,
-            partOfSpeech = token.partOfSpeech,
-          )
-        }
+    val tokens = withContext(tokenizeDispatcher) { tokenizer.tokenize(text) }
 
     val readingId =
       repository.addReading(

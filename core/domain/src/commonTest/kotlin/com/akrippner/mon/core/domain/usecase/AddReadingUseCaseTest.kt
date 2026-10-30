@@ -1,13 +1,13 @@
 package com.akrippner.mon.core.domain.usecase
 
 import com.akrippner.mon.core.domain.fake.FakeReadingRepository
-import com.akrippner.mon.core.domain.fake.FakeToken
 import com.akrippner.mon.core.domain.fake.FakeTokenizer
 import com.akrippner.mon.core.domain.model.AddReadingInput
 import com.akrippner.mon.core.domain.model.AddReadingInputError
 import com.akrippner.mon.core.domain.model.AddReadingResult
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
+import kotlin.collections.emptyList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,8 +20,8 @@ class AddReadingUseCaseTest {
   private val tokenizer =
     FakeTokenizer(
       listOf(
-        FakeToken("私", dictionaryForm = "私", readingForm = "わたし", partOfSpeech = listOf("代名詞")),
-        FakeToken("は", readingForm = "ワ", partOfSpeech = listOf("助詞")),
+        MonToken("私", dictionaryForm = "私", pronunciation = "わたし", partOfSpeech = listOf("代名詞")),
+        MonToken("は", dictionaryForm = "は", pronunciation = "ワ", partOfSpeech = listOf("助詞")),
       )
     )
 
@@ -37,7 +37,7 @@ class AddReadingUseCaseTest {
   private fun TestScope.useCase() =
     AddReadingUseCase(
       repository = repository,
-      tokenizeText = TokenizeTextUseCase(tokenizer),
+      tokenizer = tokenizer,
       tokenizeDispatcher = UnconfinedTestDispatcher(testScheduler),
     )
 

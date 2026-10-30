@@ -1,3 +1,5 @@
+import com.android.build.api.withAndroid
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -18,10 +20,27 @@ kotlin {
     }
     jvm()
 
+    // Sudachi is a JVM library, so both targets share the code that uses it.
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvmAndAndroid") {
+                withJvm()
+                withAndroid()
+            }
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
                 api(libs.koin.core)
+                api(project(":core:model"))
+        }
+
+        val jvmAndAndroidMain by getting {
+            dependencies {
                 implementation(libs.sudachi.core)
+            }
         }
     }
 }
