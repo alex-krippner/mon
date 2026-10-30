@@ -147,4 +147,32 @@ class MonDatabaseTest {
     assertEquals(20L, usageDao.getLastUsedTimestamp("r1"))
     assertEquals(listOf("u2", "u1"), usageDao.getUsageHistoryForReading("r1").first().map { it.id })
   }
+
+  @Test
+  fun observeReadingSummaries_fetchesOrderedReadingsBasedOnUserId() = runTest {
+    createUser("user-1")
+    db.getUserDao().insert(UserEntity("user-2", createdAt = 0))
+    val dao = db.getReadingDao()
+
+    dao.insertReadingWithTokens(
+      reading("old", createdAt = 1),
+      listOf(
+        token("old", 0),
+        ReadingTokenEntity(
+          readingId = "old",
+          tokenIndex = 1,
+          surface = "家",
+          partOfSpeech = listOf("noun"),
+          dictionaryForm = "いえ",
+          pronunciation = "いえ",
+        ),
+      ),
+    )
+    dao.insertReadingWithTokens(reading("new", createdAt = 2), emptyList())
+    dao.insertReadingWithTokens(reading("other", "user-2"), emptyList())
+
+    val result = dao.observeReadingSummaries(userId = "user-1").first()
+
+    assertEquals(listOf("new" to 0, "old" to 2), result.map { it.id to it.tokenCount })
+  }
 }

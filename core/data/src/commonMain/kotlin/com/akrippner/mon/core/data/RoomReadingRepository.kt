@@ -11,24 +11,30 @@ import com.akrippner.mon.core.database.entity.ReadingUsageEntity
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
+import com.akrippner.mon.core.model.data.ReadingSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
+// TODO: Move to the internal directory?
 internal class RoomReadingRepository(
   private val readingDao: ReadingDao,
   private val readingUsageDao: ReadingUsageDao,
   private val userRepository: UserRepository,
 ) : ReadingRepository {
 
-  override fun observeReadings(): Flow<List<Reading>> = flow {
+  override fun observeReadingSummaries(): Flow<List<ReadingSummary>> = flow {
     val userId = userRepository.currentUserId()
     emitAll(
-      readingDao.observeReadingsWithTokens(userId).map { readings ->
-        readings.mapNotNull { it.toDomainOrNull() }
+      readingDao.observeReadingSummaries(userId).map { rows ->
+        rows.mapNotNull { it.toDomainOrNull() }
       }
     )
+  }
+
+  override suspend fun getReading(readingId: String): Reading? {
+    return readingDao.getReadingWithTokens(readingId = readingId)?.toDomainOrNull()
   }
 
   override suspend fun addReading(

@@ -3,11 +3,15 @@ package com.akrippner.mon.core.data
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
+import com.akrippner.mon.core.model.data.ReadingSummary
 import kotlinx.coroutines.flow.Flow
 
+// TODO: Create and move to a directory for exposed interfaces
 interface ReadingRepository {
   /** Emits the current user's readings, newest first, whenever they change. */
-  fun observeReadings(): Flow<List<Reading>>
+  fun observeReadingSummaries(): Flow<List<ReadingSummary>>
+
+  suspend fun getReading(readingId: String): Reading?
 
   /** Stores a reading with its tokens atomically and returns the id of the new reading. */
   suspend fun addReading(

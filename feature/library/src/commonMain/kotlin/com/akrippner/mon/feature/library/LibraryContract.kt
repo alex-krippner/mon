@@ -1,11 +1,11 @@
 package com.akrippner.mon.feature.library
 
 import androidx.compose.runtime.Immutable
-import com.akrippner.mon.core.model.data.Reading
+import com.akrippner.mon.core.model.data.ReadingSummary
 
 @Immutable
 data class LibraryState(
-  val readings: List<Reading> = emptyList(),
+  val readings: List<ReadingSummary> = emptyList(),
   val isLoading: Boolean = true,
   val errorMessage: String? = null,
 )

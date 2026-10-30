@@ -14,7 +14,7 @@ class LibraryViewModel(private val repository: ReadingRepository) :
 
   init {
     repository
-      .observeReadings()
+      .observeReadingSummaries()
       .catch { error ->
         updateState {
           copy(isLoading = false, errorMessage = error.message ?: "Could not load readings.")

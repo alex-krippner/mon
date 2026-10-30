@@ -25,7 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.modifier.conditional
+import com.akrippner.mon.core.designsystem.conditional
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @DslMarker private annotation class SlotSheetScope

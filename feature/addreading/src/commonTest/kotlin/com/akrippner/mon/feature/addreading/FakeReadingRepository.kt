@@ -4,6 +4,7 @@ import com.akrippner.mon.core.data.ReadingRepository
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
+import com.akrippner.mon.core.model.data.ReadingSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -11,7 +12,7 @@ class FakeReadingRepository : ReadingRepository {
   val addedTitles = mutableListOf<String>()
   var failure: Throwable? = null
 
-  override fun observeReadings(): Flow<List<Reading>> = flowOf(emptyList())
+  override fun observeReadingSummaries(): Flow<List<ReadingSummary>> = flowOf(emptyList())
 
   override suspend fun addReading(
     title: String,
@@ -25,6 +26,8 @@ class FakeReadingRepository : ReadingRepository {
     addedTitles += title
     return "reading-${addedTitles.size}"
   }
+
+  override suspend fun getReading(readingId: String): Reading? = null
 
   override suspend fun deleteReading(readingId: String) = Unit
 

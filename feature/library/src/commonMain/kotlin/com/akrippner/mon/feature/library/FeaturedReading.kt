@@ -73,7 +73,7 @@ fun FeaturedReading(
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7F2E8)
 @Composable
-private fun PreviewFeaturedEntry() {
+private fun PreviewFeaturedReading() {
   MonTheme {
     FeaturedReading(
       title = "こころ",

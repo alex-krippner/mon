@@ -1,4 +1,4 @@
-package com.akrippner.mon.core.designsystem.component
+package com.akrippner.mon.core.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.akrippner.mon.core.designsystem.VocabEntry
+import com.akrippner.mon.core.designsystem.component.JlptBadge
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 @Composable

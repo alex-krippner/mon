@@ -1,10 +1,12 @@
 package com.akrippner.mon.core.data.mapper
 
+import com.akrippner.mon.core.database.entity.ReadingSummaryRow
 import com.akrippner.mon.core.database.entity.ReadingTokenEntity
 import com.akrippner.mon.core.database.entity.ReadingWithTokens
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
+import com.akrippner.mon.core.model.data.ReadingSummary
 
 /** Returns null if the stored languages are not supported, so one bad row cannot hide the rest. */
 internal fun ReadingWithTokens.toDomainOrNull(): Reading? {
@@ -39,3 +41,17 @@ internal fun MonToken.toEntity(readingId: String, tokenIndex: Int): ReadingToken
     dictionaryForm = dictionaryForm,
     partOfSpeech = partOfSpeech,
   )
+
+internal fun ReadingSummaryRow.toDomainOrNull(): ReadingSummary? {
+  val sourceLanguage = Language.fromTagOrNull(sourceLanguage) ?: return null
+  val translationLanguage = Language.fromTagOrNull(translationLanguage) ?: return null
+
+  return ReadingSummary(
+    id = id,
+    title = title,
+    sourceLanguage = sourceLanguage,
+    translationLanguage = translationLanguage,
+    createdAt = createdAt,
+    tokenCount = tokenCount,
+  )
+}

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import com.akrippner.mon.core.database.entity.ReadingEntity
+import com.akrippner.mon.core.database.entity.ReadingSummaryRow
 import com.akrippner.mon.core.database.entity.ReadingTokenEntity
 import com.akrippner.mon.core.database.entity.ReadingWithTokens
 import kotlinx.coroutines.flow.Flow
@@ -37,4 +38,17 @@ abstract class ReadingDao {
 
   @Query("DELETE FROM reading WHERE id = :readingId")
   abstract suspend fun deleteById(readingId: String)
+
+  @Query(
+    """
+    SELECT r.id, r.title, r.sourceLanguage, r.translationLanguage, r.createdAt,
+    (SELECT COUNT(*) FROM reading_token t WHERE t.readingId = r.id) AS tokenCount
+    FROM reading r WHERE r.userId = :userId ORDER BY r.createdAt DESC
+  """
+  )
+  abstract fun observeReadingSummaries(userId: String): Flow<List<ReadingSummaryRow>>
+
+  @Transaction
+  @Query("SELECT * FROM reading WHERE id = :readingId")
+  abstract suspend fun getReadingWithTokens(readingId: String): ReadingWithTokens?
 }

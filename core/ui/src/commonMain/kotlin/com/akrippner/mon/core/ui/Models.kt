@@ -43,6 +43,17 @@ data class Sense(
   val usageNote: String? = null,
 )
 
+/** A saved vocabulary word */
+data class VocabEntry(
+  val id: Long,
+  val surface: String, // TODO: Rename to vocab?
+  val reading: String,
+  val definition: String,
+  val jlptLevel: String?,
+  val sourceTitle: String?,
+  val userNote: String? = null,
+)
+
 data class JmdictEntry(
   val surface: String,
   val reading: String,

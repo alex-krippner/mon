@@ -23,10 +23,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akrippner.mon.core.designsystem.conditional
 import com.akrippner.mon.core.designsystem.icon.IconId
 import com.akrippner.mon.core.designsystem.icon.IconSize
 import com.akrippner.mon.core.designsystem.icon.MonIcon
-import com.akrippner.mon.core.designsystem.modifier.conditional
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
 enum class ButtonVariant {
