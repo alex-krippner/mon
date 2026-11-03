@@ -3,6 +3,8 @@ plugins { `kotlin-dsl` }
 dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
+    compileOnly(libs.compose.gradlePlugin)
+    compileOnly(libs.kotlin.composeCompilerGradlePlugin)
 }
 
 gradlePlugin {
@@ -10,6 +12,10 @@ gradlePlugin {
         register("kmpLibrary") {
             id = "mon.kmp.library"
             implementationClass = "KmpLibraryConventionPlugin"
+        }
+        register("kmpCompose") {
+            id = "mon.kmp.compose"
+            implementationClass = "KmpComposeConventionPlugin"
         }
     }
 }
