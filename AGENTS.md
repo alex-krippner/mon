@@ -22,7 +22,7 @@ All targets compile with JVM target 11.
 - Fix formatting:
   `./gradlew spotlessApply`
 - Run the JVM tests:
-  `./gradlew :core:database:jvmTest :core:data:jvmTest :core:domain:jvmTest :core:model:jvmTest :feature:addreading:jvmTest`
+  `./gradlew :core:database:jvmTest :core:data:jvmTest :core:domain:jvmTest :core:model:jvmTest :feature:addreading:jvmTest :feature:library:jvmTest`
 
 Notes:
 
@@ -91,8 +91,8 @@ Dependency injection is Koin. All modules register their Koin modules in
   `MonDatabase` version accordingly. Every version after 2 needs a `Migration` in
   `Migrations.kt` (or an `AutoMigration`) and a test in `MonDatabaseMigrationTest`; only version 1
   may still be dropped, so a missing migration fails instead of wiping user data.
-- Tests live in `commonTest` of `:core:database`, `:core:data`, `:core:domain`, `:core:model` and
-  `:feature:addreading`, plus `jvmTest` in `:core:database` for the migration test (it reads the
+- Tests live in `commonTest` of `:core:database`, `:core:data`, `:core:domain`, `:core:model`,
+  `:feature:addreading` and `:feature:library`, plus `jvmTest` in `:core:database` for the migration test (it reads the
   exported schemas); other modules have no test source sets. Database tests run
   against an in-memory database with the bundled SQLite driver. Domain and view model
   tests use hand-written fakes of `ReadingRepository` and `Tokenizer`, and view model
