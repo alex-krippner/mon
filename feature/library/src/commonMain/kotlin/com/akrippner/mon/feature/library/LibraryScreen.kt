@@ -3,10 +3,8 @@ package com.akrippner.mon.feature.library
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,9 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.akrippner.mon.core.designsystem.bottomBorder
 import com.akrippner.mon.core.designsystem.component.FabPosition
@@ -26,8 +22,13 @@ import com.akrippner.mon.core.designsystem.component.FloatingActionButton
 import com.akrippner.mon.core.designsystem.component.Scaffold
 import com.akrippner.mon.core.designsystem.component.TextListItem
 import com.akrippner.mon.core.designsystem.conditional
-import com.akrippner.mon.core.designsystem.icon.Icon
 import com.akrippner.mon.core.designsystem.theme.MonTheme
+import com.akrippner.mon.feature.library.generated.resources.Res
+import com.akrippner.mon.feature.library.generated.resources.library_all_texts
+import com.akrippner.mon.feature.library.generated.resources.library_error_load_failed
+import com.akrippner.mon.feature.library.generated.resources.library_title
+import com.akrippner.mon.feature.library.generated.resources.library_word_count
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LibraryScreen(state: LibraryState, onIntent: (LibraryIntent) -> Unit) {
@@ -38,38 +39,22 @@ fun LibraryScreen(state: LibraryState, onIntent: (LibraryIntent) -> Unit) {
     }
   }
 
-  val navTabs = listOf(Icon.Core.Library, Icon.Core.Vocabulary)
-  var selectedTab by remember { mutableStateOf("") }
-
-  fun onSelected(tab: String) {
-    selectedTab = tab
-  }
-
   Scaffold(
-    title = "Library",
-    selectedTab = selectedTab,
-    navTabs = navTabs,
-    navigationIcon = Icon.Core.ChevronLeft,
-    onTabSelected = { selectedTab = it },
-    onNavigationClick = { println("Alex: back") },
+    title = stringResource(Res.string.library_title),
     floatingActionButtonPosition = FabPosition.END,
     floatingActionButton = {
-      FloatingActionButton(onClick = {}, modifier = Modifier.offset(-MonTheme.space.spacing10))
+      FloatingActionButton(
+        onClick = { onIntent(LibraryIntent.AddReading) },
+        modifier = Modifier.offset(-MonTheme.space.spacing10),
+      )
     },
   ) { padding ->
     Column(
       modifier = Modifier.fillMaxSize().padding(MonTheme.space.spacing10),
       verticalArrangement = Arrangement.spacedBy(MonTheme.space.spacing5),
     ) {
-      FeaturedReading(
-        title = "こころ",
-        wordCount = 25,
-        vocabCount = 12,
-        onOpen = { println("Alex: open") },
-      )
-      Spacer(modifier = Modifier.height(MonTheme.space.spacing8))
       Text(
-        text = "All texts",
+        text = stringResource(Res.string.library_all_texts),
         style = MonTheme.typography.titleMedium,
         color = MonTheme.colors.textPrimary,
         modifier =
@@ -82,6 +67,13 @@ fun LibraryScreen(state: LibraryState, onIntent: (LibraryIntent) -> Unit) {
             }
             .padding(bottom = MonTheme.space.spacing5),
       )
+      state.error?.let { error ->
+        Text(
+          text = error.message(),
+          style = MonTheme.typography.bodyMedium,
+          color = MonTheme.colors.textPrimary,
+        )
+      }
       LazyColumn(
         state = listState,
         verticalArrangement = Arrangement.spacedBy(MonTheme.space.spacing3),
@@ -91,7 +83,7 @@ fun LibraryScreen(state: LibraryState, onIntent: (LibraryIntent) -> Unit) {
         items(state.readings, key = { it.id }) { reading ->
           TextListItem(
             title = reading.title,
-            meta = "${reading.tokenCount} words",
+            meta = stringResource(Res.string.library_word_count, reading.tokenCount),
             onClick = { onIntent(LibraryIntent.OpenReading(reading.id)) },
           )
         }
@@ -99,3 +91,9 @@ fun LibraryScreen(state: LibraryState, onIntent: (LibraryIntent) -> Unit) {
     }
   }
 }
+
+@Composable
+private fun LibraryError.message(): String =
+  when (this) {
+    LibraryError.LoadFailed -> stringResource(Res.string.library_error_load_failed)
+  }

@@ -12,11 +12,11 @@ data class AddReadingState(
   val translationLanguage: Language = Language.ENGLISH,
   val isSaving: Boolean = false,
   val error: AddReadingError? = null,
-  /** Set once the reading is stored, so the screen can navigate away. */
-  val savedReadingId: String? = null,
+  /** True once the reading is stored; guards against saving twice while the screen closes. */
+  val isSaved: Boolean = false,
 ) {
   val canSave: Boolean
-    get() = title.isNotBlank() && text.isNotBlank() && !isSaving && savedReadingId == null
+    get() = title.isNotBlank() && text.isNotBlank() && !isSaving && !isSaved
 }
 
 enum class AddReadingError {
@@ -33,4 +33,9 @@ sealed interface AddReadingIntent {
   data class TranslationChanged(val value: String) : AddReadingIntent
 
   data object Save : AddReadingIntent
+}
+
+sealed interface AddReadingEffect {
+  /** The reading was stored, so the host should leave the screen. */
+  data class Saved(val readingId: String) : AddReadingEffect
 }

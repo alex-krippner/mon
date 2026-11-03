@@ -10,7 +10,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 class AddReadingViewModel(private val addReadingUseCase: AddReadingUseCase) :
-  BaseViewModel<AddReadingState, AddReadingIntent>(initialState = AddReadingState()) {
+  BaseViewModel<AddReadingState, AddReadingIntent, AddReadingEffect>(
+    initialState = AddReadingState()
+  ) {
 
   override fun onIntent(intent: AddReadingIntent) {
     when (intent) {
@@ -24,7 +26,7 @@ class AddReadingViewModel(private val addReadingUseCase: AddReadingUseCase) :
 
   private fun save() {
     val current = state.value
-    if (current.isSaving || current.savedReadingId != null) return
+    if (current.isSaving || current.isSaved) return
     updateState { copy(isSaving = true, error = null) }
 
     viewModelScope.launch {
@@ -46,12 +48,13 @@ class AddReadingViewModel(private val addReadingUseCase: AddReadingUseCase) :
           return@launch
         }
 
-      updateState {
-        when (result) {
-          is AddReadingResult.Success -> copy(isSaving = false, savedReadingId = result.readingId)
-          is AddReadingResult.Invalid ->
-            copy(isSaving = false, error = result.errors.first().toError())
+      when (result) {
+        is AddReadingResult.Success -> {
+          updateState { copy(isSaving = false, isSaved = true) }
+          sendEffect(AddReadingEffect.Saved(result.readingId))
         }
+        is AddReadingResult.Invalid ->
+          updateState { copy(isSaving = false, error = result.errors.first().toError()) }
       }
     }
   }

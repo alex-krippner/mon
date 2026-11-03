@@ -1,8 +1,11 @@
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.compose.ComposeExtension
+import org.jetbrains.compose.resources.ResourcesExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
@@ -23,10 +26,19 @@ class FeatureConventionPlugin : Plugin<Project> {
           implementation(project(":core:model"))
 
           implementation(libs.findLibrary("compose-runtime").get())
+          implementation(libs.findLibrary("compose-components-resources").get())
           implementation(libs.findLibrary("koin-core").get())
           implementation(libs.findLibrary("koin-compose").get())
           implementation(libs.findLibrary("koin-compose-viewmodel").get())
           implementation(libs.findLibrary("androidx-lifecycle-viewmodelCompose").get())
+        }
+      }
+
+      // Each feature owns its strings, e.g. com.akrippner.mon.feature.library.generated.resources.
+      extensions.configure<ComposeExtension> {
+        (this as ExtensionAware).extensions.configure<ResourcesExtension>("resources") {
+          packageOfResClass =
+            "com.akrippner.mon." + path.removePrefix(":").replace(":", ".") + ".generated.resources"
         }
       }
     }

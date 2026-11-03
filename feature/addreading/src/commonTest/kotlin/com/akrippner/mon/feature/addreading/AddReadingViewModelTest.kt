@@ -9,6 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -71,7 +72,7 @@ class AddReadingViewModelTest {
     }
 
   @Test
-  fun save_success_setsSavedReadingId_andStopsSaving() =
+  fun save_success_emitsSavedEffect_andStopsSaving() =
     runTest(testDispatcher) {
       fillValidForm()
 
@@ -80,7 +81,8 @@ class AddReadingViewModelTest {
       advanceUntilIdle()
 
       val state = viewModel.state.value
-      assertEquals("reading-1", state.savedReadingId)
+      assertEquals(AddReadingEffect.Saved("reading-1"), viewModel.effects.first())
+      assertTrue(state.isSaved)
       assertFalse(state.isSaving)
       assertNull(state.error)
       assertFalse(state.canSave)
@@ -98,7 +100,7 @@ class AddReadingViewModelTest {
       val state = viewModel.state.value
       assertEquals(AddReadingError.SaveFailed, state.error)
       assertFalse(state.isSaving)
-      assertNull(state.savedReadingId)
+      assertFalse(state.isSaved)
     }
 
   @Test

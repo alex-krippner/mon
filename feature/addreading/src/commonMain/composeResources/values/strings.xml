@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="add_reading_title">Add reading</string>
+    <string name="add_reading_field_title">Title</string>
+    <string name="add_reading_field_text">Text</string>
+    <string name="add_reading_field_translation">Translation (optional)</string>
+    <string name="add_reading_save">Save</string>
+    <string name="add_reading_saving">Saving…</string>
+    <string name="add_reading_error_missing_title">Enter a title.</string>
+    <string name="add_reading_error_missing_text">Enter the text to read.</string>
+    <string name="add_reading_error_save_failed">Could not save the reading. Try again.</string>
+</resources>

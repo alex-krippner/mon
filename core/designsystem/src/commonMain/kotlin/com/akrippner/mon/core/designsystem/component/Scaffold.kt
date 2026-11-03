@@ -18,7 +18,7 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 fun Scaffold(
   title: String,
   modifier: Modifier = Modifier,
-  navigationIcon: IconId,
+  navigationIcon: IconId? = null,
   onNavigationClick: () -> Unit = {},
   topBarActions: @Composable RowScope.() -> Unit = {},
   floatingActionButton: @Composable () -> Unit = {},

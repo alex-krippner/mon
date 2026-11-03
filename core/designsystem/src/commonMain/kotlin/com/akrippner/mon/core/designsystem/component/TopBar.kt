@@ -25,7 +25,7 @@ import com.akrippner.mon.core.designsystem.theme.MonTheme
 @Composable
 fun MonTopAppBar(
   title: String,
-  navigationIconId: IconId,
+  navigationIconId: IconId? = null,
   actions: @Composable (RowScope.() -> Unit) = {},
   onNavigationClick: () -> Unit = {},
   onActionClick: () -> Unit = {},
@@ -39,12 +39,14 @@ fun MonTopAppBar(
       )
     },
     navigationIcon = {
-      IconButton(onClick = onNavigationClick) {
-        MonIcon(
-          id = navigationIconId,
-          primaryColor = MonTheme.colors.navigation.text,
-          size = IconSize.ExtraSmall,
-        )
+      if (navigationIconId != null) {
+        IconButton(onClick = onNavigationClick) {
+          MonIcon(
+            id = navigationIconId,
+            primaryColor = MonTheme.colors.navigation.text,
+            size = IconSize.ExtraSmall,
+          )
+        }
       }
     },
     actions = actions,

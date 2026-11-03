@@ -10,34 +10,37 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class LibraryViewModel(private val repository: ReadingRepository) :
-  BaseViewModel<LibraryState, LibraryIntent>(initialState = LibraryState()) {
+  BaseViewModel<LibraryState, LibraryIntent, LibraryEffect>(initialState = LibraryState()) {
 
   init {
     repository
       .observeReadingSummaries()
-      .catch { error ->
-        updateState {
-          copy(isLoading = false, errorMessage = error.message ?: "Could not load readings.")
-        }
-      }
+      .catch { updateState { copy(isLoading = false, error = LibraryError.LoadFailed) } }
       .onEach { readings ->
-        updateState { copy(readings = readings, isLoading = false, errorMessage = null) }
+        updateState { copy(readings = readings, isLoading = false, error = null) }
       }
       .launchIn(viewModelScope)
   }
 
   override fun onIntent(intent: LibraryIntent) {
     when (intent) {
-      is LibraryIntent.OpenReading ->
-        viewModelScope.launch {
-          try {
-            repository.recordReadingOpened(intent.readingId)
-          } catch (e: CancellationException) {
-            throw e
-          } catch (e: Exception) {
-            // Usage tracking is best effort: e.g. the reading may have been deleted meanwhile.
-          }
-        }
+      is LibraryIntent.OpenReading -> {
+        sendEffect(LibraryEffect.OpenReader(intent.readingId))
+        recordOpened(intent.readingId)
+      }
+      LibraryIntent.AddReading -> sendEffect(LibraryEffect.OpenAddReading)
+    }
+  }
+
+  private fun recordOpened(readingId: String) {
+    viewModelScope.launch {
+      try {
+        repository.recordReadingOpened(readingId)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        // Usage tracking is best effort: e.g. the reading may have been deleted meanwhile.
+      }
     }
   }
 }
