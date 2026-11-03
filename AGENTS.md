@@ -104,7 +104,9 @@ Presentation and navigation:
 - Module builds use the convention plugins in the included `build-logic` build: `mon.kmp.library`
   (targets, Android library setup), `mon.kmp.compose` (Compose) and `mon.feature` (both, plus the
   shared feature dependencies and per-feature resource package). A module's `build.gradle.kts`
-  declares only its own dependencies, using the `projects.*` accessors.
+  declares only its own dependencies, using the `projects.*` accessors. `mon.feature` also fails
+  configuration when a feature directly depends on `:core:database` or on another feature; reach
+  persistence through `:core:data`, and wire features together in `:shared`.
 
 - Icon catalog is generated code. `core:designsystem` has a manual
   `generateIconCatalog` task that produces `IconIds.generated.kt` and

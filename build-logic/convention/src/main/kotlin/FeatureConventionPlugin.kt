@@ -1,5 +1,7 @@
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.configure
@@ -34,6 +36,9 @@ class FeatureConventionPlugin : Plugin<Project> {
         }
       }
 
+      // Declared dependencies are only known once the module's own build script has run.
+      afterEvaluate { checkFeatureDependencies() }
+
       // Each feature owns its strings, e.g. com.akrippner.mon.feature.library.generated.resources.
       extensions.configure<ComposeExtension> {
         (this as ExtensionAware).extensions.configure<ResourcesExtension>("resources") {
@@ -42,5 +47,42 @@ class FeatureConventionPlugin : Plugin<Project> {
         }
       }
     }
+  }
+
+  /**
+   * Fails the build when a feature declares a project dependency it must not have: `:core:database`
+   * (features reach persistence through `:core:data`) or another feature (features are wired
+   * together only in `:shared`). Only declared dependencies count, so a transitive path through
+   * `:core:data` is fine.
+   *
+   * TODO: Look into adopting libraries that guard the architecture instead of this hand-written
+   *   check, e.g. Module Graph Assert for module dependency rules and Konsist for source-level
+   *   rules.
+   */
+  private fun Project.checkFeatureDependencies() {
+    val violations =
+      configurations
+        .flatMap { configuration ->
+          configuration.dependencies.withType(ProjectDependency::class.java).mapNotNull { dependency
+            ->
+            val reason =
+              when {
+                dependency.path == DATABASE_MODULE -> "must not depend on $DATABASE_MODULE"
+                dependency.path.startsWith(FEATURE_PREFIX) && dependency.path != path ->
+                  "must not depend on another feature"
+                else -> null
+              }
+            reason?.let { "$path $it: ${dependency.path} (in '${configuration.name}')" }
+          }
+        }
+        .distinct()
+    if (violations.isNotEmpty()) {
+      throw GradleException(violations.joinToString(separator = "\n", prefix = "Module rules:\n"))
+    }
+  }
+
+  private companion object {
+    const val DATABASE_MODULE = ":core:database"
+    const val FEATURE_PREFIX = ":feature:"
   }
 }
