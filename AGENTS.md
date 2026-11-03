@@ -9,7 +9,7 @@ trust the scripts.
 
 The project uses the Gradle wrapper (`./gradlew`, or `gradlew.bat` on Windows).
 Kotlin Multiplatform with AGP 9.1.1 / Kotlin 2.3.21 / Compose Multiplatform 1.11.1.
-All targets compile with JVM target 11.
+All targets compile with JVM target 17.
 
 - Build and run the Android app:
   `./gradlew :androidApp:assembleDebug`

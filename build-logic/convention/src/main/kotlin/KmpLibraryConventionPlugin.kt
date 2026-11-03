@@ -21,7 +21,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
           namespace = "com.akrippner.mon." + target.path.removePrefix(":").replace(":", ".")
           minSdk = libs.findVersion("android-minSdk").get().requiredVersion.toInt()
           compileSdk = libs.findVersion("android-compileSdk").get().requiredVersion.toInt()
-          compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
+          compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
         }
       }
     }
