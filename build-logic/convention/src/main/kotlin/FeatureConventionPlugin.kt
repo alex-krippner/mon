@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -22,6 +23,11 @@ class FeatureConventionPlugin : Plugin<Project> {
       val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
       extensions.configure<KotlinMultiplatformExtension> {
+        // Without this the feature's Compose resources are not packaged into the Android assets.
+        targets.withType(KotlinMultiplatformAndroidLibraryTarget::class.java).configureEach {
+          androidResources.enable = true
+        }
+
         sourceSets.getByName("commonMain").dependencies {
           // BaseViewModel is a supertype of the features' public view models.
           api(project(":core:arch"))
