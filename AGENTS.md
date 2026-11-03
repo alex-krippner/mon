@@ -58,10 +58,11 @@ dictionary lookups, using a Japanese tokenizer.
   screens and `VocabEntryItem`.
 - `:core:designsystem` — Compose design system: theme, components, modifiers, icon catalog.
   It holds no domain models, only primitives and component parameters.
-- `:core:navigation` — navigation (Navigation 3): `MonNavHost`.
-- `:core:arch` — small shared building blocks (e.g. a base ViewModel).
+- `:core:navigation` — the Navigation 3 keys (`MonNavKey`: `Library`, `AddReading`, `Reader`) and
+  `MonNavConfiguration`, the one place that registers them for back-stack serialization.
+- `:core:arch` — small shared building blocks: `BaseViewModel<State, Intent, Effect>`.
 - `:feature:library` — the library feature: list of saved readings.
-- `:feature:addreading` — the add-reading feature: create a reading and its tokens.
+- `:feature:addreading` — the add-reading feature: a form that creates a reading and its tokens.
 - `:androidApp`, `:desktopApp`, `:iosApp` — platform entrypoints. All three embed
   `:shared`; the iOS app is an Xcode project that bridges into it.
 
@@ -79,7 +80,31 @@ the full `Reading` with its tokens is loaded only for one reading (`getReading`)
 Dependency injection is Koin. All modules register their Koin modules in
 `:shared` (`Koin.kt`, `initKoin`); new modules must be added there.
 
+Presentation and navigation:
+
+- A feature has a `*Contract.kt` (state, sealed intents, effects), a view model extending
+  `BaseViewModel<State, Intent, Effect>`, and a stateless screen `Screen(state, onIntent)`.
+  Intents are input from the UI through `onIntent`. State is what is rendered. Effects are
+  one-off events (navigation, snackbars) sent with `sendEffect` and delivered once through
+  `effects`; never signal them through state. Use `NoEffect` when a screen has none.
+- View models expose typed errors (an enum or sealed type such as `LibraryError`), never
+  exception messages. The screen maps them to string resources.
+- Features do not depend on `:core:navigation`. They emit their own effects (for example
+  `LibraryEffect.OpenReader`), and `MonNavHost` in `:shared` collects them and maps them to nav
+  keys. To add a destination: add the key to `MonNavKey`, register it in `MonNavConfiguration`
+  (the only place; forgetting it crashes on back-stack restore), and add an `entry<…>` to
+  `MonNavHost`. `Reader` is still a stub entry.
+- Strings live in each feature's `src/commonMain/composeResources/values/strings.xml`. The
+  `mon.feature` convention plugin gives each feature its own resource package, derived from the
+  module path (`:feature:library` → `com.akrippner.mon.feature.library.generated.resources`).
+  Do not hardcode UI strings.
+
 ## Quirks and gotchas
+
+- Module builds use the convention plugins in the included `build-logic` build: `mon.kmp.library`
+  (targets, Android library setup), `mon.kmp.compose` (Compose) and `mon.feature` (both, plus the
+  shared feature dependencies and per-feature resource package). A module's `build.gradle.kts`
+  declares only its own dependencies, using the `projects.*` accessors.
 
 - Icon catalog is generated code. `core:designsystem` has a manual
   `generateIconCatalog` task that produces `IconIds.generated.kt` and
