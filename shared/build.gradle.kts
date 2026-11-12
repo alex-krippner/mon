@@ -53,6 +53,7 @@ sourceSets {
         implementation(projects.core.ui)
         implementation(projects.core.designsystem)
         implementation(projects.core.tokenizer)
+        implementation(projects.core.dictionary)
         implementation(projects.core.database)
 
         implementation(libs.compose.runtime)
