@@ -2,6 +2,7 @@ package com.akrippner.mon
 
 import com.akrippner.mon.core.data.di.dataModule
 import com.akrippner.mon.core.database.di.databaseModule
+import com.akrippner.mon.core.dictionary.di.dictionaryModule
 import com.akrippner.mon.core.domain.di.domainModule
 import com.akrippner.mon.core.tokenizer.di.tokenizerModule
 import com.akrippner.mon.feature.addreading.di.addReadingModule
@@ -19,6 +20,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
       libraryModule,
       addReadingModule,
       tokenizerModule,
+      dictionaryModule,
     )
   }
 }

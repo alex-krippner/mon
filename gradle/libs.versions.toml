@@ -1,6 +1,6 @@
 [versions]
 agp = "9.1.1"
-android-compileSdk = "36"
+android-compileSdk = "37"
 android-minSdk = "26"
 android-targetSdk = "36"
 androidx-activity = "1.12.4"
@@ -13,12 +13,13 @@ composeMultiplatform = "1.11.1"
 junit = "4.13.2"
 kotlin = "2.3.21"
 material3 = "1.10.0-alpha05"
-kotlinx-coroutines = "1.10.2"
+kotlinx-coroutines = "1.11.0"
 sudachi = "0.7.5"
 koin = "4.1.1"
 spotless = "6.25.0"
 ktfmt = "0.61"
 room = "2.8.4"
+ktor = "3.6.1"
 sqlite = "2.6.2"
 ksp = "2.3.5"
 jetbrains-navigation3 = "1.1.1"
@@ -64,6 +65,9 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "jetbrains-navigation3" }
 navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "jetbrains-navigation3" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

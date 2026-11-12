@@ -11,6 +11,7 @@ kotlin {
                 implementation(projects.core.model)
                 implementation(projects.core.data)
                 implementation(projects.core.tokenizer)
+                implementation(projects.core.dictionary)
                 implementation(libs.kotlinx.coroutines.core)
             }
         }

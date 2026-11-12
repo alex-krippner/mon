@@ -1,0 +1,35 @@
+package com.akrippner.mon.core.dictionary
+
+import com.akrippner.mon.core.dictionary.jmdict.JmdictFormat
+import com.akrippner.mon.core.dictionary.pack.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
+import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+
+/** The catalog is the only URL the app hard-codes; it points to the dictionary files. */
+internal const val CATALOG_URL =
+  "https://github.com/alex-krippner/mon-data/releases/latest/download/catalog.json"
+
+/** Builds the manager for both platforms; each platform only chooses [baseDir]. */
+internal fun createDictionaryManager(baseDir: File): DictionaryManager {
+  val client =
+    HttpClient(OkHttp) {
+      install(HttpTimeout) {
+        connectTimeoutMillis = 15_000
+        socketTimeoutMillis = 30_000 // time without data; no overall limit, files are big
+      }
+    }
+  val downloader = KtorPackDownloader(client)
+  return FileDictionaryManager(
+    downloader = downloader,
+    installer = PackInstaller(downloader, baseDir),
+    factory = DictionaryFactory(listOf(JmdictFormat)),
+    catalogUrl = CATALOG_URL,
+    // The manager is an app-wide singleton, so its scope is never cancelled.
+    scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+  )
+}
