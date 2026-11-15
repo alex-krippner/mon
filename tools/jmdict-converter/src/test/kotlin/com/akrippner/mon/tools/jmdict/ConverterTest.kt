@@ -25,11 +25,13 @@ class ConverterTest {
 
   // A real jmdict-simplified entry has many more fields; the extra ones must be ignored.
   private fun inputFile(
-    languages: String = """["eng"]""",
+    code: String = "eng",
+    languages: String = """["$code"]""",
     commonOnly: Boolean = false,
     dictDate: String = "2026-11-09",
+    fileName: String = "jmdict-$code.json",
   ): File =
-    File(dir, "jmdict-eng.json").also {
+    File(dir, fileName).also {
       it.writeText(
         """
         {
@@ -48,7 +50,7 @@ class ConverterTest {
                 "partOfSpeech": ["v1", "vt"], "appliesToKanji": ["*"], "appliesToKana": ["*"],
                 "related": [], "antonym": [], "field": [], "dialect": [], "misc": [], "info": [],
                 "languageSource": [],
-                "gloss": [{"lang": "eng", "gender": null, "type": null, "text": "to eat"}]
+                "gloss": [{"lang": "$code", "gender": null, "type": null, "text": "to eat"}]
               }]
             },
             {"id": "99", "kanji": [], "kana": [], "sense": []}
@@ -66,37 +68,39 @@ class ConverterTest {
 
   @Test
   fun writesArchiveAndCatalogThatDescribeEachOther() {
-    val result = convert(inputFile(), outDir, "owner/repo")
+    val result = convert(listOf(inputFile()), outDir, "owner/repo")
 
-    assertEquals(1, result.entries)
-    assertEquals(1, result.skipped)
     assertEquals("jmdict-2026-11-09", result.releaseTag)
-    assertEquals(File(outDir, "jmdict-eng-2026-11-09.db.gz"), result.archive)
+    val packResult = result.packs.single()
+    assertEquals(1, packResult.entries)
+    assertEquals(1, packResult.skipped)
+    assertEquals(File(outDir, "jmdict-eng-2026-11-09.db.gz"), packResult.archive)
 
     val catalog = Json.decodeFromString<Catalog>(result.catalog.readText())
     val pack = catalog.packs.single()
-    assertEquals(pack, result.pack)
+    assertEquals(pack, packResult.pack)
     assertEquals(
       "https://github.com/owner/repo/releases/download/jmdict-2026-11-09/jmdict-eng-2026-11-09.db.gz",
       pack.url,
     )
     assertEquals("jmdict-eng", pack.id)
+    assertEquals("JMdict (English)", pack.name)
     assertEquals("ja", pack.sourceLanguage)
     assertEquals("en", pack.glossLanguage)
     assertEquals(JmdictSchema.FORMAT, pack.format)
     assertEquals(JmdictSchema.VERSION, pack.schema)
-    assertEquals(sha256(result.archive), pack.sha256)
-    assertEquals(result.archive.length(), pack.sizeBytes)
+    assertEquals(sha256(packResult.archive), pack.sha256)
+    assertEquals(packResult.archive.length(), pack.sizeBytes)
     assertTrue(pack.attribution.contains("Electronic Dictionary Research and Development Group"))
 
-    val unpacked = GZIPInputStream(result.archive.inputStream()).use { it.readBytes() }
+    val unpacked = GZIPInputStream(packResult.archive.inputStream()).use { it.readBytes() }
     assertEquals(unpacked.size.toLong(), pack.unpackedSizeBytes)
     assertContentEquals("SQLite format 3\u0000".toByteArray(), unpacked.copyOf(16))
   }
 
   @Test
   fun leavesOnlyTheArchiveAndTheCatalogBehind() {
-    convert(inputFile(), outDir, "owner/repo")
+    convert(listOf(inputFile()), outDir, "owner/repo")
 
     assertEquals(
       setOf("jmdict-eng-2026-11-09.db.gz", "catalog.json"),
@@ -106,19 +110,79 @@ class ConverterTest {
 
   @Test
   fun sameInputGivesTheSameArchive() {
-    val first = convert(inputFile(), File(dir, "a"), "owner/repo").pack.sha256
-    val second = convert(inputFile(), File(dir, "b"), "owner/repo").pack.sha256
+    val input = inputFile()
+    val first = convert(listOf(input), File(dir, "a"), "owner/repo").packs.single().pack.sha256
+    val second = convert(listOf(input), File(dir, "b"), "owner/repo").packs.single().pack.sha256
 
     assertEquals(first, second)
   }
 
   @Test
-  fun rejectsOtherLanguagesAndTheCommonOnlyFile() {
+  fun germanFileGivesAGermanPack() {
+    val result = convert(listOf(inputFile(code = "ger")), outDir, "owner/repo")
+
+    val pack = result.packs.single().pack
+    assertEquals("jmdict-ger", pack.id)
+    assertEquals("JMdict (German)", pack.name)
+    assertEquals("ja", pack.sourceLanguage)
+    assertEquals("de", pack.glossLanguage)
+    assertEquals(File(outDir, "jmdict-ger-2026-11-09.db.gz"), result.packs.single().archive)
+  }
+
+  @Test
+  fun severalLanguagesShareOneCatalogAndOneRelease() {
+    // Listed German first: the catalog is sorted by id, not by input order.
+    val result = convert(listOf(inputFile("ger"), inputFile("eng")), outDir, "owner/repo")
+
+    assertEquals("jmdict-2026-11-09", result.releaseTag)
+    val packs = Json.decodeFromString<Catalog>(result.catalog.readText()).packs
+    assertEquals(listOf("jmdict-eng", "jmdict-ger"), packs.map { it.id })
+    assertEquals(listOf("en", "de"), packs.map { it.glossLanguage })
+    assertEquals(
+      listOf(
+        "https://github.com/owner/repo/releases/download/jmdict-2026-11-09/jmdict-eng-2026-11-09.db.gz",
+        "https://github.com/owner/repo/releases/download/jmdict-2026-11-09/jmdict-ger-2026-11-09.db.gz",
+      ),
+      packs.map { it.url },
+    )
+    assertEquals(
+      setOf("jmdict-eng-2026-11-09.db.gz", "jmdict-ger-2026-11-09.db.gz", "catalog.json"),
+      outDir.listFiles().orEmpty().map { it.name }.toSet(),
+    )
+  }
+
+  @Test
+  fun rejectsFilesItCannotTurnIntoOnePack() {
+    // An unsupported language, a multi-language file (jmdict-all) and the common-only file.
     assertFailsWith<IllegalArgumentException> {
-      convert(inputFile(languages = """["ger"]"""), outDir, "owner/repo")
+      convert(listOf(inputFile(code = "xxx")), outDir, "owner/repo")
     }
     assertFailsWith<IllegalArgumentException> {
-      convert(inputFile(commonOnly = true), outDir, "owner/repo")
+      convert(listOf(inputFile(languages = """["eng","ger"]""")), outDir, "owner/repo")
+    }
+    assertFailsWith<IllegalArgumentException> {
+      convert(listOf(inputFile(commonOnly = true)), outDir, "owner/repo")
+    }
+  }
+
+  @Test
+  fun rejectsInputsThatDoNotBelongInOneCatalog() {
+    assertFailsWith<IllegalArgumentException> { convert(emptyList(), outDir, "owner/repo") }
+    // The same language twice.
+    assertFailsWith<IllegalArgumentException> {
+      convert(
+        listOf(inputFile(), inputFile(fileName = "jmdict-eng-again.json")),
+        outDir,
+        "owner/repo",
+      )
+    }
+    // Two languages from different JMdict dates cannot share one release tag.
+    assertFailsWith<IllegalArgumentException> {
+      convert(
+        listOf(inputFile("eng"), inputFile("ger", dictDate = "2026-12-09")),
+        outDir,
+        "owner/repo",
+      )
     }
   }
 }
