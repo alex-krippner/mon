@@ -3,7 +3,8 @@ package com.akrippner.mon.core.model.data
 /** A language a reading can be written in or translated into. */
 enum class Language(val tag: String) {
   JAPANESE("ja"),
-  ENGLISH("en");
+  ENGLISH("en"),
+  GERMAN("de");
 
   companion object {
     /**

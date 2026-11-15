@@ -11,7 +11,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 
-internal const val PACK_ID = "jmdict-eng"
 private const val BUFFER_SIZE = 64 * 1024
 
 /** The standard acknowledgement the EDRDG licence asks for. Shown on the Dictionaries screen. */
@@ -21,40 +20,75 @@ internal const val ATTRIBUTION =
     "licence (https://www.edrdg.org/edrdg/licence.html), CC BY-SA 4.0. " +
     "Converted with jmdict-simplified (https://github.com/scriptin/jmdict-simplified)."
 
-internal class ConversionResult(
+/** One converted input file: its catalog entry, the archive to publish, and entry counts. */
+internal class PackResult(
   val pack: CatalogPack,
   val archive: File,
-  val catalog: File,
-  val releaseTag: String,
   val entries: Int,
   val skipped: Int,
+)
+
+internal class ConversionResult(
+  val packs: List<PackResult>,
+  val catalog: File,
+  val releaseTag: String,
 )
 
 private val inputJson = Json { ignoreUnknownKeys = true }
 private val catalogJson = Json { prettyPrint = true }
 
+private fun releaseTagFor(version: String) = "jmdict-$version"
+
 /**
- * Converts a jmdict-simplified English JSON file ([input]) into `jmdict-eng-<dictDate>.db.gz` and
- * `catalog.json` in [outDir]. [repo] (`owner/name`) is the GitHub repository whose release will
- * hold both files; the catalog points at the archive there.
+ * Converts several jmdict-simplified files ([inputs], one gloss language each) into one
+ * `jmdict-<code>-<dictDate>.db.gz` per file plus a single `catalog.json` that lists every pack, all
+ * in [outDir]. [repo] (`owner/name`) is the GitHub repository whose release will hold the files;
+ * the catalog points at the archives there. All inputs must come from the same JMdict date, since
+ * they share one release tag.
+ *
+ * The files are converted one at a time, so only one parsed dictionary is in memory.
+ */
+internal fun convert(inputs: List<File>, outDir: File, repo: String): ConversionResult {
+  require(inputs.isNotEmpty()) { "No input files" }
+  val results = inputs.map { convertPack(it, outDir, repo) }
+  val packs = results.map { it.pack }
+
+  require(packs.map { it.id }.toSet().size == packs.size) {
+    "Two input files have the same language: ${packs.map { it.id }}"
+  }
+  val versions = packs.map { it.version }.toSet()
+  require(versions.size == 1) {
+    "The files come from different JMdict dates $versions; use one jmdict-simplified release"
+  }
+
+  val catalog = File(outDir, "catalog.json")
+  catalog.writeText(catalogJson.encodeToString(Catalog(packs.sortedBy { it.id })))
+  return ConversionResult(results, catalog, releaseTagFor(versions.single()))
+}
+
+/**
+ * Converts one jmdict-simplified file ([input]) into `jmdict-<code>-<dictDate>.db.gz` in [outDir]
+ * and describes it as a [CatalogPack]. The gloss language comes from the file itself.
  */
 @OptIn(ExperimentalSerializationApi::class)
-internal fun convert(input: File, outDir: File, repo: String): ConversionResult {
+internal fun convertPack(input: File, outDir: File, repo: String): PackResult {
   val dictionary =
     input.inputStream().buffered().use { inputJson.decodeFromStream<SimplifiedDictionary>(it) }
-  require(dictionary.languages == listOf("eng")) {
-    "Expected the English-only file (jmdict-eng-*.json), got languages ${dictionary.languages}"
-  }
+  val language =
+    requireNotNull(dictionary.languages.singleOrNull()?.let(GlossLanguage::fromCode)) {
+      "Expected a file with one supported gloss language " +
+        "(${GlossLanguage.entries.joinToString { it.code }}), got ${dictionary.languages}"
+    }
   require(!dictionary.commonOnly) {
-    "That is the 'common words only' file; use the full jmdict-eng-*.json"
+    "That is the 'common words only' file; use the full jmdict-${language.code}-*.json"
   }
 
   val version = dictionary.dictDate
-  val releaseTag = "jmdict-$version"
-  val archiveName = "$PACK_ID-$version.db.gz"
+  val releaseTag = releaseTagFor(version)
+  val archiveName = "${language.packId}-$version.db.gz"
   outDir.mkdirs()
 
-  val database = File(outDir, "$PACK_ID-$version.db").also { it.delete() }
+  val database = File(outDir, "${language.packId}-$version.db").also { it.delete() }
   var entries = 0
   var skipped = 0
   try {
@@ -81,10 +115,10 @@ internal fun convert(input: File, outDir: File, repo: String): ConversionResult 
 
     val pack =
       CatalogPack(
-        id = PACK_ID,
-        name = "JMdict (English)",
+        id = language.packId,
+        name = "JMdict (${language.displayName})",
         sourceLanguage = "ja",
-        glossLanguage = "en",
+        glossLanguage = language.tag,
         format = JmdictSchema.FORMAT,
         schema = JmdictSchema.VERSION,
         version = version,
@@ -94,9 +128,7 @@ internal fun convert(input: File, outDir: File, repo: String): ConversionResult 
         sha256 = sha256Hex(archive),
         attribution = ATTRIBUTION,
       )
-    val catalog = File(outDir, "catalog.json")
-    catalog.writeText(catalogJson.encodeToString(Catalog(listOf(pack))))
-    return ConversionResult(pack, archive, catalog, releaseTag, entries, skipped)
+    return PackResult(pack, archive, entries, skipped)
   } finally {
     database.delete() // only the compressed archive is published
   }

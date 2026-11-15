@@ -8,7 +8,7 @@ Design decisions:
 
 - The app is tied to no dictionary and no language. `MonDictionary` is an interface; entries are
   data classes; labels are a sealed hierarchy.
-- JMdict (English glosses) is the first dictionary.
+- JMdict is the first dictionary, published as one pack per gloss language (English and German).
 - Dictionaries are downloadable packs listed in a hosted `catalog.json`, not bundled. The app works
   without any pack.
 - `system_core.dic` (Sudachi) stays bundled.
@@ -52,7 +52,7 @@ flowchart TB
     conv[":tools:jmdict-converter"]
   end
 
-  mondata[("GitHub: alex-krippner/mon-data<br/>catalog.json + jmdict-eng.db.gz")]:::planned
+  mondata[("GitHub: alex-krippner/mon-data<br/>catalog.json + jmdict-*.db.gz")]:::planned
 
   androidApp --> shared
   desktopApp --> shared
