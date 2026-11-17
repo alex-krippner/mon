@@ -32,8 +32,8 @@ fun YomuNavTabItem(
   Box(
     modifier =
       modifier
-        .width(40.dp)
-        .height(32.dp)
+        .width(36.dp)
+        .height(26.dp)
         .clip(RoundedCornerShape(20))
         .clickable(onClick = onClick)
         .background(backgroundColor),

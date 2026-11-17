@@ -15,11 +15,17 @@ private data class IconIdImpl(override val category: String, override val name: 
 
 object Icon {
   object Core {
+    val Block: IconId = IconIdImpl("Core", "Block")
+    val CheckCircle: IconId = IconIdImpl("Core", "CheckCircle")
     val ChevronLeft: IconId = IconIdImpl("Core", "ChevronLeft")
     val ChevronRight: IconId = IconIdImpl("Core", "ChevronRight")
+    val Dictionaries: IconId = IconIdImpl("Core", "Dictionaries")
+    val ErrorCircle: IconId = IconIdImpl("Core", "ErrorCircle")
     val Furigana: IconId = IconIdImpl("Core", "Furigana")
+    val Info: IconId = IconIdImpl("Core", "Info")
     val Library: IconId = IconIdImpl("Core", "Library")
     val Plus: IconId = IconIdImpl("Core", "Plus")
+    val Refresh: IconId = IconIdImpl("Core", "Refresh")
     val Search: IconId = IconIdImpl("Core", "Search")
     val Settings: IconId = IconIdImpl("Core", "Settings")
     val Vocabulary: IconId = IconIdImpl("Core", "Vocabulary")

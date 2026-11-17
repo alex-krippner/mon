@@ -6,6 +6,7 @@ import com.akrippner.mon.core.dictionary.di.dictionaryModule
 import com.akrippner.mon.core.domain.di.domainModule
 import com.akrippner.mon.core.tokenizer.di.tokenizerModule
 import com.akrippner.mon.feature.addreading.di.addReadingModule
+import com.akrippner.mon.feature.dictionaries.di.dictionariesModule
 import com.akrippner.mon.feature.library.di.libraryModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -19,6 +20,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
       dataModule,
       libraryModule,
       addReadingModule,
+      dictionariesModule,
       tokenizerModule,
       dictionaryModule,
     )

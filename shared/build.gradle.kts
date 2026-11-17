@@ -49,6 +49,7 @@ sourceSets {
         implementation(projects.core.domain)
         implementation(projects.feature.library)
         implementation(projects.feature.addreading)
+        implementation(projects.feature.dictionaries)
         implementation(projects.core.data)
         implementation(projects.core.ui)
         implementation(projects.core.designsystem)
@@ -67,6 +68,7 @@ sourceSets {
         implementation(libs.koin.compose)
         implementation(libs.koin.compose.viewmodel)
         implementation(libs.navigation3.ui)
+        implementation(libs.androidx.lifecycle.viewmodelNavigation3)
         implementation(libs.kotlinx.serialization.json)
 
     }

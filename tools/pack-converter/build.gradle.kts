@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-// Command-line tool, not part of the app: turns a jmdict-simplified JSON file into a dictionary pack.
+// Command-line tool, not part of the app: turns dictionary source files into dictionary packs.
+// Today the only source is JMdict (jmdict-simplified JSON files).
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.kotlinSerialization)
@@ -18,7 +19,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("com.akrippner.mon.tools.jmdict.MainKt")
+    mainClass.set("com.akrippner.mon.tools.MainKt")
     // The whole JSON file (about 120 MB) is parsed into memory.
     applicationDefaultJvmArgs = listOf("-Xmx3g")
 }

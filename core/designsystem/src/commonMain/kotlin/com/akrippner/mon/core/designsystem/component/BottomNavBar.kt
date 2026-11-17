@@ -30,9 +30,9 @@ fun BottomNavBar(
     modifier =
       modifier
         .fillMaxWidth()
-        .height(56.dp)
+        .background(MonTheme.colors.navigation.background)
         .navigationBarsPadding()
-        .background(MonTheme.colors.navigation.background),
+        .height(53.dp),
     horizontalArrangement = Arrangement.SpaceAround,
     verticalAlignment = Alignment.CenterVertically,
   ) {

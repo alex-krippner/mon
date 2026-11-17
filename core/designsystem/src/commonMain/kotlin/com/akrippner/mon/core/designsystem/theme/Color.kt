@@ -147,6 +147,12 @@ data class MonColors(
   val accentGradientEnd: Color,
   val accentSubtle: Color,
   val accentMuted: Color,
+  /** vermilion90: a light accent background, e.g. a success notice. */
+  val accentTint: Color,
+  /** Error messages. */
+  val error: Color,
+  /** paper90: surfaces raised above the screen, such as a dialog. */
+  val surfaceRaised: Color,
   // Borders & dividers
   val borderDefault: Color,
   val borderFocus: Color,
@@ -265,6 +271,9 @@ internal val lightMonColors =
     accentGradientEnd = Palette.Vermilion40,
     accentSubtle = Palette.Vermilion50.copy(alpha = 0.10f),
     accentMuted = Palette.Vermilion50.copy(alpha = 0.55f),
+    accentTint = Palette.Vermilion90,
+    error = Palette.Red70,
+    surfaceRaised = Palette.Paper90,
     borderDefault = Palette.Ink50.copy(alpha = 0.08f),
     borderFocus = Palette.Vermilion50,
     divider = Palette.Ink50.copy(alpha = 0.07f),

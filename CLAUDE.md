@@ -8,5 +8,5 @@ Guidance for Claude Code in this repository. The full agent guide is imported be
 
 - Run Gradle quietly: `./gradlew -q --console=plain <task>`. On failure, rerun only the failing task (add `--stacktrace` if needed) and trim output with `| tail -n 80` or `| grep -E "e: |error|FAILED"`.
 - Use the narrowest task that answers the question, e.g. `./gradlew -q --console=plain :core:database:jvmTest --tests "*MonDatabaseTest*"`, instead of full builds.
-- Never read `system_core.dic`, `build/` outputs, or `*.generated.kt` files; regenerate the icon catalog with `generateIconCatalog` instead of editing it.
+- Never read `system_core.dic`, dictionary `*.db` / `jmdict-*.json` files, `build/` outputs, or `*.generated.kt` files; regenerate the icon catalog with `generateIconCatalog` instead of editing it.
 - Delegate broad multi-file searches to the `codebase-explorer` subagent; use `code-reviewer` after non-trivial changes.

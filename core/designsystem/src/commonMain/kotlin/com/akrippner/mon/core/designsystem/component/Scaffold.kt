@@ -5,12 +5,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.akrippner.mon.core.designsystem.icon.IconId
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 
@@ -45,7 +43,7 @@ fun Scaffold(
           selectedTab = selectedTab,
           navTabs = navTabs,
           onTabSelected = onTabSelected,
-          modifier = Modifier.fillMaxWidth().height(80.dp),
+          modifier = Modifier.fillMaxWidth(),
         )
       }
     },

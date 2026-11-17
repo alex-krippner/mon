@@ -2,6 +2,7 @@ package com.akrippner.mon.core.dictionary.pack
 
 import com.akrippner.mon.core.dictionary.DictionaryClosedException
 import com.akrippner.mon.core.dictionary.MonDictionary
+import com.akrippner.mon.core.dictionary.PackReader
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -50,7 +51,8 @@ data class Pack(val info: CatalogPack, val state: PackState)
 sealed interface PackState {
   data object NotInstalled : PackState
 
-  data class Downloading(val progress: Float) : PackState
+  /** [installed] is the version on disk while an update downloads, or null for a first install. */
+  data class Downloading(val progress: Float, val installed: CatalogPack? = null) : PackState
 
   /** The installed version is [Pack.info] itself. */
   data object Installed : PackState
@@ -81,8 +83,13 @@ interface DictionaryManager {
   suspend fun remove(packId: String)
 
   /**
-   * The readers of the installed packs. An update or removal closes a pack's reader, after which
-   * its lookups throw [DictionaryClosedException]; call this again to get the current ones.
+   * The readers of the installed packs, of every kind, sorted by pack id. An update or removal
+   * closes a pack's reader, after which its calls throw [DictionaryClosedException]; call this
+   * again to get the current ones.
    */
-  suspend fun installed(): List<MonDictionary>
+  suspend fun readers(): List<PackReader>
 }
+
+/** The installed packs that can look words up. Another kind of reader adds its own extension. */
+suspend fun DictionaryManager.installed(): List<MonDictionary> =
+  readers().filterIsInstance<MonDictionary>()

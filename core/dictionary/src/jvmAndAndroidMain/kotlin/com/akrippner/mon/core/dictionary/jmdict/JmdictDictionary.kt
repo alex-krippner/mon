@@ -3,8 +3,9 @@ package com.akrippner.mon.core.dictionary.jmdict
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READONLY
-import com.akrippner.mon.core.dictionary.CloseableDictionary
+import com.akrippner.mon.core.dictionary.CloseableReader
 import com.akrippner.mon.core.dictionary.DictionaryClosedException
+import com.akrippner.mon.core.dictionary.MonDictionary
 import com.akrippner.mon.core.model.data.DictionaryEntry
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Label
@@ -25,11 +26,13 @@ internal class JmdictDictionary(
   override val source: DictionarySource,
   override val sourceLanguage: Language,
   override val glossLanguage: Language,
-) : CloseableDictionary {
+) : MonDictionary, CloseableReader {
 
   private val mutex = Mutex()
   private val json = Json { ignoreUnknownKeys = true }
   private var connection: SQLiteConnection? = null
+  /** Read from the file when [connection] is opened. */
+  private var normalization = KeyNormalization.NONE
   private var closed = false
 
   override suspend fun lookup(query: LookupQuery): List<DictionaryEntry> =
@@ -40,9 +43,10 @@ internal class JmdictDictionary(
         // found" either: the word may well be in the pack, so the caller has to ask a new reader.
         if (closed) throw DictionaryClosedException()
         val connection = openConnection()
-        val surface = query.surface // copy: a property from another module can't be smart-cast
-        var candidates = find(connection, query.lemma)
-        if (candidates.isEmpty() && surface != null && surface != query.lemma) {
+        val lemma = normalization.apply(query.lemma)
+        val surface = query.surface?.let(normalization::apply)
+        var candidates = find(connection, lemma)
+        if (candidates.isEmpty() && surface != null && surface != lemma) {
           candidates = find(connection, surface)
         }
         val reading = query.reading?.toHiragana()
@@ -53,9 +57,28 @@ internal class JmdictDictionary(
       }
     }
 
-  private fun openConnection(): SQLiteConnection =
-    connection ?: BundledSQLiteDriver().open(path, SQLITE_OPEN_READONLY).also { connection = it }
+  /**
+   * Opens the file on the first lookup and reads how its keys are normalized. The rule comes from
+   * the file, not from [sourceLanguage], so it is always the one the writer used.
+   */
+  private fun openConnection(): SQLiteConnection {
+    connection?.let {
+      return it
+    }
+    val opened = BundledSQLiteDriver().open(path, SQLITE_OPEN_READONLY)
+    try {
+      val rule = opened.meta(KEY_NORMALIZATION)
+      // Unreachable for an installed pack: verify() rejects such a file.
+      normalization = checkNotNull(KeyNormalization.fromMeta(rule)) { "Unknown key rule: $rule" }
+    } catch (e: Exception) {
+      opened.close()
+      throw e
+    }
+    connection = opened
+    return opened
+  }
 
+  /** [key] must already be normalized with [normalization]. */
   private fun find(connection: SQLiteConnection, key: String): List<Candidate> =
     connection.prepare(FIND_SQL).use { statement ->
       statement.bindText(1, key)

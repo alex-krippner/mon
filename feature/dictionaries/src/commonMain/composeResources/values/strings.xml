@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dictionaries_title">Dictionaries</string>
+    <string name="dictionaries_checking">Checking for dictionaries…</string>
+    <string name="dictionaries_empty">No dictionaries available.</string>
+    <string name="dictionaries_empty_body">None fit this version of Mon yet. Update the app, then check again.</string>
+    <string name="dictionaries_check_again">Check again</string>
+    <string name="dictionaries_download">Download</string>
+    <string name="dictionaries_update">Update</string>
+    <string name="dictionaries_try_again">Try again</string>
+    <string name="dictionaries_remove">Remove</string>
+    <string name="dictionaries_keep">Keep</string>
+    <string name="dictionaries_installed">Installed</string>
+    <string name="dictionaries_downloading">Downloading…</string>
+    <string name="dictionaries_installing">Installing…</string>
+    <string name="dictionaries_update_available">Update available</string>
+    <string name="dictionaries_not_compatible">Not compatible</string>
+    <string name="dictionaries_needs_newer_app">Needs a newer Mon</string>
+
+    <!-- Lines above the packs -->
+    <string name="dictionaries_intro_first_run">Tap a word in a text to see its meaning. Download a dictionary to turn that on.</string>
+    <string name="dictionaries_intro_downloading">You can keep reading while this downloads.</string>
+    <string name="dictionaries_intro_update">A newer %1$s is available. The version you have keeps working until you update.</string>
+    <string name="dictionaries_intro_updates">Newer versions are available. The versions you have keep working until you update.</string>
+    <string name="dictionaries_ready_title">%1$s is ready.</string>
+    <string name="dictionaries_ready_body">Tap a word in any text to see its meaning.</string>
+    <string name="dictionaries_ready_link">Back to Library</string>
+    <string name="dictionaries_section_installed">Installed</string>
+    <string name="dictionaries_section_available">Available</string>
+
+    <!-- Tile -->
+    <string name="dictionaries_tile_version">Version %1$s</string>
+    <string name="dictionaries_tile_new_version">New: %1$s</string>
+    <string name="dictionaries_tile_using">Using %1$s</string>
+    <string name="dictionaries_tile_download_size">%1$s download</string>
+    <string name="dictionaries_tile_on_device">%1$s on device</string>
+    <string name="dictionaries_tile_of_size">of %1$s</string>
+    <string name="dictionaries_size_mb">%1$d MB</string>
+    <string name="dictionaries_language_pair">%1$s → %2$s</string>
+
+    <!-- Short failure reasons on a tile -->
+    <string name="dictionaries_reason_network">No connection</string>
+    <string name="dictionaries_reason_checksum">Damaged download</string>
+    <string name="dictionaries_reason_storage">Could not save</string>
+    <string name="dictionaries_reason_not_enough_space">Not enough space</string>
+
+    <!-- Catalog errors -->
+    <string name="dictionaries_error_catalog_network">Could not check for dictionaries. Check your connection.</string>
+    <string name="dictionaries_error_catalog_invalid">The list of dictionaries could not be read. Please try again later.</string>
+    <string name="dictionaries_check_failed_kept">The dictionaries you have still work.</string>
+    <string name="dictionaries_check_failed_empty_title">Could not check for dictionaries.</string>
+    <string name="dictionaries_check_failed_empty_network">Check your connection. You can still read your texts, but tapping a word needs a dictionary.</string>
+    <string name="dictionaries_check_failed_empty_invalid">The list of dictionaries could not be read. Please try again later. You can still read your texts, but tapping a word needs a dictionary.</string>
+
+    <!-- Download errors -->
+    <string name="dictionaries_error_network">The download failed. Check your connection.</string>
+    <string name="dictionaries_error_checksum">The download was damaged. Please try again.</string>
+    <string name="dictionaries_error_storage">The dictionary could not be saved on this device.</string>
+    <string name="dictionaries_error_not_enough_space">There is not enough free space for this dictionary.</string>
+    <string name="dictionaries_error_unsupported">This version of the app cannot use this dictionary.</string>
+    <string name="dictionaries_error_free_space">Free %1$s on this device, then try again.</string>
+    <string name="dictionaries_error_old_version_works">The version you have, %1$s, still works.</string>
+    <string name="dictionaries_error_for_pack">%1$s: %2$s</string>
+
+    <!-- Detail -->
+    <string name="dictionaries_detail_title">Dictionary</string>
+    <string name="dictionaries_detail_languages">Languages</string>
+    <string name="dictionaries_detail_version">Version</string>
+    <string name="dictionaries_detail_installed_version">Installed version</string>
+    <string name="dictionaries_detail_download_size">Download</string>
+    <string name="dictionaries_detail_on_device">On this device</string>
+    <string name="dictionaries_detail_licence">Licence</string>
+    <string name="dictionaries_detail_frees">Frees %1$s</string>
+    <string name="dictionaries_remove_title">Remove %1$s?</string>
+    <string name="dictionaries_remove_body">Tapping a word will stop showing %1$s meanings. To get it back you download %2$s again.</string>
+
+    <!-- Language names for a pack's language tags -->
+    <string name="language_ja">Japanese</string>
+    <string name="language_en">English</string>
+    <string name="language_de">German</string>
+    <string name="language_fr">French</string>
+    <string name="language_nl">Dutch</string>
+    <string name="language_es">Spanish</string>
+    <string name="language_ru">Russian</string>
+    <string name="language_sv">Swedish</string>
+    <string name="language_hu">Hungarian</string>
+</resources>

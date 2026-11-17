@@ -22,6 +22,8 @@ data class Space(
   val spacing14: Dp,
   val spacing15: Dp,
   val headlineGap: Dp,
+  /** Horizontal margin of a screen's content, from the design spec. */
+  val screenMargin: Dp,
 )
 
 val space =
@@ -44,4 +46,5 @@ val space =
     spacing14 = 120.dp,
     spacing15 = 128.dp,
     headlineGap = 14.dp,
+    screenMargin = 39.dp,
   )

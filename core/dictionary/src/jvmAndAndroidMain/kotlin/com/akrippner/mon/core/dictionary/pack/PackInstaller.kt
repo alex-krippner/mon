@@ -51,6 +51,9 @@ internal class PackInstaller(private val downloader: PackDownloader, private val
     val database = File(dir, "$DB_NAME$TMP_SUFFIX")
     try {
       downloader.download(pack.url, archive, pack.sizeBytes, onProgress)
+      // The checks and unpacking below take a while on a phone. Reporting 100 % first lets the
+      // screen show them as "Installing" even when the server's size did not match exactly.
+      onProgress(1f)
       if (!storage { sha256Hex(archive) }.equals(pack.sha256, ignoreCase = true)) {
         throw PackException(PackError.CHECKSUM)
       }
