@@ -228,8 +228,8 @@ private fun PackGrid(packs: List<Pack>, onIntent: (DictionariesIntent) -> Unit) 
 }
 
 /**
- * The full message of each failed download, under the grid. Retrying an unsupported one cannot
- * help.
+ * The full message of each failed download or removal, under the grid. Retrying an unsupported
+ * download cannot help.
  */
 @Composable
 private fun DownloadFailures(packs: List<Pack>) {

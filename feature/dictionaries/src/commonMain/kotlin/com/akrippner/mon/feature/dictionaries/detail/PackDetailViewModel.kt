@@ -3,6 +3,8 @@ package com.akrippner.mon.feature.dictionaries.detail
 import androidx.lifecycle.viewModelScope
 import com.akrippner.mon.core.arch.mvi.BaseViewModel
 import com.akrippner.mon.core.dictionary.pack.DictionaryManager
+import com.akrippner.mon.core.dictionary.pack.PackError
+import com.akrippner.mon.core.dictionary.pack.PackState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -31,6 +33,7 @@ class PackDetailViewModel(private val packId: String, private val manager: Dicti
         updateState { copy(pack = pack) }
       }
       .launchIn(viewModelScope)
+    if (findPack() == null) loadPacks()
   }
 
   override fun onIntent(intent: PackDetailIntent) {
@@ -44,10 +47,27 @@ class PackDetailViewModel(private val packId: String, private val manager: Dicti
         updateState { copy(confirmingRemove = false) }
         viewModelScope.launch {
           manager.remove(packId)
-          sendEffect(PackDetailEffect.Close)
+          // On failure the pack is still installed: stay, so the error shows and Remove can be
+          // tried again.
+          val failed = (findPack()?.state as? PackState.Failed)?.error == PackError.REMOVE
+          if (failed) removeRequested = false else sendEffect(PackDetailEffect.Close)
         }
       }
       PackDetailIntent.Back -> sendEffect(PackDetailEffect.Close)
+    }
+  }
+
+  private fun findPack() = manager.packs.value.firstOrNull { it.info.id == packId }
+
+  /**
+   * The screen was opened without the list before it, e.g. when the app is restored on this screen
+   * after the process was killed: the manager has not loaded anything yet. A refresh scans the
+   * installed packs even offline. A pack that is still unknown is gone, so the screen closes.
+   */
+  private fun loadPacks() {
+    viewModelScope.launch {
+      manager.refreshCatalog()
+      if (findPack() == null) sendEffect(PackDetailEffect.Close)
     }
   }
 }

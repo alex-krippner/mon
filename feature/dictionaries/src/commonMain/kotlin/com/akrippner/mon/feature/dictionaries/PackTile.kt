@@ -38,6 +38,7 @@ import com.akrippner.mon.core.designsystem.icon.Icon
 import com.akrippner.mon.core.designsystem.icon.MonIcon
 import com.akrippner.mon.core.designsystem.stateLayer
 import com.akrippner.mon.core.designsystem.theme.MonTheme
+import com.akrippner.mon.core.dictionary.pack.CatalogPack
 import com.akrippner.mon.core.dictionary.pack.Pack
 import com.akrippner.mon.core.dictionary.pack.PackError
 import com.akrippner.mon.core.dictionary.pack.PackState
@@ -72,6 +73,8 @@ internal enum class TileKind {
   Update,
   Failed,
   FailedKept,
+  /** A removal failed: the pack is still installed. Removing again is done from the details. */
+  RemoveFailed,
   Unsupported,
 }
 
@@ -87,9 +90,21 @@ internal val Pack.tileKind: TileKind
         when {
           // Retrying cannot help: this app version cannot read the pack.
           s.error == PackError.UNSUPPORTED -> TileKind.Unsupported
+          s.error == PackError.REMOVE -> TileKind.RemoveFailed
           s.installed != null -> TileKind.FailedKept
           else -> TileKind.Failed
         }
+    }
+
+/** The version on disk, or null if nothing is installed. During an update it is the old one. */
+internal val Pack.onDisk: CatalogPack?
+  get() =
+    when (val s = state) {
+      PackState.NotInstalled -> null
+      PackState.Installed -> info
+      is PackState.UpdateAvailable -> s.installed
+      is PackState.Failed -> s.installed
+      is PackState.Downloading -> s.installed
     }
 
 /** The label of the tile's main button, or null if it has none. */
@@ -194,7 +209,7 @@ internal fun PackTile(
 
 @Composable
 private fun versionLine(pack: Pack, kind: TileKind): String {
-  val kept = (pack.state as? PackState.Failed)?.installed
+  val kept = if (kind == TileKind.FailedKept) pack.onDisk else null
   return when {
     kind == TileKind.Update ->
       stringResource(Res.string.dictionaries_tile_new_version, pack.info.version)
@@ -221,7 +236,8 @@ internal fun PackStatusRow(
     when (kind) {
       TileKind.Installed -> Icon.Core.CheckCircle to colors.secondary
       TileKind.Failed,
-      TileKind.FailedKept -> Icon.Core.ErrorCircle to colors.error
+      TileKind.FailedKept,
+      TileKind.RemoveFailed -> Icon.Core.ErrorCircle to colors.error
       TileKind.Unsupported -> Icon.Core.Block to colors.textPrimary
       else -> null to Color.Unspecified
     }
@@ -234,7 +250,8 @@ internal fun PackStatusRow(
       TileKind.Installed -> stringResource(Res.string.dictionaries_installed)
       TileKind.Update -> stringResource(Res.string.dictionaries_update_available)
       TileKind.Failed,
-      TileKind.FailedKept -> failure?.shortReason().orEmpty()
+      TileKind.FailedKept,
+      TileKind.RemoveFailed -> failure?.shortReason().orEmpty()
       TileKind.Unsupported -> stringResource(Res.string.dictionaries_not_compatible)
     }
   Row(
@@ -250,7 +267,8 @@ internal fun PackStatusRow(
       style = style,
       // red70 on paper70 meets 4.5:1; vermilion does not, so "Update available" stays ink.
       color =
-        if (kind == TileKind.Failed || kind == TileKind.FailedKept) colors.error
+        if (kind == TileKind.Failed || kind == TileKind.FailedKept || kind == TileKind.RemoveFailed)
+          colors.error
         else colors.textPrimary,
     )
   }

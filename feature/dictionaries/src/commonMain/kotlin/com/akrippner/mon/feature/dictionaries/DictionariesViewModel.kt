@@ -54,7 +54,7 @@ class DictionariesViewModel(private val manager: DictionaryManager) :
         }
       copy(
         packs = packs,
-        installedIds = packs.filter { it.hasVersionOnDisk() }.map { it.info.id }.toSet(),
+        installedIds = packs.filter { it.onDisk != null }.map { it.info.id }.toSet(),
         readyPackName = finished?.info?.name ?: readyPackName,
       )
     }
@@ -74,12 +74,3 @@ class DictionariesViewModel(private val manager: DictionaryManager) :
       }
   }
 }
-
-private fun Pack.hasVersionOnDisk(): Boolean =
-  when (val s = state) {
-    PackState.NotInstalled -> false
-    PackState.Installed,
-    is PackState.UpdateAvailable -> true
-    is PackState.Failed -> s.installed != null
-    is PackState.Downloading -> s.installed != null
-  }

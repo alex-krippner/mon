@@ -253,9 +253,15 @@ internal class FileDictionaryManager(
           }
         }
       }
-      // Something could not be deleted. The rescan above shows whether the pack is still installed;
-      // either way the user must see that the removal did not go through.
-      setActivity(packId, if (removed) null else PackState.Failed(PackError.STORAGE))
+      // Something could not be deleted. If the rescan above still finds the pack, the user must see
+      // that the removal did not go through. If only pack.json went, the pack is uninstalled
+      // already
+      // and sweep() deletes the rest of its folder on the next start.
+      val stillInstalled = current.installed.orEmpty().containsKey(packId)
+      setActivity(
+        packId,
+        if (removed || !stillInstalled) null else PackState.Failed(PackError.REMOVE),
+      )
     } finally {
       change { it.copy(removing = it.removing - packId) }
     }

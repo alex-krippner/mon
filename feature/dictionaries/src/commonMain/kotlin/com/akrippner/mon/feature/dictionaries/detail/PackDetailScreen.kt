@@ -49,6 +49,7 @@ import com.akrippner.mon.feature.dictionaries.languagePair
 import com.akrippner.mon.feature.dictionaries.linkified
 import com.akrippner.mon.feature.dictionaries.megabytes
 import com.akrippner.mon.feature.dictionaries.oldVersionWorks
+import com.akrippner.mon.feature.dictionaries.onDisk
 import com.akrippner.mon.feature.dictionaries.primaryActionLabel
 import com.akrippner.mon.feature.dictionaries.tileKind
 import org.jetbrains.compose.resources.stringResource
@@ -147,11 +148,7 @@ private fun PackDetail(pack: Pack, onIntent: (PackDetailIntent) -> Unit, modifie
 
 /** The version on disk, when it differs from the newest one shown as "Version". */
 private fun installedVersion(pack: Pack): String? =
-  when (val s = pack.state) {
-    is PackState.UpdateAvailable -> s.installed.version
-    is PackState.Failed -> s.installed?.version
-    else -> null
-  }
+  pack.onDisk?.version?.takeIf { it != pack.info.version }
 
 @Composable
 private fun Fact(label: String, value: String) {
@@ -170,10 +167,7 @@ private fun Fact(label: String, value: String) {
 @Composable
 private fun Actions(pack: Pack, kind: TileKind, onIntent: (PackDetailIntent) -> Unit) {
   // Something is on disk and no download is running: the manager refuses to remove mid-download.
-  val removable =
-    kind == TileKind.Installed ||
-      kind == TileKind.Update ||
-      (pack.state as? PackState.Failed)?.installed != null
+  val removable = pack.onDisk != null && pack.state !is PackState.Downloading
   val primary = primaryActionLabel(kind)
   if (primary == null && !removable) return
   Column(
@@ -204,12 +198,7 @@ private fun Actions(pack: Pack, kind: TileKind, onIntent: (PackDetailIntent) -> 
 }
 
 /** The space the installed version takes, which is what Remove frees. */
-private fun onDiskSize(pack: Pack): Long =
-  when (val s = pack.state) {
-    is PackState.UpdateAvailable -> s.installed.unpackedSizeBytes
-    is PackState.Failed -> s.installed?.unpackedSizeBytes ?: pack.info.unpackedSizeBytes
-    else -> pack.info.unpackedSizeBytes
-  }
+private fun onDiskSize(pack: Pack): Long = (pack.onDisk ?: pack.info).unpackedSizeBytes
 
 @Composable
 private fun RemoveDialog(pack: Pack, onIntent: (PackDetailIntent) -> Unit) {

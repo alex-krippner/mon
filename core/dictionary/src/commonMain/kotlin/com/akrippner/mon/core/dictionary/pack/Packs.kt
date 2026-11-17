@@ -32,6 +32,8 @@ enum class PackError {
   STORAGE,
   UNSUPPORTED,
   NOT_ENOUGH_SPACE,
+  /** The last removal failed and the pack is still installed. Retrying means removing again. */
+  REMOVE,
 }
 
 /** Why the catalog could not be refreshed. */

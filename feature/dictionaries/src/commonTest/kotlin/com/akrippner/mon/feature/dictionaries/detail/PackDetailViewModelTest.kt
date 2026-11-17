@@ -1,5 +1,6 @@
 package com.akrippner.mon.feature.dictionaries.detail
 
+import com.akrippner.mon.core.dictionary.pack.PackError
 import com.akrippner.mon.core.dictionary.pack.PackState
 import com.akrippner.mon.feature.dictionaries.FakeDictionaryManager
 import com.akrippner.mon.feature.dictionaries.testPack
@@ -48,12 +49,67 @@ class PackDetailViewModelTest {
     }
 
   @Test
-  fun anUnknownPack_showsNothing() =
+  fun aListedPack_doesNotRefresh() =
+    runTest(testDispatcher) {
+      manager.packs.value = listOf(testPack())
+
+      PackDetailViewModel("jmdict-eng", manager)
+      advanceUntilIdle()
+
+      assertEquals(0, manager.refreshCount)
+    }
+
+  @Test
+  fun restoredWithNothingLoaded_refreshesAndShowsThePack() =
+    runTest(testDispatcher) {
+      val pack = testPack(state = PackState.Installed)
+      manager.onRefresh = { manager.packs.value = listOf(pack) }
+
+      val viewModel = PackDetailViewModel("jmdict-eng", manager)
+      val effects = mutableListOf<PackDetailEffect>()
+      backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+        viewModel.effects.toList(effects)
+      }
+      advanceUntilIdle()
+
+      assertEquals(1, manager.refreshCount)
+      assertEquals(pack, viewModel.state.value.pack)
+      assertTrue(effects.isEmpty())
+    }
+
+  @Test
+  fun anUnknownPack_refreshesThenCloses() =
     runTest(testDispatcher) {
       val viewModel = PackDetailViewModel("missing", manager)
       advanceUntilIdle()
 
+      assertEquals(1, manager.refreshCount)
       assertNull(viewModel.state.value.pack)
+      assertEquals(PackDetailEffect.Close, viewModel.effects.first())
+    }
+
+  @Test
+  fun aFailedRemoval_keepsTheScreenOpen() =
+    runTest(testDispatcher) {
+      val installed = testPack(state = PackState.Installed)
+      manager.packs.value = listOf(installed)
+      manager.onRemove = {
+        manager.packs.value =
+          listOf(testPack(state = PackState.Failed(PackError.REMOVE, installed.info)))
+      }
+      val viewModel = PackDetailViewModel("jmdict-eng", manager)
+      val effects = mutableListOf<PackDetailEffect>()
+      backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+        viewModel.effects.toList(effects)
+      }
+      advanceUntilIdle()
+
+      viewModel.onIntent(PackDetailIntent.AskRemove)
+      viewModel.onIntent(PackDetailIntent.ConfirmRemove)
+      advanceUntilIdle()
+
+      assertTrue(effects.isEmpty())
+      assertEquals(PackError.REMOVE, (viewModel.state.value.pack?.state as PackState.Failed).error)
     }
 
   @Test

@@ -22,6 +22,7 @@ import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_e
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_network
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_not_enough_space
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_old_version_works
+import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_remove
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_storage
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_unsupported
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_language_pair
@@ -29,6 +30,7 @@ import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_n
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_reason_checksum
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_reason_network
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_reason_not_enough_space
+import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_reason_remove
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_reason_storage
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_size_mb
 import com.akrippner.mon.feature.dictionaries.generated.resources.language_de
@@ -91,6 +93,7 @@ internal fun PackError.message(): String =
     PackError.STORAGE -> stringResource(Res.string.dictionaries_error_storage)
     PackError.NOT_ENOUGH_SPACE -> stringResource(Res.string.dictionaries_error_not_enough_space)
     PackError.UNSUPPORTED -> stringResource(Res.string.dictionaries_error_unsupported)
+    PackError.REMOVE -> stringResource(Res.string.dictionaries_error_remove)
   }
 
 /** Two or three words for a tile's status line. */
@@ -102,6 +105,7 @@ internal fun PackError.shortReason(): String =
     PackError.STORAGE -> stringResource(Res.string.dictionaries_reason_storage)
     PackError.NOT_ENOUGH_SPACE -> stringResource(Res.string.dictionaries_reason_not_enough_space)
     PackError.UNSUPPORTED -> stringResource(Res.string.dictionaries_not_compatible)
+    PackError.REMOVE -> stringResource(Res.string.dictionaries_reason_remove)
   }
 
 /**
@@ -119,9 +123,9 @@ internal fun failureMessage(pack: Pack, error: PackError): String {
 /** For a failed update: the old version is still installed and works. */
 @Composable
 internal fun oldVersionWorks(state: PackState.Failed): String? =
-  state.installed?.let {
-    stringResource(Res.string.dictionaries_error_old_version_works, it.version)
-  }
+  state.installed
+    ?.takeIf { state.error != PackError.REMOVE }
+    ?.let { stringResource(Res.string.dictionaries_error_old_version_works, it.version) }
 
 private val urlPattern = Regex("""https?://[^\s()]+""")
 

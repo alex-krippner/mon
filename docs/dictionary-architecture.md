@@ -1,8 +1,9 @@
 # Dictionary architecture
 
 How the dictionary feature fits into the app. Everything drawn in the class diagram exists in the
-code; the only planned part is the Reader's lookup sheet, which will call `LookupWordUseCase`. The
-module edges are simplified from `AGENTS.md`.
+code; the only part not built is the Reader's lookup sheet, which will call `LookupWordUseCase`.
+`LookupBottomSheet` already exists in `:core:ui`, but nothing calls the use case yet. The module
+edges are the real dependencies from the `build.gradle.kts` files and the `mon.feature` plugin.
 
 Design decisions:
 
@@ -21,12 +22,8 @@ Design decisions:
 
 ## 1. Modules
 
-Yellow dashed boxes are planned.
-
 ```mermaid
 flowchart TB
-  classDef planned fill:#fff3cd,stroke:#b58900,stroke-dasharray: 5 3,color:#000
-
   subgraph Platforms
     androidApp
     desktopApp
@@ -38,11 +35,11 @@ flowchart TB
   subgraph Features
     library[":feature:library"]
     addreading[":feature:addreading"]
-    dictionaries[":feature:dictionaries<br/>pack list, download, licence attribution"]
+    dictionaries[":feature:dictionaries<br/>pack list and download<br/>pack detail: licence, remove"]
   end
 
   subgraph Core
-    nav[":core:navigation<br/>MonNavKey.Dictionaries"]
+    nav[":core:navigation<br/>Dictionaries, DictionaryDetail"]
     arch[":core:arch"]
     ui[":core:ui<br/>LookupBottomSheet"]
     ds[":core:designsystem"]
@@ -58,16 +55,16 @@ flowchart TB
     conv[":tools:pack-converter<br/>PackSource per source, publish"]
   end
 
-  mondata[("GitHub: alex-krippner/mon-data<br/>catalog.json + jmdict-*.db.gz")]:::planned
+  mondata[("GitHub: alex-krippner/mon-data<br/>catalog.json + jmdict-*.db.gz")]
 
   androidApp --> shared
   desktopApp --> shared
   iosApp --> shared
   shared --> library & addreading & dictionaries & nav
-  library & addreading & dictionaries --> domain
-  library & addreading & dictionaries --> ui
-  library & addreading & dictionaries --> arch
+  library --> data
+  addreading --> domain & data & tok
   dictionaries --> dict
+  library & addreading & dictionaries --> ds & arch
   ui --> ds
   domain --> data & tok & dict & model
   data --> db & model
@@ -79,8 +76,9 @@ flowchart TB
 ```
 
 The module rule still holds: features never depend on `:core:database` or on each other.
-`:feature:dictionaries` reaches the dictionary only through `:core:domain` or the
-`DictionaryManager` interface, and `:shared` wires them together.
+`:feature:dictionaries` talks to the `DictionaryManager` interface directly and does not use
+`:core:domain`. No feature uses `:core:ui` yet; the lookup sheet in it waits for the Reader. `:shared`
+wires everything together.
 
 ## 2. Classes
 
@@ -128,11 +126,12 @@ classDiagram
   class PackState {
     <<sealed>>
     NotInstalled
-    Downloading(progress)
+    Downloading(progress, installed)
     Installed
     UpdateAvailable(installed)
     Failed(error, installed)
   }
+  note for PackState "Failed covers a failed download or a failed removal"
   class CatalogPack {
     <<data, serializable>>
     id, name, format, schema
@@ -152,6 +151,7 @@ classDiagram
     STORAGE
     UNSUPPORTED
     NOT_ENOUGH_SPACE
+    REMOVE
   }
   class CatalogError {
     <<enum>>
@@ -199,7 +199,7 @@ classDiagram
   class State {
     <<private data>>
     catalog: List~CatalogPack~
-    installed: Map~String, CatalogPack~
+    installed: Map~String, CatalogPack~?
     activity: Map~String, PackState~
     removing: Set~String~
     toPacks() List~Pack~
@@ -307,8 +307,22 @@ classDiagram
   class DictionariesState {
     <<data :feature:dictionaries>>
     packs: List~Pack~
+    installedIds: Set~String~
     isRefreshing: Boolean
     refreshError: CatalogError?
+    readyPackName: String?
+    installed: List~Pack~
+    available: List~Pack~
+  }
+  class PackDetailViewModel {
+    <<public :feature:dictionaries>>
+    -packId: String
+    +onIntent(intent)
+  }
+  class PackDetailState {
+    <<data :feature:dictionaries>>
+    pack: Pack?
+    confirmingRemove: Boolean
   }
 
   %% ---------- :tools:pack-converter ----------
@@ -331,6 +345,11 @@ classDiagram
     publish(source, built, outDir, repo, previous, allowDrop) Release
     readCatalog(text) Catalog
     requireValidVersion(version)
+  }
+  class PackResult {
+    <<internal :tools:pack-converter>>
+    pack: CatalogPack
+    archive, entries, skipped
   }
   class Release {
     <<internal :tools:pack-converter>>
@@ -421,12 +440,17 @@ classDiagram
   DictionariesViewModel --> DictionaryManager
   DictionariesViewModel --> DictionariesState
   DictionariesState --> Pack
+  PackDetailViewModel --> DictionaryManager
+  PackDetailViewModel --> PackDetailState
+  PackDetailState --> Pack
   Main --> PackSource : picks by subcommand
   Main ..> PreviousCatalog : fetches the latest catalog
   Main ..> Publish
   PackSource ..> BuiltPack : builds
   Publish ..> BuiltPack : gzips and describes
   Publish ..> Release
+  Release --> PackResult
+  PackResult --> CatalogPack
   Publish ..> Sha256
   Publish ..> Catalog : merges the previous one, writes catalog.json
   JmdictSource ..> SimplifiedDictionary : parses
@@ -457,8 +481,8 @@ classDiagram
   are byte-identical to the ones published before the rule existed.
 - **State:** `FileDictionaryManager` keeps one private `State` and derives `packs` from it on every
   change. `PackInstaller` keeps no state; it only does the file work.
-- **UI path:** `LookupWordUseCase` and `DictionariesViewModel` depend only on the
-  `DictionaryManager` interface. They never see files, Ktor or SQLite.
+- **UI path:** `LookupWordUseCase`, `DictionariesViewModel` and `PackDetailViewModel` depend only on
+  the `DictionaryManager` interface. They never see files, Ktor or SQLite.
 - **Converter:** `JmdictWriter`, `JmdictRecord`, `JmdictSchema` and `sha256Hex` are public only
   because `:tools:pack-converter` uses them; the app itself only reads.
 - **Converter split:** a `PackSource` only turns its input files into uncompressed pack files
@@ -471,3 +495,4 @@ classDiagram
 - **Rules and checklists** for adding a source, a format or a kind, and for the catalog and the
   releases, are in `AGENTS.md` under "Dictionary packs".
 - **Not drawn:** the Reader's lookup sheet, which will call `LookupWordUseCase` (a follow-up).
+  `LookupBottomSheet` exists in `:core:ui`, but nothing uses it yet.
