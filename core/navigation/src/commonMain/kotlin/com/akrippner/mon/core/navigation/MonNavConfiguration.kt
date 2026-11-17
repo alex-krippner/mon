@@ -15,6 +15,8 @@ val MonNavConfiguration = SavedStateConfiguration {
     polymorphic(NavKey::class) {
       subclass(Library::class)
       subclass(AddReading::class)
+      subclass(Dictionaries::class)
+      subclass(DictionaryDetail::class)
       subclass(Reader::class)
     }
   }

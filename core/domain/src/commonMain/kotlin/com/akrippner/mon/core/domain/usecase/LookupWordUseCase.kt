@@ -3,6 +3,7 @@ package com.akrippner.mon.core.domain.usecase
 import com.akrippner.mon.core.dictionary.DictionaryClosedException
 import com.akrippner.mon.core.dictionary.MonDictionary
 import com.akrippner.mon.core.dictionary.pack.DictionaryManager
+import com.akrippner.mon.core.dictionary.pack.installed
 import com.akrippner.mon.core.domain.model.LookupResult
 import com.akrippner.mon.core.model.data.DictionaryEntry
 import com.akrippner.mon.core.model.data.Language

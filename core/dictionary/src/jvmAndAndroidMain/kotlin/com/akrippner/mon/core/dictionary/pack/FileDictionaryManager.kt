@@ -1,7 +1,7 @@
 package com.akrippner.mon.core.dictionary.pack
 
-import com.akrippner.mon.core.dictionary.CloseableDictionary
-import com.akrippner.mon.core.dictionary.MonDictionary
+import com.akrippner.mon.core.dictionary.CloseableReader
+import com.akrippner.mon.core.dictionary.PackReader
 import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +30,7 @@ private fun State.toPacks(): List<Pack> {
   fun activityOf(id: String): PackState? =
     when (val current = activity[id]) {
       is PackState.Failed -> current.copy(installed = onDisk[id])
+      is PackState.Downloading -> current.copy(installed = onDisk[id])
       else -> current
     }
   val fromCatalog =
@@ -53,7 +54,7 @@ internal class FileDictionaryManager(
   private val installer: PackInstaller,
   private val factory: DictionaryFactory,
   private val catalogUrl: String,
-  /** Runs the installs. Lives as long as the manager, i.e. the app. */
+  /** Runs the installations. Lives as long as the manager, i.e. the app. */
   private val scope: CoroutineScope,
 ) : DictionaryManager {
 
@@ -63,11 +64,11 @@ internal class FileDictionaryManager(
 
   private val json = Json { ignoreUnknownKeys = true }
 
-  /** Serializes "close reader, then replace or delete the file" against [installed]. */
+  /** Serializes "close reader, then replace or delete the file" against [readers]. */
   private val files = Mutex()
 
   /** Open readers by pack id. Only touched while holding [files]. */
-  private val opened = mutableMapOf<String, CloseableDictionary>()
+  private val opened = mutableMapOf<String, CloseableReader>()
 
   private fun change(block: (State) -> State): State =
     synchronized(this) {
@@ -136,7 +137,7 @@ internal class FileDictionaryManager(
   /**
    * Closes the reader first and forgets it only afterwards, so a cancelled close loses nothing. A
    * reader whose close failed is forgotten too: it counts as closed and answers nothing any more,
-   * so [installed] must not hand it out again.
+   * so [readers] must not hand it out again.
    */
   private suspend fun closeReader(packId: String) {
     try {
@@ -208,7 +209,7 @@ internal class FileDictionaryManager(
       files.withLock {
         closeReader(packId)
         // Not cancellable, and also after a failed commit: once the files have changed, the
-        // installed list must follow, or installed() would work with the old pack.json.
+        // installed list must follow, or readers() would work with the old pack.json.
         withContext(NonCancellable) {
           try {
             withContext(Dispatchers.IO) { installer.commit(pack, database) }
@@ -260,12 +261,17 @@ internal class FileDictionaryManager(
     }
   }
 
-  override suspend fun installed(): List<MonDictionary> =
+  override suspend fun readers(): List<PackReader> =
     files.withLock {
       if (current.installed == null) reloadInstalled()
-      current.installed.orEmpty().values.mapNotNull { pack ->
-        val format = factory.formatOf(pack) ?: return@mapNotNull null
-        opened.getOrPut(pack.id) { format.open(installer.databaseFile(pack.id), pack) }
-      }
+      // Sorted, so results from several packs always come in the same order.
+      current.installed
+        .orEmpty()
+        .values
+        .sortedBy { it.id }
+        .mapNotNull { pack ->
+          val format = factory.formatOf(pack) ?: return@mapNotNull null
+          opened.getOrPut(pack.id) { format.open(installer.databaseFile(pack.id), pack) }
+        }
     }
 }

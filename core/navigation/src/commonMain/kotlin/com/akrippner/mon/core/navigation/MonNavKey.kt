@@ -9,4 +9,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object AddReading : MonNavKey
 
+@Serializable data object Dictionaries : MonNavKey
+
+/** One dictionary pack: its details, licence and Remove. Part of the Dictionaries tab. */
+@Serializable data class DictionaryDetail(val packId: String) : MonNavKey
+
 @Serializable data class Reader(val readingId: String) : MonNavKey

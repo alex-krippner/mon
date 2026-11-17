@@ -1,6 +1,6 @@
 package com.akrippner.mon.core.dictionary.pack
 
-import com.akrippner.mon.core.dictionary.CloseableDictionary
+import com.akrippner.mon.core.dictionary.CloseableReader
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Language
 import java.io.File
@@ -15,7 +15,11 @@ internal interface DictionaryFormat {
 
   fun verify(file: File, pack: CatalogPack): Boolean
 
-  fun open(file: File, pack: CatalogPack): CloseableDictionary
+  /**
+   * Must be cheap and must not touch [file] yet: the manager opens a reader for every installed
+   * pack whenever the readers are asked for. Open the file on the first real call instead.
+   */
+  fun open(file: File, pack: CatalogPack): CloseableReader
 }
 
 internal class DictionaryFactory(private val formats: List<DictionaryFormat>) {

@@ -10,20 +10,38 @@ import com.akrippner.mon.core.designsystem.icon.defaultIcons.core.*
 
 @Immutable
 abstract class IconCatalog {
+  open fun coreBlock(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.Block(primaryColor)
+
+  open fun coreCheckCircle(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.CheckCircle(primaryColor)
+
   open fun coreChevronLeft(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.ChevronLeft(primaryColor)
 
   open fun coreChevronRight(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.ChevronRight(primaryColor)
 
+  open fun coreDictionaries(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.Dictionaries(primaryColor)
+
+  open fun coreErrorCircle(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.ErrorCircle(primaryColor)
+
   open fun coreFurigana(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Furigana(primaryColor)
+
+  open fun coreInfo(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.Info(primaryColor)
 
   open fun coreLibrary(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Library(primaryColor)
 
   open fun corePlus(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Plus(primaryColor)
+
+  open fun coreRefresh(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.Refresh(primaryColor)
 
   open fun coreSearch(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Search(primaryColor)
@@ -40,11 +58,17 @@ abstract class IconCatalog {
     secondaryColor: Color = Color(0xFFDADADA),
   ): ImageVector =
     when (id) {
+      Icon.Core.Block -> coreBlock(primaryColor)
+      Icon.Core.CheckCircle -> coreCheckCircle(primaryColor)
       Icon.Core.ChevronLeft -> coreChevronLeft(primaryColor)
       Icon.Core.ChevronRight -> coreChevronRight(primaryColor)
+      Icon.Core.Dictionaries -> coreDictionaries(primaryColor)
+      Icon.Core.ErrorCircle -> coreErrorCircle(primaryColor)
       Icon.Core.Furigana -> coreFurigana(primaryColor)
+      Icon.Core.Info -> coreInfo(primaryColor)
       Icon.Core.Library -> coreLibrary(primaryColor)
       Icon.Core.Plus -> corePlus(primaryColor)
+      Icon.Core.Refresh -> coreRefresh(primaryColor)
       Icon.Core.Search -> coreSearch(primaryColor)
       Icon.Core.Settings -> coreSettings(primaryColor)
       Icon.Core.Vocabulary -> coreVocabulary(primaryColor)
