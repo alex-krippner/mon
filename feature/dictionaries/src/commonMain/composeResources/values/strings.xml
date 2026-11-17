@@ -43,6 +43,7 @@
     <string name="dictionaries_reason_checksum">Damaged download</string>
     <string name="dictionaries_reason_storage">Could not save</string>
     <string name="dictionaries_reason_not_enough_space">Not enough space</string>
+    <string name="dictionaries_reason_remove">Could not remove</string>
 
     <!-- Catalog errors -->
     <string name="dictionaries_error_catalog_network">Could not check for dictionaries. Check your connection.</string>
@@ -58,6 +59,7 @@
     <string name="dictionaries_error_storage">The dictionary could not be saved on this device.</string>
     <string name="dictionaries_error_not_enough_space">There is not enough free space for this dictionary.</string>
     <string name="dictionaries_error_unsupported">This version of the app cannot use this dictionary.</string>
+    <string name="dictionaries_error_remove">The dictionary could not be removed. Please try again.</string>
     <string name="dictionaries_error_free_space">Free %1$s on this device, then try again.</string>
     <string name="dictionaries_error_old_version_works">The version you have, %1$s, still works.</string>
     <string name="dictionaries_error_for_pack">%1$s: %2$s</string>

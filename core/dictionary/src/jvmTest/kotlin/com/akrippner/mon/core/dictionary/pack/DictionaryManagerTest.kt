@@ -147,7 +147,7 @@ class DictionaryManagerTest {
 
       val state = stateOf()
       assertIs<PackState.Failed>(state)
-      assertEquals(PackError.STORAGE, state.error)
+      assertEquals(PackError.REMOVE, state.error)
       assertEquals(pack.info, state.installed)
       assertEquals(1, manager.installed().single().lookup(LookupQuery("開けて")).size)
     } finally {

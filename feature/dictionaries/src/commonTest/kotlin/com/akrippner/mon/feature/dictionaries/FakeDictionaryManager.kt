@@ -20,9 +20,13 @@ class FakeDictionaryManager : DictionaryManager {
   val installs = mutableListOf<String>()
   val removals = mutableListOf<String>()
 
+  /** Runs at the end of refreshCatalog(), e.g. to fill [packs] as the real manager would. */
+  var onRefresh: () -> Unit = {}
+
   override suspend fun refreshCatalog(): CatalogError? {
     refreshCount++
     refreshGate?.await()
+    onRefresh()
     return refreshResult
   }
 
