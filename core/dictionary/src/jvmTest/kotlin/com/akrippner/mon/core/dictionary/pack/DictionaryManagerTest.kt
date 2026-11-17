@@ -28,13 +28,14 @@ class DictionaryManagerTest {
   private val catalogUrl = "https://example.test/catalog.json"
   // Installs run in the manager's own scope, as in the app; tests cancel it to simulate shutdown.
   private val scope = CoroutineScope(SupervisorJob())
+  private val notesFormat = NotesFormat()
   private val manager = newManager()
 
   private fun newManager() =
     FileDictionaryManager(
       downloader,
       PackInstaller(downloader, dir),
-      DictionaryFactory(listOf(JmdictFormat)),
+      DictionaryFactory(listOf(JmdictFormat, notesFormat)),
       catalogUrl,
       scope,
     )
@@ -236,6 +237,46 @@ class DictionaryManagerTest {
   }
 
   @Test
+  fun aDownloadingUpdateNamesTheVersionOnDisk() = runTest {
+    val v1 = testPack(version = "1", word = "開けて")
+    val v2 = testPack(version = "2", word = "飲んで")
+    publish(v1)
+    manager.refreshCatalog()
+    manager.install(v1.info.id)
+    publish(v2)
+    manager.refreshCatalog()
+    val gate = CompletableDeferred<Unit>()
+    downloader.gate = gate
+
+    val install = launch { manager.install(v2.info.id) }
+    // A screen opened mid-update must still see that a version is installed.
+    val state = awaitState { it is PackState.Downloading }.single().state
+    assertIs<PackState.Downloading>(state)
+    assertEquals(v1.info, state.installed)
+
+    gate.complete(Unit)
+    install.join()
+    assertEquals(PackState.Installed, stateOf())
+  }
+
+  @Test
+  fun aFirstDownloadHasNoVersionOnDisk() = runTest {
+    val pack = testPack()
+    publish(pack)
+    manager.refreshCatalog()
+    val gate = CompletableDeferred<Unit>()
+    downloader.gate = gate
+
+    val install = launch { manager.install(pack.info.id) }
+    val state = awaitState { it is PackState.Downloading }.single().state
+    assertIs<PackState.Downloading>(state)
+    assertNull(state.installed)
+
+    gate.complete(Unit)
+    install.join()
+  }
+
+  @Test
   fun cancellingTheCallerDoesNotCancelTheDownload() = runTest {
     val pack = testPack()
     publish(pack)
@@ -385,5 +426,51 @@ class DictionaryManagerTest {
 
     assertEquals(PackState.Installed, stateOf())
     assertEquals(1, manager.installed().single().lookup(LookupQuery("開けて")).size)
+  }
+
+  @Test
+  fun servesReadersOfEveryKindAndOnlyDictionariesAsInstalled() = runTest {
+    val words = testPack()
+    val notes = notesPack()
+    publish(words, notes)
+    manager.refreshCatalog()
+    manager.install(words.info.id)
+    manager.install(notes.info.id)
+
+    assertEquals(listOf(words.info.id, notes.info.id), manager.readers().map { it.source.id })
+    assertIs<NotesReader>(manager.readers().last())
+    assertEquals(listOf(words.info.id), manager.installed().map { it.source.id })
+  }
+
+  @Test
+  fun removingAPackClosesAReaderOfAnyKind() = runTest {
+    val words = testPack()
+    val notes = notesPack()
+    publish(words, notes)
+    manager.refreshCatalog()
+    manager.install(words.info.id)
+    manager.install(notes.info.id)
+    manager.readers() // opens the readers
+    val reader = notesFormat.opened.single()
+    assertFalse(reader.closed)
+
+    manager.remove(notes.info.id)
+
+    assertTrue(reader.closed)
+    assertEquals(listOf(words.info.id), manager.readers().map { it.source.id })
+    assertFalse(File(dir, notes.info.id).exists())
+  }
+
+  @Test
+  fun readersAreSortedByPackId() = runTest {
+    // Without the sort the order is the directory listing's, which depends on the file system and
+    // can be alphabetical by chance. Many unrelated names make that chance negligible.
+    val ids = listOf("zeta", "pack-c", "m", "alpha-2", "jmdict-eng", "b", "notes", "k-1", "pack-a")
+    val packs = ids.map { testPack(id = it) }
+    publish(*packs.toTypedArray())
+    manager.refreshCatalog()
+    ids.forEach { manager.install(it) }
+
+    assertEquals(ids.sorted(), manager.readers().map { it.source.id })
   }
 }

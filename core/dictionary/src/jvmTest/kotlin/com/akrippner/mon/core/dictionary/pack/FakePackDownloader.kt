@@ -10,6 +10,8 @@ internal class FakePackDownloader : PackDownloader {
   var failWith: PackError? = null // every call throws PackException(it)
   var gate: CompletableDeferred<Unit>? = null // download() waits here until you complete it
   val downloads = AtomicInteger()
+  /** The last progress download() reports; a server whose size was off never reaches 1. */
+  var finalProgress = 1f
 
   override suspend fun fetchText(url: String): String {
     failWith?.let { throw PackException(it) }
@@ -26,6 +28,6 @@ internal class FakePackDownloader : PackDownloader {
     failWith?.let { throw PackException(it) }
     gate?.await()
     target.writeBytes(files[url] ?: throw PackException(PackError.NETWORK))
-    onProgress(1f)
+    onProgress(finalProgress)
   }
 }

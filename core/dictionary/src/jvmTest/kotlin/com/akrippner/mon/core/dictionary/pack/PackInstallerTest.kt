@@ -54,7 +54,19 @@ class PackInstallerTest {
 
     installer.download(pack.info, accept) { progress += it }
 
-    assertEquals(listOf(1f), progress)
+    assertEquals(1f, progress.last())
+  }
+
+  @Test
+  fun reportsFullProgressBeforeUnpackingEvenIfTheDownloadFellShort() = runTest {
+    val pack = testPack()
+    serve(pack)
+    downloader.finalProgress = 0.97f
+    val progress = mutableListOf<Float>()
+
+    installer.download(pack.info, accept) { progress += it }
+
+    assertEquals(listOf(0.97f, 1f), progress)
   }
 
   @Test
