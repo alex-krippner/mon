@@ -129,7 +129,7 @@ class LookupWordUseCaseTest {
       LookupWordUseCase(manager).execute(dictionaryForm, Language.JAPANESE, Language.ENGLISH)
 
     assertEquals(LookupResult.Found(listOf(entry("a"))), result)
-    assertEquals(2, manager.installedCalls)
+    assertEquals(2, manager.readersCalls)
   }
 
   @Test
@@ -152,6 +152,6 @@ class LookupWordUseCaseTest {
       LookupWordUseCase(manager).execute(dictionaryForm, Language.JAPANESE, Language.ENGLISH)
 
     assertEquals(LookupResult.NotFound, result)
-    assertEquals(3, manager.installedCalls)
+    assertEquals(3, manager.readersCalls)
   }
 }

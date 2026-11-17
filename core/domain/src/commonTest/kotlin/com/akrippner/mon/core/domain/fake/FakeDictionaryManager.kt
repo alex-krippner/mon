@@ -1,6 +1,7 @@
 package com.akrippner.mon.core.domain.fake
 
 import com.akrippner.mon.core.dictionary.MonDictionary
+import com.akrippner.mon.core.dictionary.PackReader
 import com.akrippner.mon.core.dictionary.pack.CatalogError
 import com.akrippner.mon.core.dictionary.pack.DictionaryManager
 import com.akrippner.mon.core.dictionary.pack.Pack
@@ -11,14 +12,14 @@ import com.akrippner.mon.core.model.data.LookupQuery
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** Only [installed] matters to the use case; the pack operations do nothing. */
-class FakeDictionaryManager(private val dictionaries: List<MonDictionary> = emptyList()) :
+/** Only [readers] matters to the use case; the pack operations do nothing. */
+class FakeDictionaryManager(private val dictionaries: List<PackReader> = emptyList()) :
   DictionaryManager {
   override val packs: StateFlow<List<Pack>> = MutableStateFlow(emptyList())
 
-  /** If set, returned from the second [installed] call on, as after an update replaced a reader. */
-  var afterFirstCall: List<MonDictionary>? = null
-  var installedCalls = 0
+  /** If set, returned from the second [readers] call on, as after an update replaced a reader. */
+  var afterFirstCall: List<PackReader>? = null
+  var readersCalls = 0
 
   override suspend fun refreshCatalog(): CatalogError? = null
 
@@ -26,8 +27,8 @@ class FakeDictionaryManager(private val dictionaries: List<MonDictionary> = empt
 
   override suspend fun remove(packId: String) {}
 
-  override suspend fun installed(): List<MonDictionary> =
-    if (installedCalls++ == 0) dictionaries else afterFirstCall ?: dictionaries
+  override suspend fun readers(): List<PackReader> =
+    if (readersCalls++ == 0) dictionaries else afterFirstCall ?: dictionaries
 }
 
 class FakeDictionary(
