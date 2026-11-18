@@ -13,6 +13,7 @@ kotlin {
                 implementation(projects.core.tokenizer)
                 implementation(projects.core.dictionary)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kermit)
             }
         }
 
