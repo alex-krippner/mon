@@ -52,7 +52,22 @@ class JmdictDictionaryTest {
     block: suspend (JmdictDictionary) -> Unit,
   ) {
     val path = writeFile(writtenFor, *records)
-    val dictionary = JmdictDictionary(path, source, openedAs, Language.ENGLISH)
+    val pack =
+      CatalogPack(
+        id = "jmdict",
+        name = "JMdict",
+        sourceLanguage = openedAs.tag,
+        glossLanguage = Language.ENGLISH.tag,
+        format = JmdictSchema.FORMAT,
+        schema = JmdictSchema.VERSION,
+        version = "test",
+        url = "https://example.test/jmdict.db.gz",
+        sizeBytes = 0,
+        unpackedSizeBytes = 0,
+        sha256 = "",
+        attribution = "attribution",
+      )
+    val dictionary = JmdictDictionary(path, pack)
     try {
       block(dictionary)
     } finally {

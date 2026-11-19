@@ -1,7 +1,8 @@
 package com.akrippner.mon.core.domain.usecase
 
+import com.akrippner.mon.core.dictionary.DictionaryUnavailableException
 import com.akrippner.mon.core.domain.fake.FakeDictionary
-import com.akrippner.mon.core.domain.fake.FakeDictionaryManager
+import com.akrippner.mon.core.domain.fake.FakeDictionaryProvider
 import com.akrippner.mon.core.domain.model.LookupResult
 import com.akrippner.mon.core.model.data.DictionaryEntry
 import com.akrippner.mon.core.model.data.DictionarySource
@@ -10,7 +11,6 @@ import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.LookupQuery
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Sense
-import com.akrippner.mon.core.packs.PackClosedException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -32,7 +32,7 @@ class LookupWordUseCaseTest {
     MonToken("食べた", dictionaryForm = "食べる", pronunciation = "タベタ", partOfSpeech = listOf("動詞"))
 
   private suspend fun lookup(token: MonToken, vararg dictionaries: FakeDictionary) =
-    LookupWordUseCase(FakeDictionaryManager(dictionaries.toList()))
+    LookupWordUseCase(FakeDictionaryProvider(dictionaries.toList()))
       .execute(token, Language.JAPANESE, Language.ENGLISH)
 
   @Test
@@ -120,38 +120,20 @@ class LookupWordUseCaseTest {
   }
 
   @Test
-  fun aReaderClosedByAnUpdateIsReplacedAndTheLookupRepeated() = runTest {
-    val closed = FakeDictionary(failure = PackClosedException())
-    val reopened = FakeDictionary(entries = listOf(entry("a")))
-    val manager = FakeDictionaryManager(listOf(closed)).apply { afterFirstCall = listOf(reopened) }
+  fun anUnavailableDictionaryIsSkipped() = runTest {
+    val unavailable = FakeDictionary("gone", failure = DictionaryUnavailableException("replaced"))
+    val working = FakeDictionary("ok", entries = listOf(entry("1", "ok")))
 
-    val result =
-      LookupWordUseCase(manager).execute(dictionaryForm, Language.JAPANESE, Language.ENGLISH)
-
-    assertEquals(LookupResult.Found(listOf(entry("a"))), result)
-    assertEquals(2, manager.readersCalls)
+    assertEquals(
+      LookupResult.Found(listOf(entry("1", "ok"))),
+      lookup(dictionaryForm, unavailable, working),
+    )
   }
 
   @Test
-  fun aReaderClosedByARemovalGivesNoDictionaryInstalled() = runTest {
-    val closed = FakeDictionary(failure = PackClosedException())
-    val manager = FakeDictionaryManager(listOf(closed)).apply { afterFirstCall = emptyList() }
+  fun onlyUnavailableDictionariesGiveNotFound() = runTest {
+    val unavailable = FakeDictionary(failure = DictionaryUnavailableException("replaced"))
 
-    val result =
-      LookupWordUseCase(manager).execute(dictionaryForm, Language.JAPANESE, Language.ENGLISH)
-
-    assertEquals(LookupResult.NoDictionaryInstalled, result)
-  }
-
-  @Test
-  fun givesUpAfterAFewAttemptsWhenTheReaderIsClosedEveryTime() = runTest {
-    val closed = FakeDictionary(failure = PackClosedException())
-    val manager = FakeDictionaryManager(listOf(closed))
-
-    val result =
-      LookupWordUseCase(manager).execute(dictionaryForm, Language.JAPANESE, Language.ENGLISH)
-
-    assertEquals(LookupResult.NotFound, result)
-    assertEquals(3, manager.readersCalls)
+    assertEquals(LookupResult.NotFound, lookup(dictionaryForm, unavailable))
   }
 }

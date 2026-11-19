@@ -12,7 +12,6 @@ kotlin {
                 implementation(projects.core.data)
                 implementation(projects.core.tokenizer)
                 implementation(projects.core.dictionary)
-                implementation(projects.core.packs)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kermit)
             }

@@ -9,8 +9,10 @@ import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Label
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.LookupQuery
+import com.akrippner.mon.core.packs.CatalogPack
 import com.akrippner.mon.core.packs.CloseableReader
 import com.akrippner.mon.core.packs.PackClosedException
+import com.akrippner.mon.core.packs.toSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -21,12 +23,12 @@ private const val MAX_RESULTS = 10
 private const val FIND_SQL =
   "SELECT e.id, e.common, e.payload FROM lookup_key k JOIN entry e ON e.id = k.entry_id WHERE k.key = ?"
 
-internal class JmdictDictionary(
-  private val path: String,
-  override val source: DictionarySource,
-  override val sourceLanguage: Language,
-  override val glossLanguage: Language,
-) : MonDictionary, CloseableReader {
+internal class JmdictDictionary(private val path: String, override val pack: CatalogPack) :
+  MonDictionary, CloseableReader {
+
+  override val source: DictionarySource = pack.toSource()
+  override val sourceLanguage: Language = Language.fromTag(pack.sourceLanguage)
+  override val glossLanguage: Language = Language.fromTag(pack.glossLanguage)
 
   private val mutex = Mutex()
   private val json = Json { ignoreUnknownKeys = true }

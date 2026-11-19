@@ -4,16 +4,12 @@ import com.akrippner.mon.core.data.ReadingRepository
 import com.akrippner.mon.core.domain.model.AddReadingInput
 import com.akrippner.mon.core.domain.model.AddReadingInputError
 import com.akrippner.mon.core.domain.model.AddReadingResult
-import com.akrippner.mon.core.tokenizer.Tokenizer
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.akrippner.mon.core.tokenizer.TokenizerProvider
 
 /** Validates a new reading, tokenizes its text and stores both. */
 class AddReadingUseCase(
   private val repository: ReadingRepository,
-  private val tokenizer: Tokenizer,
-  private val tokenizeDispatcher: CoroutineDispatcher = Dispatchers.Default,
+  private val tokenizers: TokenizerProvider,
 ) {
   suspend fun execute(input: AddReadingInput): AddReadingResult {
     val title = input.title.trim()
@@ -26,7 +22,8 @@ class AddReadingUseCase(
     }
     if (errors.isNotEmpty()) return AddReadingResult.Invalid(errors)
 
-    val tokens = withContext(tokenizeDispatcher) { tokenizer.tokenize(text) }
+    // No tokenizer for the language: store the reading without tokens (phase 3 tokenizes it later).
+    val tokens = tokenizers.tokenizerFor(input.sourceLanguage)?.tokenize(text).orEmpty()
 
     val readingId =
       repository.addReading(

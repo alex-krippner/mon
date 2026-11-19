@@ -7,4 +7,6 @@ import org.koin.dsl.module
 
 // bind, not single<PackFormat>: every module registers its own format under its own type, and the
 // pack manager collects them with getAll<PackFormat>().
-actual val dictionaryModule = module { single { JmdictFormat } bind PackFormat::class }
+internal actual val dictionaryFormatModule = module {
+  single { JmdictFormat } bind PackFormat::class
+}

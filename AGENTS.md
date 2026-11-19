@@ -48,12 +48,17 @@ dictionary lookups, using a Japanese tokenizer.
   bootstrap (`initKoin`), Compose resources, and the Sudachi system dictionary.
 - `:core:model` — data models (`Reading`, `ReadingSummary`, `MonToken`, ...).
 - `:core:domain` — business logic: use cases such as `AddReadingUseCase`, which
-  validates input, tokenizes it with the `Tokenizer` and stores it through a repository, and
-  `LookupWordUseCase`, which looks a `MonToken` up in every installed dictionary for a language
-  pair and returns `LookupResult` (`Found`, `NotFound` or `NoDictionaryInstalled`, which the UI
+  validates input, tokenizes it with the `Tokenizer` that `TokenizerProvider` offers for the
+  reading's language (none: it stores the reading without tokens) and stores it through a
+  repository, and `LookupWordUseCase`, which looks a `MonToken` up in every dictionary
+  `DictionaryProvider` offers for a language pair and returns `LookupResult` (`Found`, `NotFound` or `NoDictionaryInstalled`, which the UI
   turns into a "download a dictionary" prompt).
-- `:core:tokenizer` — the `Tokenizer` interface, which returns `MonToken`s, and its Sudachi
-  implementation. `TokenizerImpl` lives in the shared `jvmAndAndroidMain` source set; the
+- `:core:tokenizer` — the `Tokenizer` capability (`language`, `id`, suspending `tokenize`, which
+  returns `MonToken`s), `TokenizerProvider` (`tokenizerFor(language)`, and `changes`, which emits
+  when the available tokenizers may have changed) and the Sudachi implementation.
+  `TokenizerUnavailableException` means "can't answer right now", not "no tokens".
+  Code above this module asks the provider and never assumes where a tokenizer comes from.
+  Today `BundledTokenizerProvider` offers the one bundled Sudachi tokenizer. `TokenizerImpl` lives in the shared `jvmAndAndroidMain` source set; the
   dictionary loading and the Koin module are `expect`/`actual` per platform. The dictionary is
   loaded lazily on the first `tokenize` call, so call it off the main thread.
 - `:core:packs` — the generic pack system, which knows no file format: `PackManager` (catalog, download,
@@ -66,9 +71,12 @@ dictionary lookups, using a Japanese tokenizer.
   (`single { JmdictFormat } bind PackFormat::class`). Installed packs live in a folder called
   `dictionaries` (see "Dictionary packs"); the name is historical and must not change.
 - `:core:dictionary` — the dictionary: the `MonDictionary` capability (word lookup in some language
-  pair; it extends `PackReader`), the JMdict reader and file format, and `installed()`, which keeps
-  the `MonDictionary` readers of a `PackManager`. It plugs `JmdictFormat` into `:core:packs`
-  (`dictionaryModule`). See "Dictionary packs" below.
+  pair; it does not extend `PackReader`, so an online dictionary can implement it too),
+  `DictionaryProvider` (`dictionariesFor(source, gloss)`), the JMdict reader and file format and
+  `PackDictionaryProvider`, which offers the `MonDictionary` readers of the installed packs and
+  repeats a lookup with the pack's current reader when it was closed by an update or removal. A
+  lookup that can't be answered throws `DictionaryUnavailableException`. It plugs `JmdictFormat`
+  into `:core:packs` (`dictionaryModule`). See "Dictionary packs" below.
   The architecture diagrams are in `docs/dictionary-architecture.md`.
 - `:tools:pack-converter` — command-line tool (not part of the app) that turns dictionary source
   files into packs and writes the catalog. One subcommand per source (`PackSource`); today the only
@@ -153,7 +161,7 @@ Presentation and navigation:
   exported schemas), `jvmTest` in `:core:dictionary` and `test` in `:tools:pack-converter`; other
   modules have no test source sets. Database tests run
   against an in-memory database with the bundled SQLite driver. Domain and view model
-  tests use hand-written fakes of `ReadingRepository` and `Tokenizer`, and view model
+  tests use hand-written fakes of `ReadingRepository`, `TokenizerProvider` and `DictionaryProvider`, and view model
   tests use `Dispatchers.setMain`. The dictionary tests build tiny real packs with `JmdictWriter`
   and use a hand-written `FakePackDownloader` plus Ktor's `MockEngine`; `NotesFormat` is a test-only
   pack kind that is not a word dictionary. The converter tests use a fake `PackSource`, and
@@ -173,11 +181,11 @@ The app is tied to no dictionary or language: `MonDictionary` is an interface, a
 downloadable packs, not bundled (only the Sudachi `system_core.dic` is). The app works without any
 pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
 
-- **Readers and capabilities.** Every installed pack opens into a `PackReader` (`source`,
-  `sourceLanguage`, `glossLanguage`). What a reader can answer is a capability interface on top of
-  it: `MonDictionary` (`lookup`) is the only one today. `PackManager.readers()` returns the
-  readers of all kinds, sorted by pack id; `installed()` is an extension that keeps the
-  `MonDictionary` ones. The manager, the installer and the Dictionaries screen do not care what
+- **Readers and capabilities.** Every installed pack opens into a `PackReader` (only `pack: CatalogPack`).
+  What a reader can answer is a capability interface that the reader implements next to it:
+  `MonDictionary` (`lookup`) is the only one today. Capabilities do not extend `PackReader`.
+  `PackManager.readers()` returns the readers of all kinds, sorted by pack id; the `internal`
+  extension `installed()` in `:core:dictionary` keeps the `MonDictionary` ones. The manager, the installer and the Dictionaries screen do not care what
   kind a pack is. `PackFormat.open` must stay cheap (no file access), because `readers()`
   opens every installed pack; a reader opens its file on the first real call.
 - **Where it lives.** A pack is `<base>/<packId>/dictionary.db` plus `pack.json` (the installed
@@ -197,8 +205,8 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
   sha256, gunzip, validate with `PackFormat.verify`, then commit). Ktor is used only in
   `KtorPackDownloader`, behind the `PackDownloader` interface. A reader must be closed before its
   file is replaced or deleted; the manager does that under its `files` lock. A closed reader throws
-  `PackClosedException`, and `LookupWordUseCase` then fetches `installed()` again and repeats
-  the lookup. The sha256 of a pack is computed by `sha256Hex`, shared by the app and the converter.
+  `PackClosedException`, and `PackDictionaryProvider` then fetches the readers again and repeats
+  the lookup (or throws `DictionaryUnavailableException` if the pack is gone). The sha256 of a pack is computed by `sha256Hex`, shared by the app and the converter.
 - **The word-list format.** `jmdict-sqlite` is Mon's format for any word list in any language pair,
   not only JMdict: every source that maps to `JmdictRecord` (headwords, senses, labels, `common`)
   uses it. The wire id and the Kotlin names keep "jmdict"; renaming the id would hide installed
@@ -216,8 +224,9 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
     published packs to a new value also needs a new `schema`, so that older apps hide the pack
     instead of failing after the download.
   - Normalization is not lemmatization: "Häuser" → "Haus" is the tokenizer's job. Today the only
-    tokenizer is Sudachi and `tokenize` takes no language, so a pack whose source language is not
-    Japanese can be installed but is not reached from a reading yet.
+    tokenizer is Sudachi, which is Japanese-only, so a reading in another language is stored
+    without tokens, and a pack whose source language is not Japanese can be installed but is not
+    reached from a reading yet.
 - **Adding a source or a format.**
   - *A new word source, any language pair* (e.g. JMnedict, Wadoku): a package in
     `:tools:pack-converter` with a parser, a mapper to `JmdictRecord` and a `PackSource` that passes
@@ -231,9 +240,9 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
     `createPackManager`; then the converter source. The manager does not change.
   - *A new kind of data* (kanji, example sentences, pitch accent): as a new storage format, but the
     reader implements a new capability interface `: PackReader` in `commonMain` instead of
-    `MonDictionary`. Add its models to `:core:model`, a `PackManager` extension like
-    `installed()`, a use case in `:core:domain` that also retries on `PackClosedException`,
-    and the UI.
+    `MonDictionary`. Add its models to `:core:model`, a provider like
+    `PackDictionaryProvider` that retries on `PackClosedException`, a use case in `:core:domain`
+    that asks that provider, and the UI.
   - *Another JMdict gloss language:* add it to `GlossLanguage` (converter) and to `Language`
     (`:core:model`), or the app hides the pack. `JmdictSourceTest` fails if the second is missing.
 - **Publishing a data update** (the licence requires keeping the data current, so do this regularly,

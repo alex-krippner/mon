@@ -2,17 +2,17 @@ package com.akrippner.mon.core.domain.usecase
 
 import com.akrippner.mon.core.domain.fake.FakeReadingRepository
 import com.akrippner.mon.core.domain.fake.FakeTokenizer
+import com.akrippner.mon.core.domain.fake.FakeTokenizerProvider
 import com.akrippner.mon.core.domain.model.AddReadingInput
 import com.akrippner.mon.core.domain.model.AddReadingInputError
 import com.akrippner.mon.core.domain.model.AddReadingResult
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.tokenizer.TokenizerProvider
 import kotlin.collections.emptyList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
 class AddReadingUseCaseTest {
@@ -34,12 +34,8 @@ class AddReadingUseCaseTest {
       translationLanguage = Language.ENGLISH,
     )
 
-  private fun TestScope.useCase() =
-    AddReadingUseCase(
-      repository = repository,
-      tokenizer = tokenizer,
-      tokenizeDispatcher = UnconfinedTestDispatcher(testScheduler),
-    )
+  private fun useCase(tokenizers: TokenizerProvider = FakeTokenizerProvider(tokenizer)) =
+    AddReadingUseCase(repository = repository, tokenizers = tokenizers)
 
   @Test
   fun blankTitle_isInvalid_andNothingIsStored() = runTest {
@@ -98,5 +94,24 @@ class AddReadingUseCaseTest {
     repository.failure = IllegalStateException("disk full")
 
     assertFailsWith<IllegalStateException> { useCase().execute(input()) }
+  }
+
+  @Test
+  fun noTokenizerForTheLanguage_storesTheReadingWithoutTokens() = runTest {
+    val result = useCase(FakeTokenizerProvider(null)).execute(input())
+
+    assertEquals(AddReadingResult.Success("new-id"), result)
+    assertEquals(emptyList(), repository.added.single().tokens)
+    assertEquals(emptyList(), tokenizer.tokenizedTexts)
+  }
+
+  @Test
+  fun aTokenizerForAnotherLanguage_isNotUsed() = runTest {
+    val german = FakeTokenizer(language = Language.GERMAN)
+
+    useCase(FakeTokenizerProvider(german)).execute(input())
+
+    assertEquals(emptyList(), german.tokenizedTexts)
+    assertEquals(emptyList(), repository.added.single().tokens)
   }
 }

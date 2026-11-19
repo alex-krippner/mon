@@ -3,11 +3,9 @@ package com.akrippner.mon.core.dictionary.jmdict
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READONLY
-import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.packs.CatalogPack
 import com.akrippner.mon.core.packs.CloseableReader
 import com.akrippner.mon.core.packs.PackFormat
-import com.akrippner.mon.core.packs.toSource
 import java.io.File
 
 /** The value of the meta row [key], or null if the file has no such row. */
@@ -41,10 +39,5 @@ internal object JmdictFormat : PackFormat {
   override fun verify(file: File, pack: CatalogPack) = isValidJmdictFile(file, pack)
 
   override fun open(file: File, pack: CatalogPack): CloseableReader =
-    JmdictDictionary(
-      file.path,
-      pack.toSource(),
-      Language.fromTag(pack.sourceLanguage),
-      Language.fromTag(pack.glossLanguage),
-    )
+    JmdictDictionary(file.path, pack)
 }

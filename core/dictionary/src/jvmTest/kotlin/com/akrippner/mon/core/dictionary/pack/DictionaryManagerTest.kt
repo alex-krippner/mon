@@ -438,7 +438,7 @@ class DictionaryManagerTest {
     manager.install(words.info.id)
     manager.install(notes.info.id)
 
-    assertEquals(listOf(words.info.id, notes.info.id), manager.readers().map { it.source.id })
+    assertEquals(listOf(words.info.id, notes.info.id), manager.readers().map { it.pack.id })
     assertIs<NotesReader>(manager.readers().last())
     assertEquals(listOf(words.info.id), manager.installed().map { it.source.id })
   }
@@ -458,7 +458,7 @@ class DictionaryManagerTest {
     manager.remove(notes.info.id)
 
     assertTrue(reader.closed)
-    assertEquals(listOf(words.info.id), manager.readers().map { it.source.id })
+    assertEquals(listOf(words.info.id), manager.readers().map { it.pack.id })
     assertFalse(File(dir, notes.info.id).exists())
   }
 
@@ -472,6 +472,6 @@ class DictionaryManagerTest {
     manager.refreshCatalog()
     ids.forEach { manager.install(it) }
 
-    assertEquals(ids.sorted(), manager.readers().map { it.source.id })
+    assertEquals(ids.sorted(), manager.readers().map { it.pack.id })
   }
 }

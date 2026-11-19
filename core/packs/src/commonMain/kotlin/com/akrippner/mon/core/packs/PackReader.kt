@@ -1,19 +1,13 @@
 package com.akrippner.mon.core.packs
 
-import com.akrippner.mon.core.model.data.DictionarySource
-import com.akrippner.mon.core.model.data.Language
-
 /**
- * What every installed pack opens into. It only says where the data comes from; what a reader can
- * answer is a capability interface on top of it, such as [MonDictionary] for word lookups. A pack
- * of another kind (kanji, example sentences) adds its own capability next to it.
+ * What every installed pack opens into. It only says which pack it was opened from; what a reader
+ * can answer is a capability interface that the reader implements next to it, such as
+ * `MonDictionary` for word lookups. Capabilities do not extend this interface, so something that is
+ * not a pack (an online service, say) can implement them too.
  */
 interface PackReader {
-  val source: DictionarySource
-  /** Language of the headwords. */
-  val sourceLanguage: Language
-  /** Language of the glosses. */
-  val glossLanguage: Language
+  val pack: CatalogPack
 }
 
 /**

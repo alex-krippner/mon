@@ -24,12 +24,7 @@ class AddReadingViewModelTest {
   @BeforeTest
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
-    val useCase =
-      AddReadingUseCase(
-        repository = repository,
-        tokenizer = FakeTokenizer(),
-        tokenizeDispatcher = testDispatcher,
-      )
+    val useCase = AddReadingUseCase(repository = repository, tokenizers = FakeTokenizerProvider())
     viewModel = AddReadingViewModel(useCase)
   }
 
