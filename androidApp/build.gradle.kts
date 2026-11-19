@@ -51,11 +51,4 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    sourceSets {
-        getByName("main") {
-            assets {
-             directories +=  rootProject.file("shared/src/commonMain/resources").absolutePath
-            }
-        }
-    }
 }

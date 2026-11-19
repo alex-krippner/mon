@@ -22,7 +22,7 @@ All targets compile with JVM target 17.
 - Fix formatting:
   `./gradlew spotlessApply`
 - Run the JVM tests:
-  `./gradlew :core:database:jvmTest :core:data:jvmTest :core:domain:jvmTest :core:model:jvmTest :core:dictionary:jvmTest :feature:addreading:jvmTest :feature:dictionaries:jvmTest :feature:library:jvmTest`
+  `./gradlew :core:database:jvmTest :core:data:jvmTest :core:domain:jvmTest :core:model:jvmTest :core:dictionary:jvmTest :core:tokenizer:jvmTest :feature:addreading:jvmTest :feature:dictionaries:jvmTest :feature:library:jvmTest`
 - Test the pack converter (a plain JVM module, so the task is `test`):
   `./gradlew :tools:pack-converter:test`
 
@@ -45,7 +45,7 @@ dictionary lookups, using a Japanese tokenizer.
 
 - `:shared` — the shared/common code used by all platforms. Contains the app's
   single `App()` composable, the navigation host (`MonNavHost`), the Koin
-  bootstrap (`initKoin`), Compose resources, and the Sudachi system dictionary.
+  bootstrap (`initKoin`) and Compose resources.
 - `:core:model` — data models (`Reading`, `ReadingSummary`, `MonToken`, ...).
 - `:core:domain` — business logic: use cases such as `AddReadingUseCase`, which
   validates input, tokenizes it with the `Tokenizer` that `TokenizerProvider` offers for the
@@ -58,12 +58,16 @@ dictionary lookups, using a Japanese tokenizer.
   turns into a "download a dictionary" prompt).
 - `:core:tokenizer` — the `Tokenizer` capability (`language`, `id`, suspending `tokenize`, which
   returns `MonToken`s), `TokenizerProvider` (`tokenizerFor(language)`, and `changes`, which emits
-  when the available tokenizers may have changed) and the Sudachi implementation.
+  when the available tokenizers may have changed) and the Sudachi pack.
   `TokenizerUnavailableException` means "can't answer right now", not "no tokens".
   Code above this module asks the provider and never assumes where a tokenizer comes from.
-  Today `BundledTokenizerProvider` offers the one bundled Sudachi tokenizer. `TokenizerImpl` lives in the shared `jvmAndAndroidMain` source set; the
-  dictionary loading and the Koin module are `expect`/`actual` per platform. The dictionary is
-  loaded lazily on the first `tokenize` call, so call it off the main thread.
+  `PackTokenizerProvider` offers the `Tokenizer` readers of the installed packs, repeats a call with
+  the pack's current reader when it was closed by an update or removal, and emits `changes` when a
+  tokenizer pack is installed, updated or removed. The Sudachi pack (`sudachi/`, in
+  `jvmAndAndroidMain`) is `SudachiFormat` (`sudachi-system`, schema 1; `verify` checks the size and
+  the header) and `SudachiReader`, a `Tokenizer` and `CloseableReader` that loads the dictionary on
+  the first `tokenize` call, on its own dispatcher. Only the Koin format registration is
+  `expect`/`actual`. With no Sudachi pack installed Japanese readings are stored as pending.
 - `:core:packs` — the generic pack system, which knows no file format: `PackManager` (catalog, download,
   install, remove, `packs: StateFlow<List<Pack>>`), `PackReader`/`CloseableReader` (what an installed
   pack opens into) and the `PackFormat` interface that other modules implement. The contract
@@ -82,8 +86,8 @@ dictionary lookups, using a Japanese tokenizer.
   into `:core:packs` (`dictionaryModule`). See "Dictionary packs" below.
   The architecture diagrams are in `docs/dictionary-architecture.md`.
 - `:tools:pack-converter` — command-line tool (not part of the app) that turns dictionary source
-  files into packs and writes the catalog. One subcommand per source (`PackSource`); today the only
-  one is `jmdict` (jmdict-simplified JSON files). The packaging and the catalog merge (`publish`)
+  files into packs and writes the catalog. One subcommand per source (`PackSource`): `jmdict` (jmdict-simplified JSON
+  files) and `sudachi` (one `system_core.dic`, published as the pack `sudachi-core`). The packaging and the catalog merge (`publish`)
   are shared by all sources. It is the only user of `JmdictWriter`.
 - `:core:database` — Room database (`MonDatabase`) and DAOs, with KSP codegen.
 - `:core:data` — repository layer: the `ReadingRepository` interface and its Room-backed
@@ -173,9 +177,10 @@ Presentation and navigation:
   pack kind that is not a word dictionary. The converter tests use a fake `PackSource`, and
   `PreviousCatalogTest` talks to an HTTP server it starts on the loopback address. No emulator or
   outside server is needed.
-- `system_core.dic` — the Sudachi system dictionary — is a git-LFS file located
-  in `:shared` resources. It is loaded at runtime by the tokenizer (copied to
-  the app cache dir on Android). Do not delete or regenerate it.
+- `system_core.dic` — the Sudachi system dictionary — is no longer in the repository: it is the
+  downloadable pack `sudachi-core`. The converter's input is the `system_core.dic` of a SudachiDict
+  release (the 'core' one); an old copy is in git history (`272df57`, git-LFS). Do not read it.
+  `*.dic` stays in `.gitattributes` as an LFS pattern.
 - The iOS targets in `:shared/build.gradle.kts` are commented out. The iOS app
   only builds via the Xcode project in `iosApp/`.
 - `compileSdk` is 37 because Ktor's OkHttp engine pulls in OkHttp 5.5, which requires it.
@@ -184,8 +189,8 @@ Presentation and navigation:
 ## Dictionary packs
 
 The app is tied to no dictionary or language: `MonDictionary` is an interface, and dictionaries are
-downloadable packs, not bundled (only the Sudachi `system_core.dic` is). The app works without any
-pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
+downloadable packs, not bundled, and so is the Sudachi tokenizer dictionary. The app works without any
+pack: a Japanese reading is stored without tokens until `sudachi-core` is installed. Do not read `*.db` or `jmdict-*.json` files; they are large.
 
 - **Readers and capabilities.** Every installed pack opens into a `PackReader` (only `pack: CatalogPack`).
   What a reader can answer is a capability interface that the reader implements next to it:
@@ -230,7 +235,7 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
     published packs to a new value also needs a new `schema`, so that older apps hide the pack
     instead of failing after the download.
   - Normalization is not lemmatization: "Häuser" → "Haus" is the tokenizer's job. Today the only
-    tokenizer is Sudachi, which is Japanese-only, so a reading in another language is stored
+    tokenizer is the Sudachi pack, which is Japanese-only, so a reading in another language is stored
     without tokens, and a pack whose source language is not Japanese can be installed but is not
     reached from a reading yet.
 - **Adding a source or a format.**
@@ -251,6 +256,16 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
     that asks that provider, and the UI.
   - *Another JMdict gloss language:* add it to `GlossLanguage` (converter) and to `Language`
     (`:core:model`), or the app hides the pack. `JmdictSourceTest` fails if the second is missing.
+- **Publishing the Sudachi dictionary** (only when a new SudachiDict release is wanted):
+  download `sudachi-dictionary-<date>-core.zip` from
+  https://github.com/WorksApplications/SudachiDict/releases, unpack it, and run
+  `./gradlew :tools:pack-converter:run --args="sudachi <outDir> <path>/system_core.dic"`. The
+  version is the date in the file's header description (or its build date). The run carries the
+  JMdict packs over from the latest release, so the release it prints covers every source; create it
+  as for JMdict, before converting another source. The attribution text is `ATTRIBUTION` in
+  `SudachiSource.kt`; check it against the LEGAL file of the SudachiDict release. The format is
+  `sudachi-system`, schema 1: a different Sudachi library version that can't read the file needs a
+  new `schema`, so that older apps hide the pack.
 - **Publishing a data update** (the licence requires keeping the data current, so do this regularly,
   at least monthly):
   1. From the same release at https://github.com/scriptin/jmdict-simplified/releases, download the

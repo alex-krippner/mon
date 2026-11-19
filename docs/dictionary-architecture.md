@@ -18,7 +18,8 @@ Design decisions:
   each run merges its packs into the catalog of the previous release.
 - Dictionaries are downloadable packs listed in a hosted `catalog.json`, not bundled. The app works
   without any pack.
-- `system_core.dic` (Sudachi) stays bundled.
+- The Sudachi dictionary (`system_core.dic`) is a pack too (`sudachi-core`), installed from the same
+  catalog. Until it is installed, Japanese readings are stored without tokens and tokenized later.
 
 ## 1. Modules
 
@@ -30,7 +31,7 @@ flowchart TB
     iosApp
   end
 
-  shared["<b>:shared</b><br/>App(), MonNavHost, initKoin<br/>Sudachi system_core.dic"]
+  shared["<b>:shared</b><br/>App(), MonNavHost, initKoin"]
 
   subgraph Features
     library[":feature:library"]

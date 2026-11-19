@@ -9,6 +9,7 @@ import com.akrippner.mon.tools.pack.latestCatalogUrl
 import com.akrippner.mon.tools.pack.publish
 import com.akrippner.mon.tools.pack.readCatalog
 import com.akrippner.mon.tools.pack.requireSeparateIds
+import com.akrippner.mon.tools.sudachi.SudachiSource
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -24,7 +25,7 @@ private const val EXIT_FAILED = 1
 private const val EXIT_USAGE = 2
 
 /** Every source the converter knows. A new source is added here. */
-private val SOURCES: List<PackSource> = listOf(JmdictSource)
+private val SOURCES: List<PackSource> = listOf(JmdictSource, SudachiSource)
 
 private val USAGE: String
   get() {
@@ -187,10 +188,14 @@ private fun report(release: Release, arguments: Arguments, previous: Catalog?) {
   val repo = arguments.repo
   for (packResult in release.packs) {
     val pack = packResult.pack
-    println(
-      "Converted ${packResult.entries} entries (${packResult.skipped} skipped) into ${pack.id}, " +
-        "version ${pack.version}"
-    )
+    if (packResult.entries > 0) {
+      println(
+        "Converted ${packResult.entries} entries (${packResult.skipped} skipped) into " +
+          "${pack.id}, version ${pack.version}"
+      )
+    } else {
+      println("Packaged ${pack.id}, version ${pack.version}")
+    }
     println(
       "  ${packResult.archive}  ${pack.sizeBytes / 1024 / 1024} MB, " +
         "unpacked ${pack.unpackedSizeBytes / 1024 / 1024} MB"
