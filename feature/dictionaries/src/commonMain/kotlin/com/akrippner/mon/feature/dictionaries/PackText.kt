@@ -9,11 +9,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
-import com.akrippner.mon.core.dictionary.pack.CatalogError
-import com.akrippner.mon.core.dictionary.pack.CatalogPack
-import com.akrippner.mon.core.dictionary.pack.Pack
-import com.akrippner.mon.core.dictionary.pack.PackError
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.CatalogError
+import com.akrippner.mon.core.packs.CatalogPack
+import com.akrippner.mon.core.packs.Pack
+import com.akrippner.mon.core.packs.PackError
+import com.akrippner.mon.core.packs.PackState
 import com.akrippner.mon.feature.dictionaries.generated.resources.Res
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_catalog_invalid
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_catalog_network

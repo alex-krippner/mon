@@ -1,4 +1,4 @@
-package com.akrippner.mon.core.dictionary.pack
+package com.akrippner.mon.core.packs
 
 import java.io.File
 import java.io.IOException
@@ -16,7 +16,7 @@ private val ID_PATTERN = Regex("[a-z0-9-]+")
  * The file work of installing a pack: download, verify, unpack, move into place. It keeps no state.
  * Layout per pack: `<baseDir>/<packId>/dictionary.db` plus `pack.json`.
  */
-internal class PackInstaller(private val downloader: PackDownloader, private val baseDir: File) {
+class PackInstaller(private val downloader: PackDownloader, private val baseDir: File) {
   private val json = Json { ignoreUnknownKeys = true }
 
   /**

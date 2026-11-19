@@ -5,7 +5,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.core.dictionary)
+            implementation(projects.core.packs)
             implementation(projects.core.designsystem)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)

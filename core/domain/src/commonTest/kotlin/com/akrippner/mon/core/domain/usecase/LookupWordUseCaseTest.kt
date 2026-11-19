@@ -1,6 +1,5 @@
 package com.akrippner.mon.core.domain.usecase
 
-import com.akrippner.mon.core.dictionary.DictionaryClosedException
 import com.akrippner.mon.core.domain.fake.FakeDictionary
 import com.akrippner.mon.core.domain.fake.FakeDictionaryManager
 import com.akrippner.mon.core.domain.model.LookupResult
@@ -11,6 +10,7 @@ import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.LookupQuery
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Sense
+import com.akrippner.mon.core.packs.PackClosedException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -121,7 +121,7 @@ class LookupWordUseCaseTest {
 
   @Test
   fun aReaderClosedByAnUpdateIsReplacedAndTheLookupRepeated() = runTest {
-    val closed = FakeDictionary(failure = DictionaryClosedException())
+    val closed = FakeDictionary(failure = PackClosedException())
     val reopened = FakeDictionary(entries = listOf(entry("a")))
     val manager = FakeDictionaryManager(listOf(closed)).apply { afterFirstCall = listOf(reopened) }
 
@@ -134,7 +134,7 @@ class LookupWordUseCaseTest {
 
   @Test
   fun aReaderClosedByARemovalGivesNoDictionaryInstalled() = runTest {
-    val closed = FakeDictionary(failure = DictionaryClosedException())
+    val closed = FakeDictionary(failure = PackClosedException())
     val manager = FakeDictionaryManager(listOf(closed)).apply { afterFirstCall = emptyList() }
 
     val result =
@@ -145,7 +145,7 @@ class LookupWordUseCaseTest {
 
   @Test
   fun givesUpAfterAFewAttemptsWhenTheReaderIsClosedEveryTime() = runTest {
-    val closed = FakeDictionary(failure = DictionaryClosedException())
+    val closed = FakeDictionary(failure = PackClosedException())
     val manager = FakeDictionaryManager(listOf(closed))
 
     val result =

@@ -6,6 +6,7 @@ import com.akrippner.mon.core.dictionary.jmdict.JmdictWriter
 import com.akrippner.mon.core.model.data.Headword
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.Sense
+import com.akrippner.mon.core.packs.*
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.security.MessageDigest

@@ -76,7 +76,7 @@ flowchart TB
 ```
 
 The module rule still holds: features never depend on `:core:database` or on each other.
-`:feature:dictionaries` talks to the `DictionaryManager` interface directly and does not use
+`:feature:dictionaries` talks to the `PackManager` interface directly and does not use
 `:core:domain`. No feature uses `:core:ui` yet; the lookup sheet in it waits for the Reader. `:shared`
 wires everything together.
 
@@ -99,14 +99,14 @@ classDiagram
     <<interface>>
     +lookup(query: LookupQuery) List~DictionaryEntry~
   }
-  class DictionaryClosedException {
+  class PackClosedException {
     <<exception>>
   }
   class CloseableReader {
     <<internal interface>>
     +close()
   }
-  class DictionaryManager {
+  class PackManager {
     <<interface>>
     +packs: StateFlow~List~Pack~~
     +refreshCatalog() CatalogError?
@@ -114,7 +114,7 @@ classDiagram
     +remove(packId)
     +readers() List~PackReader~
   }
-  class installedExt["DictionaryManager.installed()"] {
+  class installedExt["PackManager.installed()"] {
     <<extension>>
     readers().filterIsInstance~MonDictionary~()
   }
@@ -188,7 +188,7 @@ classDiagram
   }
 
   %% ---------- :core:dictionary jvmAndAndroidMain: packs ----------
-  class FileDictionaryManager {
+  class FilePackManager {
     <<internal>>
     -current: State
     -files: Mutex
@@ -204,11 +204,11 @@ classDiagram
     removing: Set~String~
     toPacks() List~Pack~
   }
-  class DictionaryFactory {
+  class PackFormats {
     <<internal>>
-    +formatOf(pack) DictionaryFormat?
+    +formatOf(pack) PackFormat?
   }
-  class DictionaryFormat {
+  class PackFormat {
     <<internal interface>>
     +format: String
     +schema: Int
@@ -381,23 +381,23 @@ classDiagram
   CloseableReader --|> PackReader
   JmdictDictionary ..|> MonDictionary
   JmdictDictionary ..|> CloseableReader
-  FileDictionaryManager ..|> DictionaryManager
+  FilePackManager ..|> PackManager
   KtorPackDownloader ..|> PackDownloader
-  JmdictFormat ..|> DictionaryFormat
+  JmdictFormat ..|> PackFormat
   JmdictSource ..|> PackSource
 
   %% ---------- contract and model ----------
-  DictionaryManager --> Pack
-  DictionaryManager ..> CatalogError : refreshCatalog returns
-  DictionaryManager ..> PackReader : readers returns
-  installedExt ..> DictionaryManager : readers()
+  PackManager --> Pack
+  PackManager ..> CatalogError : refreshCatalog returns
+  PackManager ..> PackReader : readers returns
+  installedExt ..> PackManager : readers()
   installedExt ..> MonDictionary : keeps only
   Pack --> CatalogPack
   Pack --> PackState
   PackState --> PackError
   Catalog --> CatalogPack
   PackReader --> DictionarySource
-  PackReader ..> DictionaryClosedException : any call throws
+  PackReader ..> PackClosedException : any call throws
   MonDictionary ..> LookupQuery
   MonDictionary ..> DictionaryEntry
   DictionaryEntry --> DictionarySource
@@ -407,14 +407,14 @@ classDiagram
   Sense --> Label
 
   %% ---------- packs ----------
-  FileDictionaryManager *-- State
+  FilePackManager *-- State
   State --> CatalogPack
   State --> PackState
-  FileDictionaryManager --> PackInstaller
-  FileDictionaryManager --> PackDownloader : fetch catalog
-  FileDictionaryManager --> DictionaryFactory
-  FileDictionaryManager --> CloseableReader : keeps open readers of any kind
-  DictionaryFactory --> DictionaryFormat
+  FilePackManager --> PackInstaller
+  FilePackManager --> PackDownloader : fetch catalog
+  FilePackManager --> PackFormats
+  FilePackManager --> CloseableReader : keeps open readers of any kind
+  PackFormats --> PackFormat
   PackInstaller --> PackDownloader
   PackInstaller ..> Sha256 : checks download
   PackInstaller ..> PackException : throws
@@ -435,12 +435,12 @@ classDiagram
   %% ---------- users ----------
   LookupWordUseCase --> installedExt
   LookupWordUseCase ..> LookupResult
-  LookupWordUseCase ..> DictionaryClosedException : retries on
+  LookupWordUseCase ..> PackClosedException : retries on
   LookupResult --> DictionaryEntry
-  DictionariesViewModel --> DictionaryManager
+  DictionariesViewModel --> PackManager
   DictionariesViewModel --> DictionariesState
   DictionariesState --> Pack
-  PackDetailViewModel --> DictionaryManager
+  PackDetailViewModel --> PackManager
   PackDetailViewModel --> PackDetailState
   PackDetailState --> Pack
   Main --> PackSource : picks by subcommand
@@ -461,7 +461,7 @@ classDiagram
 
 ## How to read it
 
-- **Boundary:** the public contract (`PackReader`, `MonDictionary`, `DictionaryManager`, `Pack`,
+- **Boundary:** the public contract (`PackReader`, `MonDictionary`, `PackManager`, `Pack`,
   `PackState`, `CatalogPack`) is in `commonMain` and has no `java.*`, which keeps iOS and web open.
   `PackInstaller`, `PackDownloader`, `JmdictDictionary` and the other classes that use
   `java.io.File` stay in `jvmAndAndroidMain`.
@@ -472,17 +472,17 @@ classDiagram
   of `readers()`. A new kind of data (kanji, example sentences) adds a capability interface, an
   extension like `installed()` and a use case; the manager, the installer and the Dictionaries
   screen stay as they are. `DictionaryManagerTest` proves this with a test-only pack kind.
-- **Format seam:** `DictionaryFormat` and `DictionaryFactory` are the only link between a catalog
-  `format` string and a reader. A new storage format adds one `DictionaryFormat` and no change to
+- **Format seam:** `PackFormat` and `PackFormats` are the only link between a catalog
+  `format` string and a reader. A new storage format adds one `PackFormat` and no change to
   the manager. `open` must not touch the file, because `readers()` opens every installed pack.
 - **Key normalization:** `jmdict-sqlite` serves any language pair. The writer picks a
   `KeyNormalization` from the source language and records it in the file's meta table; the reader
   applies what the file says and never looks at the language. Japanese files have no such row and
   are byte-identical to the ones published before the rule existed.
-- **State:** `FileDictionaryManager` keeps one private `State` and derives `packs` from it on every
+- **State:** `FilePackManager` keeps one private `State` and derives `packs` from it on every
   change. `PackInstaller` keeps no state; it only does the file work.
 - **UI path:** `LookupWordUseCase`, `DictionariesViewModel` and `PackDetailViewModel` depend only on
-  the `DictionaryManager` interface. They never see files, Ktor or SQLite.
+  the `PackManager` interface. They never see files, Ktor or SQLite.
 - **Converter:** `JmdictWriter`, `JmdictRecord`, `JmdictSchema` and `sha256Hex` are public only
   because `:tools:pack-converter` uses them; the app itself only reads.
 - **Converter split:** a `PackSource` only turns its input files into uncompressed pack files

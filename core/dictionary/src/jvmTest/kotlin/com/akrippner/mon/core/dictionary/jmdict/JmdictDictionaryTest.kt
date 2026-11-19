@@ -2,9 +2,10 @@ package com.akrippner.mon.core.dictionary.jmdict
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READONLY
-import com.akrippner.mon.core.dictionary.DictionaryClosedException
-import com.akrippner.mon.core.dictionary.pack.CatalogPack
 import com.akrippner.mon.core.model.data.*
+import com.akrippner.mon.core.packs.*
+import com.akrippner.mon.core.packs.CatalogPack
+import com.akrippner.mon.core.packs.PackClosedException
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -179,7 +180,7 @@ class JmdictDictionaryTest {
     withDictionary(taberu) { dictionary ->
       assertEquals(1, dictionary.lookup(LookupQuery("食べる")).size)
       dictionary.close()
-      assertFailsWith<DictionaryClosedException> { dictionary.lookup(LookupQuery("食べる")) }
+      assertFailsWith<PackClosedException> { dictionary.lookup(LookupQuery("食べる")) }
     }
   }
 

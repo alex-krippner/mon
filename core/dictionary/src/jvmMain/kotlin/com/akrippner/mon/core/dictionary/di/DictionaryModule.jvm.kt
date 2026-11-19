@@ -1,13 +1,10 @@
 package com.akrippner.mon.core.dictionary.di
 
-import com.akrippner.mon.core.dictionary.createDictionaryManager
-import com.akrippner.mon.core.dictionary.pack.DictionaryManager
-import java.io.File
+import com.akrippner.mon.core.dictionary.jmdict.JmdictFormat
+import com.akrippner.mon.core.packs.PackFormat
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
-// Next to the database (~/mon.db). single, not factory: the manager holds the state and readers.
-actual val dictionaryModule = module {
-  single<DictionaryManager> {
-    createDictionaryManager(File(System.getProperty("user.home"), ".mon/dictionaries"))
-  }
-}
+// bind, not single<PackFormat>: every module registers its own format under its own type, and the
+// pack manager collects them with getAll<PackFormat>().
+actual val dictionaryModule = module { single { JmdictFormat } bind PackFormat::class }

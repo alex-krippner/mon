@@ -56,12 +56,19 @@ dictionary lookups, using a Japanese tokenizer.
   implementation. `TokenizerImpl` lives in the shared `jvmAndAndroidMain` source set; the
   dictionary loading and the Koin module are `expect`/`actual` per platform. The dictionary is
   loaded lazily on the first `tokenize` call, so call it off the main thread.
-- `:core:dictionary` — the dictionary: `PackReader` (what every installed pack opens into) and its
-  capability `MonDictionary` (word lookup in some language pair), the JMdict reader and file
-  format, and the downloadable *packs* (see "Dictionary packs" below).
-  The public contract (`PackReader`, `MonDictionary`, `DictionaryManager`, `Pack`, `PackState`) is
-  in `commonMain` and free of `java.*`; the file, SQLite and Ktor code is in the shared
-  `jvmAndAndroidMain` source set, and only the Koin module (`dictionaryModule`) is `expect`/`actual`.
+- `:core:packs` — the generic pack system, which knows no file format: `PackManager` (catalog, download,
+  install, remove, `packs: StateFlow<List<Pack>>`), `PackReader`/`CloseableReader` (what an installed
+  pack opens into) and the `PackFormat` interface that other modules implement. The contract
+  (`PackManager`, `Pack`, `PackState`, `CatalogPack`, `PackReader`) is in `commonMain` and free of
+  `java.*`; the file, SQLite-free installer and Ktor code is in the shared `jvmAndAndroidMain` source
+  set, and only the Koin module (`packsModule`) is `expect`/`actual`. It collects every `PackFormat`
+  registered in Koin with `getAll<PackFormat>()`, so a module that owns a format only registers it
+  (`single { JmdictFormat } bind PackFormat::class`). Installed packs live in a folder called
+  `dictionaries` (see "Dictionary packs"); the name is historical and must not change.
+- `:core:dictionary` — the dictionary: the `MonDictionary` capability (word lookup in some language
+  pair; it extends `PackReader`), the JMdict reader and file format, and `installed()`, which keeps
+  the `MonDictionary` readers of a `PackManager`. It plugs `JmdictFormat` into `:core:packs`
+  (`dictionaryModule`). See "Dictionary packs" below.
   The architecture diagrams are in `docs/dictionary-architecture.md`.
 - `:tools:pack-converter` — command-line tool (not part of the app) that turns dictionary source
   files into packs and writes the catalog. One subcommand per source (`PackSource`); today the only
@@ -80,8 +87,8 @@ dictionary lookups, using a Japanese tokenizer.
 - `:feature:library` — the library feature: list of saved readings.
 - `:feature:addreading` — the add-reading feature: a form that creates a reading and its tokens.
 - `:feature:dictionaries` — the Dictionaries screen (a bottom-bar tab): lists the
-  packs of `DictionaryManager` with download, progress, update, retry and remove, and shows each
-  pack's licence attribution. It talks to the `DictionaryManager` interface directly; downloads run
+  packs of `PackManager` with download, progress, update, retry and remove, and shows each
+  pack's licence attribution. It talks to the `PackManager` interface directly; downloads run
   in the manager's own scope, so leaving the screen does not cancel them.
 - `:androidApp`, `:desktopApp`, `:iosApp` — platform entrypoints. All three embed
   `:shared`; the iOS app is an Xcode project that bridges into it.
@@ -168,10 +175,10 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
 
 - **Readers and capabilities.** Every installed pack opens into a `PackReader` (`source`,
   `sourceLanguage`, `glossLanguage`). What a reader can answer is a capability interface on top of
-  it: `MonDictionary` (`lookup`) is the only one today. `DictionaryManager.readers()` returns the
+  it: `MonDictionary` (`lookup`) is the only one today. `PackManager.readers()` returns the
   readers of all kinds, sorted by pack id; `installed()` is an extension that keeps the
   `MonDictionary` ones. The manager, the installer and the Dictionaries screen do not care what
-  kind a pack is. `DictionaryFormat.open` must stay cheap (no file access), because `readers()`
+  kind a pack is. `PackFormat.open` must stay cheap (no file access), because `readers()`
   opens every installed pack; a reader opens its file on the first real call.
 - **Where it lives.** A pack is `<base>/<packId>/dictionary.db` plus `pack.json` (the installed
   `CatalogPack`). `pack.json` is written last, and an update deletes the old one before it replaces
@@ -179,18 +186,18 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
   `noBackupFilesDir/dictionaries` on Android and `~/.mon/dictionaries` on desktop. On its first
   scan the manager calls `PackInstaller.sweep()`, which deletes what a killed install left behind:
   temporary files and pack folders without a `pack.json`.
-- **Catalog.** The app hard-codes one URL, `CATALOG_URL` in `DictionaryManagers.kt`: the
+- **Catalog.** The app hard-codes one URL, `CATALOG_URL` in `PackManagers.kt` (`:core:packs`): the
   `catalog.json` of the latest GitHub release of the public repo `alex-krippner/mon-data`. The
   catalog points to the `.db.gz` files and carries size, `unpackedSizeBytes`, sha256 and the licence
   attribution. The app offers only packs whose `format`, `schema` and languages it supports, and
   each id once. `refreshCatalog()` never throws; it returns a `CatalogError` (or null), which the
   Dictionaries screen shows.
-- **Installing.** `FileDictionaryManager` keeps the state (`packs: StateFlow<List<Pack>>`);
+- **Installing.** `FilePackManager` keeps the state (`packs: StateFlow<List<Pack>>`);
   `PackInstaller` does the file work (https only, ids must match `[a-z0-9-]+`, free-space check,
-  sha256, gunzip, validate with `DictionaryFormat.verify`, then commit). Ktor is used only in
+  sha256, gunzip, validate with `PackFormat.verify`, then commit). Ktor is used only in
   `KtorPackDownloader`, behind the `PackDownloader` interface. A reader must be closed before its
   file is replaced or deleted; the manager does that under its `files` lock. A closed reader throws
-  `DictionaryClosedException`, and `LookupWordUseCase` then fetches `installed()` again and repeats
+  `PackClosedException`, and `LookupWordUseCase` then fetches `installed()` again and repeats
   the lookup. The sha256 of a pack is computed by `sha256Hex`, shared by the app and the converter.
 - **The word-list format.** `jmdict-sqlite` is Mon's format for any word list in any language pair,
   not only JMdict: every source that maps to `JmdictRecord` (headwords, senses, labels, `common`)
@@ -220,12 +227,12 @@ pack. Do not read `*.db` or `jmdict-*.json` files; they are large.
     first pack is published.
   - *A new storage format for words:* in `:core:dictionary/<format>/`, a schema with
     `FORMAT`/`VERSION`, a writer (used by the converter) and a reader that is
-    `MonDictionary, CloseableReader`; a `DictionaryFormat`, added to the list in
-    `createDictionaryManager`; then the converter source. The manager does not change.
+    `MonDictionary, CloseableReader`; a `PackFormat`, added to the list in
+    `createPackManager`; then the converter source. The manager does not change.
   - *A new kind of data* (kanji, example sentences, pitch accent): as a new storage format, but the
     reader implements a new capability interface `: PackReader` in `commonMain` instead of
-    `MonDictionary`. Add its models to `:core:model`, a `DictionaryManager` extension like
-    `installed()`, a use case in `:core:domain` that also retries on `DictionaryClosedException`,
+    `MonDictionary`. Add its models to `:core:model`, a `PackManager` extension like
+    `installed()`, a use case in `:core:domain` that also retries on `PackClosedException`,
     and the UI.
   - *Another JMdict gloss language:* add it to `GlossLanguage` (converter) and to `Language`
     (`:core:model`), or the app hides the pack. `JmdictSourceTest` fails if the second is missing.

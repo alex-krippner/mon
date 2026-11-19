@@ -1,9 +1,9 @@
-package com.akrippner.mon.core.dictionary.pack
+package com.akrippner.mon.core.packs
 
 import java.io.File
 
 // TODO: Move to commonMain if iOS support needed
-internal interface PackDownloader {
+interface PackDownloader {
   /** GET [url] as text, e.g. the catalog. Throws PackException(NETWORK). */
   suspend fun fetchText(url: String): String
 

@@ -1,7 +1,5 @@
-package com.akrippner.mon.core.dictionary.pack
+package com.akrippner.mon.core.packs
 
-import com.akrippner.mon.core.dictionary.CloseableReader
-import com.akrippner.mon.core.dictionary.PackReader
 import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -49,14 +47,14 @@ private fun stateOf(info: CatalogPack, onDisk: CatalogPack?): PackState =
     else -> PackState.UpdateAvailable(onDisk)
   }
 
-internal class FileDictionaryManager(
+class FilePackManager(
   private val downloader: PackDownloader,
   private val installer: PackInstaller,
-  private val factory: DictionaryFactory,
+  private val factory: PackFormats,
   private val catalogUrl: String,
   /** Runs the installations. Lives as long as the manager, i.e. the app. */
   private val scope: CoroutineScope,
-) : DictionaryManager {
+) : PackManager {
 
   @Volatile private var current = State()
   private val _packs = MutableStateFlow<List<Pack>>(emptyList())

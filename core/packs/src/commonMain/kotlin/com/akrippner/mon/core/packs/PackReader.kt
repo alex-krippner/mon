@@ -1,4 +1,4 @@
-package com.akrippner.mon.core.dictionary
+package com.akrippner.mon.core.packs
 
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Language
@@ -21,4 +21,4 @@ interface PackReader {
  * call on any reader can throw it. This is not "nothing found": fetch the readers again and repeat
  * the call.
  */
-class DictionaryClosedException : IllegalStateException("The pack reader is closed")
+class PackClosedException : IllegalStateException("The pack reader is closed")

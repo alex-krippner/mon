@@ -26,6 +26,7 @@ application {
 
 dependencies {
     implementation(projects.core.dictionary)
+    implementation(projects.core.packs)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(kotlin("test"))

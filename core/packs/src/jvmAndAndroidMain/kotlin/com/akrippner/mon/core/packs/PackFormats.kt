@@ -1,6 +1,5 @@
-package com.akrippner.mon.core.dictionary.pack
+package com.akrippner.mon.core.packs
 
-import com.akrippner.mon.core.dictionary.CloseableReader
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Language
 import java.io.File
@@ -9,7 +8,7 @@ import java.io.File
  * One file format the app can read. A German dictionary format later adds one implementation. Not
  * in `commonMain`, because it works on `java.io.File`.
  */
-internal interface DictionaryFormat {
+interface PackFormat {
   val format: String
   val schema: Int
 
@@ -22,9 +21,9 @@ internal interface DictionaryFormat {
   fun open(file: File, pack: CatalogPack): CloseableReader
 }
 
-internal class DictionaryFactory(private val formats: List<DictionaryFormat>) {
+class PackFormats(private val formats: List<PackFormat>) {
   /** Null if the app can't read [pack]: unknown format, schema or language. Never offered. */
-  fun formatOf(pack: CatalogPack): DictionaryFormat? =
+  fun formatOf(pack: CatalogPack): PackFormat? =
     formats
       .firstOrNull { it.format == pack.format && it.schema == pack.schema }
       ?.takeIf {
@@ -33,4 +32,4 @@ internal class DictionaryFactory(private val formats: List<DictionaryFormat>) {
       }
 }
 
-internal fun CatalogPack.toSource() = DictionarySource(id, name, attribution, version)
+fun CatalogPack.toSource() = DictionarySource(id, name, attribution, version)

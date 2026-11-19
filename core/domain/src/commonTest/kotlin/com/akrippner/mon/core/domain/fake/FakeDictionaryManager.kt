@@ -1,20 +1,20 @@
 package com.akrippner.mon.core.domain.fake
 
 import com.akrippner.mon.core.dictionary.MonDictionary
-import com.akrippner.mon.core.dictionary.PackReader
-import com.akrippner.mon.core.dictionary.pack.CatalogError
-import com.akrippner.mon.core.dictionary.pack.DictionaryManager
-import com.akrippner.mon.core.dictionary.pack.Pack
 import com.akrippner.mon.core.model.data.DictionaryEntry
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.LookupQuery
+import com.akrippner.mon.core.packs.CatalogError
+import com.akrippner.mon.core.packs.Pack
+import com.akrippner.mon.core.packs.PackManager
+import com.akrippner.mon.core.packs.PackReader
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /** Only [readers] matters to the use case; the pack operations do nothing. */
 class FakeDictionaryManager(private val dictionaries: List<PackReader> = emptyList()) :
-  DictionaryManager {
+  PackManager {
   override val packs: StateFlow<List<Pack>> = MutableStateFlow(emptyList())
 
   /** If set, returned from the second [readers] call on, as after an update replaced a reader. */

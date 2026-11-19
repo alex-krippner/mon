@@ -3,14 +3,14 @@ package com.akrippner.mon.core.dictionary.jmdict
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READONLY
-import com.akrippner.mon.core.dictionary.CloseableReader
-import com.akrippner.mon.core.dictionary.DictionaryClosedException
 import com.akrippner.mon.core.dictionary.MonDictionary
 import com.akrippner.mon.core.model.data.DictionaryEntry
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Label
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.LookupQuery
+import com.akrippner.mon.core.packs.CloseableReader
+import com.akrippner.mon.core.packs.PackClosedException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -41,7 +41,7 @@ internal class JmdictDictionary(
         // A closed reader must not reopen the file behind the manager's back: nobody would close
         // it again, and it would block replacing or deleting the file. It must not answer "nothing
         // found" either: the word may well be in the pack, so the caller has to ask a new reader.
-        if (closed) throw DictionaryClosedException()
+        if (closed) throw PackClosedException()
         val connection = openConnection()
         val lemma = normalization.apply(query.lemma)
         val surface = query.surface?.let(normalization::apply)
@@ -97,7 +97,7 @@ internal class JmdictDictionary(
 
   /**
    * Closes the file for good, e.g. before a pack is replaced or removed. Later lookups throw
-   * [DictionaryClosedException]; the manager hands out a new instance for the new file.
+   * [PackClosedException]; the manager hands out a new instance for the new file.
    */
   override suspend fun close() {
     mutex.withLock {

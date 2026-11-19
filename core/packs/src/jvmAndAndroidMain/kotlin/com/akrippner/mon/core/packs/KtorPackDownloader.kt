@@ -1,4 +1,4 @@
-package com.akrippner.mon.core.dictionary.pack
+package com.akrippner.mon.core.packs
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -13,7 +13,7 @@ import java.io.IOException
 
 private const val BUFFER_SIZE = 64 * 1024
 
-internal class KtorPackDownloader(private val client: HttpClient) : PackDownloader {
+class KtorPackDownloader(private val client: HttpClient) : PackDownloader {
   override suspend fun fetchText(url: String): String =
     try {
       val response = client.get(url)

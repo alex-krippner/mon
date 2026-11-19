@@ -1,6 +1,6 @@
 package com.akrippner.mon.tools
 
-import com.akrippner.mon.core.dictionary.pack.Catalog
+import com.akrippner.mon.core.packs.Catalog
 import com.akrippner.mon.tools.jmdict.JmdictSource
 import com.akrippner.mon.tools.pack.PackSource
 import com.akrippner.mon.tools.pack.Release

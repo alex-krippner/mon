@@ -1,8 +1,9 @@
 package com.akrippner.mon.core.dictionary.pack
 
-import com.akrippner.mon.core.dictionary.CloseableReader
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Language
+import com.akrippner.mon.core.packs.*
+import com.akrippner.mon.core.packs.CloseableReader
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.zip.GZIPOutputStream
@@ -15,7 +16,7 @@ private const val NOTES_MAGIC = "mon-notes 1"
  * first line is a magic string. It shows that the manager installs, hands out and closes readers of
  * any kind.
  */
-internal class NotesFormat : DictionaryFormat {
+internal class NotesFormat : PackFormat {
   override val format = NOTES_FORMAT
   override val schema = 1
 
