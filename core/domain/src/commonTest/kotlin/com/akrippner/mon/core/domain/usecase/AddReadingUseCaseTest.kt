@@ -9,6 +9,7 @@ import com.akrippner.mon.core.domain.model.AddReadingResult
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.tokenizer.TokenizerProvider
+import com.akrippner.mon.core.tokenizer.TokenizerUnavailableException
 import kotlin.collections.emptyList
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -86,7 +87,7 @@ class AddReadingUseCaseTest {
   fun success_carriesTheRepositoryId() = runTest {
     val result = useCase().execute(input())
 
-    assertEquals(AddReadingResult.Success("new-id"), result)
+    assertEquals(AddReadingResult.Success("new-id", tokenized = true), result)
   }
 
   @Test
@@ -100,8 +101,8 @@ class AddReadingUseCaseTest {
   fun noTokenizerForTheLanguage_storesTheReadingWithoutTokens() = runTest {
     val result = useCase(FakeTokenizerProvider(null)).execute(input())
 
-    assertEquals(AddReadingResult.Success("new-id"), result)
-    assertEquals(emptyList(), repository.added.single().tokens)
+    assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
+    assertEquals(null, repository.added.single().analysis)
     assertEquals(emptyList(), tokenizer.tokenizedTexts)
   }
 
@@ -113,5 +114,22 @@ class AddReadingUseCaseTest {
 
     assertEquals(emptyList(), german.tokenizedTexts)
     assertEquals(emptyList(), repository.added.single().tokens)
+  }
+
+  @Test
+  fun theTokenizersIdIsStoredWithTheTokens() = runTest {
+    useCase().execute(input())
+
+    assertEquals("fake-tokenizer", repository.added.single().analysis?.tokenizedWith)
+  }
+
+  @Test
+  fun anUnavailableTokenizer_storesTheReadingWithoutTokens() = runTest {
+    val unavailable = FakeTokenizer(failure = TokenizerUnavailableException("pack replaced"))
+
+    val result = useCase(FakeTokenizerProvider(unavailable)).execute(input())
+
+    assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
+    assertEquals(null, repository.added.single().analysis)
   }
 }

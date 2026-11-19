@@ -73,6 +73,27 @@ class MonDatabaseMigrationTest {
   }
 
   @Test
+  fun version2_marksExistingReadingsAsTokenizedByTheBundledDictionary() = runTest {
+    helper.createDatabase(2).use { connection ->
+      connection.execSQL("INSERT INTO user (id, createdAt) VALUES ('user-1', 0)")
+      connection.execSQL(
+        "INSERT INTO reading (id, userId, title, text, translation, sourceLanguage, " +
+          "translationLanguage, createdAt, updatedAt) " +
+          "VALUES ('reading-1', 'user-1', 'Title', 'こんにちは', 'Hello', 'ja', 'en', 1, 1)"
+      )
+    }
+
+    val db = openAppDatabase()
+    try {
+      val dao = db.getReadingDao()
+      assertEquals("sudachi-bundled", dao.getReadingWithTokens("reading-1")?.reading?.tokenizedWith)
+      assertEquals(emptyList(), dao.getPendingReadings("user-1"))
+    } finally {
+      db.close()
+    }
+  }
+
+  @Test
   fun version1_isRecreatedWhenOpened() = runTest {
     helper.createDatabase(1).use { connection ->
       connection.execSQL(

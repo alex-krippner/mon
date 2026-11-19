@@ -6,5 +6,7 @@ data class ReadingSummary(
   val sourceLanguage: Language,
   val translationLanguage: Language,
   val tokenCount: Int,
+  /** False while the reading waits for a tokenizer. */
+  val isTokenized: Boolean,
   val createdAt: Long,
 )

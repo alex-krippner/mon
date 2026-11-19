@@ -3,8 +3,10 @@ package com.akrippner.mon.core.domain.fake
 import com.akrippner.mon.core.data.ReadingRepository
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.model.data.PendingReading
 import com.akrippner.mon.core.model.data.Reading
 import com.akrippner.mon.core.model.data.ReadingSummary
+import com.akrippner.mon.core.model.data.TokenAnalysis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -14,12 +16,19 @@ data class AddedReading(
   val translation: String,
   val sourceLanguage: Language,
   val translationLanguage: Language,
-  val tokens: List<MonToken>,
-)
+  val analysis: TokenAnalysis?,
+) {
+  val tokens: List<MonToken>
+    get() = analysis?.tokens.orEmpty()
+}
 
 class FakeReadingRepository(private val newReadingId: String = "reading-1") : ReadingRepository {
   val added = mutableListOf<AddedReading>()
   var failure: Throwable? = null
+
+  /** The readings that wait for tokens. Saving an analysis removes the reading from here. */
+  val pending = mutableListOf<PendingReading>()
+  val saved = mutableMapOf<String, TokenAnalysis>()
 
   override fun observeReadingSummaries(): Flow<List<ReadingSummary>> = flowOf(emptyList())
 
@@ -31,11 +40,20 @@ class FakeReadingRepository(private val newReadingId: String = "reading-1") : Re
     translation: String,
     sourceLanguage: Language,
     translationLanguage: Language,
-    tokens: List<MonToken>,
+    analysis: TokenAnalysis?,
   ): String {
     failure?.let { throw it }
-    added += AddedReading(title, text, translation, sourceLanguage, translationLanguage, tokens)
+    added += AddedReading(title, text, translation, sourceLanguage, translationLanguage, analysis)
     return newReadingId
+  }
+
+  override suspend fun getPendingReadings(): List<PendingReading> = pending.toList()
+
+  override suspend fun saveAnalysis(readingId: String, analysis: TokenAnalysis): Boolean {
+    if (pending.none { it.id == readingId }) return false
+    pending.removeAll { it.id == readingId }
+    saved[readingId] = analysis
+    return true
   }
 
   override suspend fun deleteReading(readingId: String) = Unit

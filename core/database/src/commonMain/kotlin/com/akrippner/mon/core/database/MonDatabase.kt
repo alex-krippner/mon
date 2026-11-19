@@ -19,7 +19,7 @@ import kotlinx.coroutines.Dispatchers
 @Database(
   entities =
     [UserEntity::class, ReadingEntity::class, ReadingTokenEntity::class, ReadingUsageEntity::class],
-  version = 2,
+  version = 3,
 )
 @TypeConverters(StringListConverter::class)
 @ConstructedBy(MonDatabaseConstructor::class)

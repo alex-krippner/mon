@@ -19,6 +19,8 @@ import androidx.room.PrimaryKey
  * @property translationLanguage BCP-47 language tag of [translation], e.g. "en".
  * @property createdAt Creation time in milliseconds since epoch.
  * @property updatedAt Last modification time in milliseconds since epoch.
+ * @property tokenizedWith Id of the tokenizer that produced the reading's tokens, e.g.
+ *   `sudachi-core@20250825`. Null means the reading is still waiting for its tokens.
  */
 @Entity(
   tableName = "reading",
@@ -43,4 +45,5 @@ data class ReadingEntity(
   val translationLanguage: String,
   val createdAt: Long,
   val updatedAt: Long,
+  val tokenizedWith: String?,
 )

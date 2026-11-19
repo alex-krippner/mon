@@ -9,9 +9,10 @@ import com.akrippner.mon.core.database.dao.ReadingUsageDao
 import com.akrippner.mon.core.database.entity.ReadingEntity
 import com.akrippner.mon.core.database.entity.ReadingUsageEntity
 import com.akrippner.mon.core.model.data.Language
-import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.model.data.PendingReading
 import com.akrippner.mon.core.model.data.Reading
 import com.akrippner.mon.core.model.data.ReadingSummary
+import com.akrippner.mon.core.model.data.TokenAnalysis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -43,7 +44,7 @@ internal class RoomReadingRepository(
     translation: String,
     sourceLanguage: Language,
     translationLanguage: Language,
-    tokens: List<MonToken>,
+    analysis: TokenAnalysis?,
   ): String {
     val readingId = newId()
     val now = nowMillis()
@@ -59,11 +60,23 @@ internal class RoomReadingRepository(
           translationLanguage = translationLanguage.tag,
           createdAt = now,
           updatedAt = now,
+          tokenizedWith = analysis?.tokenizedWith,
         ),
-      tokens = tokens.mapIndexed { index, token -> token.toEntity(readingId, index) },
+      tokens =
+        analysis?.tokens.orEmpty().mapIndexed { index, token -> token.toEntity(readingId, index) },
     )
     return readingId
   }
+
+  override suspend fun getPendingReadings(): List<PendingReading> =
+    readingDao.getPendingReadings(userRepository.currentUserId()).mapNotNull { it.toDomainOrNull() }
+
+  override suspend fun saveAnalysis(readingId: String, analysis: TokenAnalysis): Boolean =
+    readingDao.setTokens(
+      readingId = readingId,
+      tokens = analysis.tokens.mapIndexed { index, token -> token.toEntity(readingId, index) },
+      tokenizedWith = analysis.tokenizedWith,
+    )
 
   override suspend fun deleteReading(readingId: String) {
     readingDao.deleteById(readingId)

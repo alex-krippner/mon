@@ -2,9 +2,10 @@ package com.akrippner.mon.feature.library
 
 import com.akrippner.mon.core.data.ReadingRepository
 import com.akrippner.mon.core.model.data.Language
-import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.model.data.PendingReading
 import com.akrippner.mon.core.model.data.Reading
 import com.akrippner.mon.core.model.data.ReadingSummary
+import com.akrippner.mon.core.model.data.TokenAnalysis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
@@ -33,8 +34,12 @@ class FakeReadingRepository : ReadingRepository {
     translation: String,
     sourceLanguage: Language,
     translationLanguage: Language,
-    tokens: List<MonToken>,
+    analysis: TokenAnalysis?,
   ): String = error("Not used by the library")
+
+  override suspend fun getPendingReadings(): List<PendingReading> = emptyList()
+
+  override suspend fun saveAnalysis(readingId: String, analysis: TokenAnalysis) = false
 
   override suspend fun deleteReading(readingId: String) = Unit
 }

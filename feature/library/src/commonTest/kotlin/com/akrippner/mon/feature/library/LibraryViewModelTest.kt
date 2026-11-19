@@ -38,6 +38,7 @@ class LibraryViewModelTest {
       sourceLanguage = Language.JAPANESE,
       translationLanguage = Language.ENGLISH,
       tokenCount = 3,
+      isTokenized = true,
       createdAt = 0L,
     )
 

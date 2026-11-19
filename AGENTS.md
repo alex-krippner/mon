@@ -49,8 +49,11 @@ dictionary lookups, using a Japanese tokenizer.
 - `:core:model` — data models (`Reading`, `ReadingSummary`, `MonToken`, ...).
 - `:core:domain` — business logic: use cases such as `AddReadingUseCase`, which
   validates input, tokenizes it with the `Tokenizer` that `TokenizerProvider` offers for the
-  reading's language (none: it stores the reading without tokens) and stores it through a
-  repository, and `LookupWordUseCase`, which looks a `MonToken` up in every dictionary
+  reading's language (none, or it can't answer: it stores the reading without tokens, as
+  *pending*) and stores it through a repository, `TokenizePendingReadingsUseCase`, which gives the
+  pending readings their tokens as far as a tokenizer is available, `PendingTokenization`, which
+  runs that once at start (from `initKoin`) and again on every `TokenizerProvider.changes`, one run
+  at a time, and `LookupWordUseCase`, which looks a `MonToken` up in every dictionary
   `DictionaryProvider` offers for a language pair and returns `LookupResult` (`Found`, `NotFound` or `NoDictionaryInstalled`, which the UI
   turns into a "download a dictionary" prompt).
 - `:core:tokenizer` — the `Tokenizer` capability (`language`, `id`, suspending `tokenize`, which
@@ -84,7 +87,10 @@ dictionary lookups, using a Japanese tokenizer.
   are shared by all sources. It is the only user of `JmdictWriter`.
 - `:core:database` — Room database (`MonDatabase`) and DAOs, with KSP codegen.
 - `:core:data` — repository layer: the `ReadingRepository` interface and its Room-backed
-  implementation, and `UserRepository`. It only maps between Room entities and `:core:model`.
+  implementation, and `UserRepository`. A reading stores the id of the tokenizer that produced its
+  tokens (`reading.tokenizedWith`, in `TokenAnalysis`); null means it is pending, shown as
+  `isTokenized = false` on `Reading` and `ReadingSummary`. `saveAnalysis` only writes to a pending
+  reading, so tokenizing the same reading twice is harmless. It only maps between Room entities and `:core:model`.
 - `:core:ui` — reusable Compose UI that knows about content, including the kanji lookup
   screens and `VocabEntryItem`.
 - `:core:designsystem` — Compose design system: theme, components, modifiers, icon catalog.
