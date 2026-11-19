@@ -49,8 +49,8 @@ dictionary lookups, using a Japanese tokenizer.
 - `:core:model` — data models (`Reading`, `ReadingSummary`, `MonToken`, ...).
 - `:core:domain` — business logic: use cases such as `AddReadingUseCase`, which
   validates input, tokenizes it with the `Tokenizer` that `TokenizerProvider` offers for the
-  reading's language (none, or it can't answer: it stores the reading without tokens, as
-  *pending*) and stores it through a repository, `TokenizePendingReadingsUseCase`, which gives the
+  reading's language (none, it can't answer, or it fails: it stores the reading without tokens, as
+  *pending*, and calls `PendingTokenization.request()` so a pack that arrived meanwhile is not missed) and stores it through a repository, `TokenizePendingReadingsUseCase`, which gives the
   pending readings their tokens as far as a tokenizer is available, `PendingTokenization`, which
   runs that once at start (from `initKoin`) and again on every `TokenizerProvider.changes`, one run
   at a time, and `LookupWordUseCase`, which looks a `MonToken` up in every dictionary
@@ -62,8 +62,9 @@ dictionary lookups, using a Japanese tokenizer.
   `TokenizerUnavailableException` means "can't answer right now", not "no tokens".
   Code above this module asks the provider and never assumes where a tokenizer comes from.
   `PackTokenizerProvider` offers the `Tokenizer` readers of the installed packs, repeats a call with
-  the pack's current reader when it was closed by an update or removal, and emits `changes` when a
-  tokenizer pack is installed, updated or removed. The Sudachi pack (`sudachi/`, in
+  the reader of the same version (same `Tokenizer.id`) when it was closed, and throws
+  `TokenizerUnavailableException` if that version is gone, so a reading never records a wrong id. It
+  emits `changes` only when the set of installed tokenizer packs changes (not when collected). The Sudachi pack (`sudachi/`, in
   `jvmAndAndroidMain`) is `SudachiFormat` (`sudachi-system`, schema 1; `verify` checks the size and
   the header) and `SudachiReader`, a `Tokenizer` and `CloseableReader` that loads the dictionary on
   the first `tokenize` call, on its own dispatcher. Only the Koin format registration is
@@ -168,7 +169,7 @@ Presentation and navigation:
   may still be dropped, so a missing migration fails instead of wiping user data.
 - Tests live in `commonTest` of `:core:database`, `:core:data`, `:core:domain`, `:core:model`,
   `:feature:addreading`, `:feature:dictionaries` and `:feature:library`, plus `jvmTest` in `:core:database` for the migration test (it reads the
-  exported schemas), `jvmTest` in `:core:dictionary` and `test` in `:tools:pack-converter`; other
+  exported schemas), `jvmTest` in `:core:dictionary` and `:core:tokenizer` and `test` in `:tools:pack-converter`; other
   modules have no test source sets. Database tests run
   against an in-memory database with the bundled SQLite driver. Domain and view model
   tests use hand-written fakes of `ReadingRepository`, `TokenizerProvider` and `DictionaryProvider`, and view model
@@ -194,7 +195,8 @@ pack: a Japanese reading is stored without tokens until `sudachi-core` is instal
 
 - **Readers and capabilities.** Every installed pack opens into a `PackReader` (only `pack: CatalogPack`).
   What a reader can answer is a capability interface that the reader implements next to it:
-  `MonDictionary` (`lookup`) is the only one today. Capabilities do not extend `PackReader`.
+  `MonDictionary` (`lookup`, `:core:dictionary`) and `Tokenizer` (`tokenize`, `:core:tokenizer`) are the
+  ones today. Capabilities do not extend `PackReader`.
   `PackManager.readers()` returns the readers of all kinds, sorted by pack id; the `internal`
   extension `installed()` in `:core:dictionary` keeps the `MonDictionary` ones. The manager, the installer and the Dictionaries screen do not care what
   kind a pack is. `PackFormat.open` must stay cheap (no file access), because `readers()`
@@ -247,8 +249,9 @@ pack: a Japanese reading is stored without tokens until `sudachi-core` is instal
     first pack is published.
   - *A new storage format for words:* in `:core:dictionary/<format>/`, a schema with
     `FORMAT`/`VERSION`, a writer (used by the converter) and a reader that is
-    `MonDictionary, CloseableReader`; a `PackFormat`, added to the list in
-    `createPackManager`; then the converter source. The manager does not change.
+    `MonDictionary, CloseableReader`; a `PackFormat`, registered in
+    its module's Koin module with `bind PackFormat::class` (there is no list in `createPackManager`);
+    then the converter source. The manager does not change.
   - *A new kind of data* (kanji, example sentences, pitch accent): as a new storage format, but the
     reader implements a new capability interface `: PackReader` in `commonMain` instead of
     `MonDictionary`. Add its models to `:core:model`, a provider like

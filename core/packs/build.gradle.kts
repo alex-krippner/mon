@@ -19,7 +19,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            // PackReader still mentions Language and DictionarySource until phase 2.
+            // PackFormats checks the languages of a pack with Language from :core:model.
             api(projects.core.model)
             implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)

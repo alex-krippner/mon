@@ -7,7 +7,7 @@ import com.akrippner.mon.core.domain.usecase.TokenizePendingReadingsUseCase
 import org.koin.dsl.module
 
 val domainModule = module {
-  factory { AddReadingUseCase(get(), get()) }
+  factory { AddReadingUseCase(get(), get(), get<PendingTokenization>()::request) }
   factory { LookupWordUseCase(get()) }
   factory { TokenizePendingReadingsUseCase(get(), get()) }
   single { PendingTokenization(get(), get()) }

@@ -14,6 +14,7 @@ import kotlin.collections.emptyList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 
 class AddReadingUseCaseTest {
@@ -35,8 +36,14 @@ class AddReadingUseCaseTest {
       translationLanguage = Language.ENGLISH,
     )
 
+  private var requests = 0
+
   private fun useCase(tokenizers: TokenizerProvider = FakeTokenizerProvider(tokenizer)) =
-    AddReadingUseCase(repository = repository, tokenizers = tokenizers)
+    AddReadingUseCase(
+      repository = repository,
+      tokenizers = tokenizers,
+      requestTokenization = { requests++ },
+    )
 
   @Test
   fun blankTitle_isInvalid_andNothingIsStored() = runTest {
@@ -88,6 +95,7 @@ class AddReadingUseCaseTest {
     val result = useCase().execute(input())
 
     assertEquals(AddReadingResult.Success("new-id", tokenized = true), result)
+    assertEquals(0, requests)
   }
 
   @Test
@@ -104,6 +112,7 @@ class AddReadingUseCaseTest {
     assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
     assertEquals(null, repository.added.single().analysis)
     assertEquals(emptyList(), tokenizer.tokenizedTexts)
+    assertEquals(1, requests)
   }
 
   @Test
@@ -131,5 +140,27 @@ class AddReadingUseCaseTest {
 
     assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
     assertEquals(null, repository.added.single().analysis)
+    assertEquals(1, requests)
+  }
+
+  @Test
+  fun aFailingTokenizer_storesTheReadingWithoutTokens() = runTest {
+    val failing = FakeTokenizer(failure = IllegalStateException("cannot load"))
+
+    val result = useCase(FakeTokenizerProvider(failing)).execute(input())
+
+    assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
+    assertEquals(null, repository.added.single().analysis)
+    assertEquals(1, requests)
+  }
+
+  @Test
+  fun cancellationIsNotSwallowed() = runTest {
+    val cancelled = FakeTokenizer(failure = CancellationException("cancelled"))
+
+    assertFailsWith<CancellationException> {
+      useCase(FakeTokenizerProvider(cancelled)).execute(input())
+    }
+    assertEquals(emptyList(), repository.added)
   }
 }

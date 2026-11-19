@@ -26,11 +26,14 @@ class FakeTokenizer(
  * Offers [tokenizer] for its own language only. [tokenizer] can be changed, and [changed] emits, as
  * when a pack is installed or removed.
  */
-class FakeTokenizerProvider(var tokenizer: Tokenizer? = null) : TokenizerProvider {
+class FakeTokenizerProvider(
+  var tokenizer: Tokenizer? = null,
+  private vararg val others: Tokenizer,
+) : TokenizerProvider {
   private val trigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
   override suspend fun tokenizerFor(language: Language): Tokenizer? =
-    tokenizer?.takeIf { it.language == language }
+    (listOfNotNull(tokenizer) + others).firstOrNull { it.language == language }
 
   override val changes: Flow<Unit> = trigger
 

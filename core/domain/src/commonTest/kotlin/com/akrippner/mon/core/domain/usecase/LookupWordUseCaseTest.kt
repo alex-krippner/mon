@@ -1,5 +1,6 @@
 package com.akrippner.mon.core.domain.usecase
 
+import com.akrippner.mon.core.dictionary.DictionaryProvider
 import com.akrippner.mon.core.dictionary.DictionaryUnavailableException
 import com.akrippner.mon.core.domain.fake.FakeDictionary
 import com.akrippner.mon.core.domain.fake.FakeDictionaryProvider
@@ -127,6 +128,24 @@ class LookupWordUseCaseTest {
     assertEquals(
       LookupResult.Found(listOf(entry("1", "ok"))),
       lookup(dictionaryForm, unavailable, working),
+    )
+  }
+
+  @Test
+  fun aDictionaryRemovedDuringTheLookupGivesNoDictionaryInstalled() = runTest {
+    val unavailable =
+      FakeDictionary(failure = DictionaryUnavailableException("no longer installed"))
+    val provider =
+      object : DictionaryProvider {
+        private var calls = 0
+
+        override suspend fun dictionariesFor(source: Language, gloss: Language) =
+          if (calls++ == 0) listOf(unavailable) else emptyList()
+      }
+
+    assertEquals(
+      LookupResult.NoDictionaryInstalled,
+      LookupWordUseCase(provider).execute(dictionaryForm, Language.JAPANESE, Language.ENGLISH),
     )
   }
 

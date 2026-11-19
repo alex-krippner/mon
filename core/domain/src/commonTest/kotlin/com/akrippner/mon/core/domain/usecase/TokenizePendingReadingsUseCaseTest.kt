@@ -62,7 +62,7 @@ class TokenizePendingReadingsUseCaseTest {
   }
 
   @Test
-  fun anUnavailableTokenizerStopsTheRunAndLeavesTheReadingsPending() = runTest {
+  fun anUnavailableTokenizerSkipsTheOtherReadingsOfThatLanguage() = runTest {
     repository.pending += listOf(pending("a"), pending("b"))
     val unavailable = FakeTokenizer(failure = TokenizerUnavailableException("pack replaced"))
 
@@ -71,6 +71,19 @@ class TokenizePendingReadingsUseCaseTest {
     assertEquals(0, done)
     assertEquals(listOf("text a"), unavailable.tokenizedTexts) // it did not try "b"
     assertEquals(2, repository.pending.size)
+  }
+
+  @Test
+  fun anUnavailableTokenizerDoesNotBlockOtherLanguages() = runTest {
+    repository.pending += listOf(pending("a"), pending("b", Language.GERMAN), pending("c"))
+    val unavailable = FakeTokenizer(failure = TokenizerUnavailableException("pack replaced"))
+    val german = FakeTokenizer(tokens, language = Language.GERMAN)
+
+    val done = useCase(FakeTokenizerProvider(unavailable, german)).execute()
+
+    assertEquals(1, done)
+    assertEquals(listOf("text a"), unavailable.tokenizedTexts)
+    assertEquals(listOf("a", "c"), repository.pending.map { it.id })
   }
 
   @Test

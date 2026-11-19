@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-/** The catalog is the only URL the app hard-codes; it points to the dictionary files. */
+/** The catalog is the only URL the app hard-codes; it points to the pack files. */
 internal const val CATALOG_URL =
   "https://github.com/alex-krippner/mon-data/releases/latest/download/catalog.json"
 

@@ -31,11 +31,22 @@ class LookupWordUseCase(private val dictionaries: DictionaryProvider) {
     val available = dictionaries.dictionariesFor(source, gloss)
     if (available.isEmpty()) return LookupResult.NoDictionaryInstalled
 
-    val entries = available.flatMap { it.entriesFor(query) }
-    return if (entries.isEmpty()) LookupResult.NotFound else LookupResult.Found(entries)
+    var unavailable = 0
+    val entries = available.flatMap { it.entriesFor(query) { unavailable++ } }
+    if (entries.isNotEmpty()) return LookupResult.Found(entries)
+
+    // If every dictionary vanished during the lookup (removed or replaced), there may be none left.
+    val allUnavailable = unavailable == available.size
+    if (allUnavailable && dictionaries.dictionariesFor(source, gloss).isEmpty()) {
+      return LookupResult.NoDictionaryInstalled
+    }
+    return LookupResult.NotFound
   }
 
-  private suspend fun MonDictionary.entriesFor(query: LookupQuery): List<DictionaryEntry> =
+  private suspend fun MonDictionary.entriesFor(
+    query: LookupQuery,
+    onUnavailable: () -> Unit,
+  ): List<DictionaryEntry> =
     try {
       lookup(query)
     } catch (e: CancellationException) {
@@ -43,6 +54,7 @@ class LookupWordUseCase(private val dictionaries: DictionaryProvider) {
     } catch (e: DictionaryUnavailableException) {
       // The dictionary can't answer right now. It says nothing about the word, so skip it.
       log.w(e) { "Dictionary '${source.id}' is unavailable ($sourceLanguage -> $glossLanguage)" }
+      onUnavailable()
       emptyList()
     } catch (e: Exception) {
       // One damaged dictionary file must not break the word sheet or hide the other

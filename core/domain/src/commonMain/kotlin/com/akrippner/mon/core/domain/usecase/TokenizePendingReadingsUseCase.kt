@@ -2,6 +2,7 @@ package com.akrippner.mon.core.domain.usecase
 
 import co.touchlab.kermit.Logger
 import com.akrippner.mon.core.data.ReadingRepository
+import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.TokenAnalysis
 import com.akrippner.mon.core.tokenizer.TokenizerProvider
 import com.akrippner.mon.core.tokenizer.TokenizerUnavailableException
@@ -21,7 +22,9 @@ class TokenizePendingReadingsUseCase(
   /** Returns how many readings got their tokens. */
   suspend fun execute(): Int {
     var done = 0
+    val unavailable = mutableSetOf<Language>()
     for (reading in repository.getPendingReadings()) {
+      if (reading.sourceLanguage in unavailable) continue
       val tokenizer = tokenizers.tokenizerFor(reading.sourceLanguage) ?: continue
       try {
         val analysis = TokenAnalysis(tokenizer.tokenize(reading.text), tokenizer.id)
@@ -29,9 +32,10 @@ class TokenizePendingReadingsUseCase(
       } catch (e: CancellationException) {
         throw e
       } catch (e: TokenizerUnavailableException) {
-        // It can't answer right now, so the rest would fail too. The next trigger tries again.
+        // It can't answer right now, so the other readings of its language would fail too. The
+        // readings of other languages go on. The next trigger tries again.
         log.w(e) { "Tokenizer '${tokenizer.id}' is unavailable; leaving the readings pending" }
-        return done
+        unavailable += reading.sourceLanguage
       } catch (e: Exception) {
         // One reading that can't be tokenized must not block the others.
         log.e(e) { "Could not tokenize reading ${reading.id}" }

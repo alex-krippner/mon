@@ -57,6 +57,7 @@ sourceSets {
         implementation(projects.core.dictionary)
         implementation(projects.core.packs)
         implementation(projects.core.database)
+        implementation(libs.kermit)
 
         implementation(libs.compose.runtime)
         implementation(libs.compose.foundation)

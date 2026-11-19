@@ -3,20 +3,24 @@ package com.akrippner.mon.core.packs
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
-/** The file the converter publishes next to the dictionary files. */
+/** The file the converter publishes next to the pack files. */
 @Serializable class Catalog(val packs: List<CatalogPack>)
 
-/** One downloadable dictionary. The same JSON is stored on disk as `pack.json` once installed. */
+/**
+ * One downloadable pack of any kind (a word dictionary, the Sudachi tokenizer dictionary, ...). The
+ * same JSON is stored on disk as `pack.json` once installed. Never remove or rename a field, and
+ * give a new one a default value, or installed `pack.json` files stop decoding.
+ */
 @Serializable
 data class CatalogPack(
-  val id: String, // e.g. "jmdict-eng"
+  val id: String, // "<source id>-<…>", e.g. "jmdict-eng" or "sudachi-core"
   val name: String,
   val sourceLanguage: String, // Language tag, e.g. "ja"
-  val glossLanguage: String, // e.g. "en"
-  val format: String, // e.g. "jmdict-sqlite", picks the reader
+  val glossLanguage: String, // e.g. "en"; a kind without one repeats sourceLanguage
+  val format: String, // e.g. "jmdict-sqlite" or "sudachi-system", picks the PackFormat
   val schema: Int,
   val version: String,
-  val url: String, // the .db.gz file
+  val url: String, // the gzipped pack file (.db.gz), https only
   val sizeBytes: Long,
   val unpackedSizeBytes: Long,
   val sha256: String,

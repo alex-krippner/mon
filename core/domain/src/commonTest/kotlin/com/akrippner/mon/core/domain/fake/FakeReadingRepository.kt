@@ -25,6 +25,7 @@ data class AddedReading(
 class FakeReadingRepository(private val newReadingId: String = "reading-1") : ReadingRepository {
   val added = mutableListOf<AddedReading>()
   var failure: Throwable? = null
+  var pendingFailure: Throwable? = null
 
   /** The readings that wait for tokens. Saving an analysis removes the reading from here. */
   val pending = mutableListOf<PendingReading>()
@@ -44,10 +45,14 @@ class FakeReadingRepository(private val newReadingId: String = "reading-1") : Re
   ): String {
     failure?.let { throw it }
     added += AddedReading(title, text, translation, sourceLanguage, translationLanguage, analysis)
+    if (analysis == null) pending += PendingReading(newReadingId, text, sourceLanguage)
     return newReadingId
   }
 
-  override suspend fun getPendingReadings(): List<PendingReading> = pending.toList()
+  override suspend fun getPendingReadings(): List<PendingReading> {
+    pendingFailure?.let { throw it }
+    return pending.toList()
+  }
 
   override suspend fun saveAnalysis(readingId: String, analysis: TokenAnalysis): Boolean {
     if (pending.none { it.id == readingId }) return false

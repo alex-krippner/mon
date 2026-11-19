@@ -8,17 +8,21 @@ import com.akrippner.mon.core.domain.model.AddReadingResult
 import com.akrippner.mon.core.model.data.TokenAnalysis
 import com.akrippner.mon.core.tokenizer.TokenizerProvider
 import com.akrippner.mon.core.tokenizer.TokenizerUnavailableException
+import kotlinx.coroutines.CancellationException
 
 private val log = Logger.withTag("AddReadingUseCase")
 
 /**
  * Validates a new reading, tokenizes its text and stores both. If there is no tokenizer for the
- * reading's language yet, the reading is stored without tokens and [TokenizePendingReadingsUseCase]
- * tokenizes it once one is available.
+ * reading's language yet, or it fails, the reading is stored without tokens and
+ * [TokenizePendingReadingsUseCase] tokenizes it once one is available. [requestTokenization] asks
+ * for that run right after such a reading is stored, so a tokenizer that appeared in the meantime
+ * is not missed.
  */
 class AddReadingUseCase(
   private val repository: ReadingRepository,
   private val tokenizers: TokenizerProvider,
+  private val requestTokenization: () -> Unit,
 ) {
   suspend fun execute(input: AddReadingInput): AddReadingResult {
     val title = input.title.trim()
@@ -42,19 +46,23 @@ class AddReadingUseCase(
         translationLanguage = input.translationLanguage,
         analysis = analysis,
       )
+    if (analysis == null) requestTokenization()
     return AddReadingResult.Success(readingId, tokenized = analysis != null)
   }
 
-  /** Null when there is no tokenizer for the language, or it can't answer right now. */
-  private suspend fun analyse(input: AddReadingInput, text: String): TokenAnalysis? {
-    val tokenizer = tokenizers.tokenizerFor(input.sourceLanguage) ?: return null
-    return try {
-      TokenAnalysis(tokenizer.tokenize(text), tokenizer.id)
+  /** Null when there is no tokenizer for the language, or it can't answer or fails. */
+  private suspend fun analyse(input: AddReadingInput, text: String): TokenAnalysis? =
+    try {
+      val tokenizer = tokenizers.tokenizerFor(input.sourceLanguage)
+      tokenizer?.let { TokenAnalysis(it.tokenize(text), it.id) }
+    } catch (e: CancellationException) {
+      throw e
     } catch (e: TokenizerUnavailableException) {
-      log.w(e) {
-        "Tokenizer '${tokenizer.id}' is unavailable; the reading is stored without tokens"
-      }
+      log.w(e) { "Tokenizer is unavailable; the reading is stored without tokens" }
+      null
+    } catch (e: Exception) {
+      // A downloaded dictionary that can't be loaded must not make saving impossible.
+      log.e(e) { "Tokenizing failed; the reading is stored without tokens" }
       null
     }
-  }
 }

@@ -5,8 +5,9 @@ import com.akrippner.mon.core.model.data.Language
 import java.io.File
 
 /**
- * One file format the app can read. A German dictionary format later adds one implementation. Not
- * in `commonMain`, because it works on `java.io.File`.
+ * One file format the app can read. A module that owns a format registers one in Koin with `bind
+ * PackFormat::class`; the manager collects them all. Not in `commonMain`, because it works on
+ * `java.io.File`.
  */
 interface PackFormat {
   val format: String

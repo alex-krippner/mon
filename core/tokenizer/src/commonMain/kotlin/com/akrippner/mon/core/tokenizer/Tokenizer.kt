@@ -30,7 +30,10 @@ interface TokenizerProvider {
   /** The tokenizer for [language], or null if there is none at the moment. */
   suspend fun tokenizerFor(language: Language): Tokenizer?
 
-  /** Emits whenever the set of available tokenizers may have changed, e.g. a pack was installed. */
+  /**
+   * Emits whenever the set of available tokenizers changed, e.g. a pack was installed. It does not
+   * emit for the current state when collected.
+   */
   val changes: Flow<Unit>
 }
 

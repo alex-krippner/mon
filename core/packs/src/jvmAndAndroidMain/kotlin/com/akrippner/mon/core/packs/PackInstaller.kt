@@ -109,11 +109,11 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
 
   /**
    * Deletes what a killed install, update or removal left behind: pack folders without a
-   * `pack.json`, and temporary files in the others. Without it that space (up to a whole
-   * dictionary) is lost, because the UI offers no "remove" for a pack that is not installed. A
-   * folder whose `pack.json` exists but can't be read is kept: it may be a pack this version of the
-   * app does not understand. Must not run while a download is in progress; the manager calls it
-   * once, before the first one.
+   * `pack.json`, and temporary files in the others. Without it that space (up to a whole pack) is
+   * lost, because the UI offers no "remove" for a pack that is not installed. A folder whose
+   * `pack.json` exists but can't be read is kept: it may be a pack this version of the app does not
+   * understand. Must not run while a download is in progress; the manager calls it once, before the
+   * first one.
    */
   fun sweep() {
     for (dir in packDirs()) {

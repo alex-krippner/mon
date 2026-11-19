@@ -72,7 +72,7 @@ class PreviousCatalogTest {
   @Test
   fun latestCatalogUrlPointsAtTheLatestReleasesCatalog() {
     // This only pins the URL's shape. The catalog that is merged must be the one the app sees,
-    // i.e. CATALOG_URL in :core:dictionary (DictionaryManagers.kt), but that constant is internal
+    // i.e. CATALOG_URL in :core:packs (PackManagers.kt), but that constant is internal
     // to the other module, so this test cannot notice if the two drift apart. Keep them equal by
     // hand when either changes.
     assertEquals(
