@@ -5,7 +5,7 @@ import com.akrippner.mon.core.model.data.MonToken
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Splits text of one [language] into tokens. How it does that (a local file, a server) is its own.
+ * Splits text of one [language] into tokens. How it does that (a local file, a server) is up to the implementation.
  */
 interface Tokenizer {
   val language: Language
