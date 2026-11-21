@@ -275,7 +275,7 @@ class FilePackManager(
         .sortedBy { it.id }
         .mapNotNull { pack ->
           val format = factory.formatOf(pack) ?: return@mapNotNull null
-          opened.getOrPut(pack.id) { format.open(installer.databaseFile(pack.id), pack) }
+          opened.getOrPut(pack.id) { format.open(installer.dataFile(pack.id), pack) }
         }
     }
 }

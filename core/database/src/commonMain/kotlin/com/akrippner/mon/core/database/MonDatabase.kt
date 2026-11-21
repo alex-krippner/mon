@@ -19,7 +19,7 @@ import kotlinx.coroutines.Dispatchers
 @Database(
   entities =
     [UserEntity::class, ReadingEntity::class, ReadingTokenEntity::class, ReadingUsageEntity::class],
-  version = 3,
+  version = 1,
 )
 @TypeConverters(StringListConverter::class)
 @ConstructedBy(MonDatabaseConstructor::class)
@@ -41,8 +41,5 @@ fun getRoomDatabase(builder: RoomDatabase.Builder<MonDatabase>): MonDatabase {
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)
     .addMigrations(*MIGRATIONS)
-    // Version 1 was a prototype schema whose data cannot be mapped to the current model. Every
-    // later version must be migrated, so that user data is never dropped.
-    .fallbackToDestructiveMigrationFrom(dropAllTables = true, 1)
     .build()
 }

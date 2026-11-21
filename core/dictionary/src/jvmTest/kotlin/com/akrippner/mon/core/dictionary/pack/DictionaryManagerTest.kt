@@ -122,8 +122,8 @@ class DictionaryManagerTest {
     val pack = testPack()
     publish(pack)
     val packDir = File(dir, pack.info.id).also { it.mkdirs() }
-    File(packDir, "dictionary.db.gz.tmp").writeText("x")
-    File(packDir, "dictionary.db.tmp").writeText("x")
+    File(packDir, "pack.dat.gz.tmp").writeText("x")
+    File(packDir, "pack.dat.tmp").writeText("x")
 
     manager.refreshCatalog()
 

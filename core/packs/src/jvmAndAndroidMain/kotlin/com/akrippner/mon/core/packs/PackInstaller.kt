@@ -7,14 +7,14 @@ import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.util.zip.GZIPInputStream
 import kotlinx.serialization.json.Json
 
-private const val DB_NAME = "dictionary.db"
+private const val DATA_NAME = "pack.dat"
 private const val PACK_JSON = "pack.json"
 private const val TMP_SUFFIX = ".tmp"
 private val ID_PATTERN = Regex("[a-z0-9-]+")
 
 /**
  * The file work of installing a pack: download, verify, unpack, move into place. It keeps no state.
- * Layout per pack: `<baseDir>/<packId>/dictionary.db` plus `pack.json`.
+ * Layout per pack: `<baseDir>/<packId>/pack.dat` plus `pack.json`.
  */
 class PackInstaller(private val downloader: PackDownloader, private val baseDir: File) {
   private val json = Json { ignoreUnknownKeys = true }
@@ -28,7 +28,7 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
     return File(baseDir, packId)
   }
 
-  fun databaseFile(packId: String) = File(packDir(packId), DB_NAME)
+  fun dataFile(packId: String) = File(packDir(packId), DATA_NAME)
 
   /**
    * Downloads, verifies and unpacks [pack] into a temporary file and returns it. The installed
@@ -47,8 +47,8 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
       throw PackException(PackError.NOT_ENOUGH_SPACE)
     }
 
-    val archive = File(dir, "$DB_NAME.gz$TMP_SUFFIX")
-    val database = File(dir, "$DB_NAME$TMP_SUFFIX")
+    val archive = File(dir, "$DATA_NAME.gz$TMP_SUFFIX")
+    val data = File(dir, "$DATA_NAME$TMP_SUFFIX")
     try {
       downloader.download(pack.url, archive, pack.sizeBytes, onProgress)
       // The checks and unpacking below take a while on a phone. Reporting 100 % first lets the
@@ -57,11 +57,11 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
       if (!storage { sha256Hex(archive) }.equals(pack.sha256, ignoreCase = true)) {
         throw PackException(PackError.CHECKSUM)
       }
-      gunzip(archive, database)
-      if (!verify(database, pack)) throw PackException(PackError.UNSUPPORTED)
-      return database
+      gunzip(archive, data)
+      if (!verify(data, pack)) throw PackException(PackError.UNSUPPORTED)
+      return data
     } catch (e: Throwable) { // also on cancellation: never leave a half-written file behind
-      database.delete()
+      data.delete()
       throw e
     } finally {
       archive.delete()
@@ -69,13 +69,13 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
   }
 
   /**
-   * Moves a verified [database] into place and records [pack] in `pack.json`. A `pack.json` on disk
-   * always describes the `dictionary.db` next to it: the old one is deleted before the database is
+   * Moves a verified [data] into place and records [pack] in `pack.json`. A `pack.json` on disk
+   * always describes the `pack.dat` next to it: the old one is deleted before the data file is
    * replaced and the new one is put in place last. An update that dies half-way therefore leaves
    * the pack not installed (and [sweep] cleans up), never new data under the old version. Close
    * readers of the old file first.
    */
-  fun commit(pack: CatalogPack, database: File) = storage {
+  fun commit(pack: CatalogPack, data: File) = storage {
     val dir = packDir(pack.id)
     val installed = File(dir, PACK_JSON)
     // Written before anything is touched: on a full disk this fails with the old version intact.
@@ -87,7 +87,7 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
       throw e
     }
     Files.deleteIfExists(installed.toPath())
-    Files.move(database.toPath(), databaseFile(pack.id).toPath(), REPLACE_EXISTING)
+    Files.move(data.toPath(), dataFile(pack.id).toPath(), REPLACE_EXISTING)
     Files.move(metadata.toPath(), installed.toPath(), REPLACE_EXISTING)
   }
 
@@ -104,7 +104,7 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
     return dir.deleteRecursively()
   }
 
-  /** Packs that are fully installed: both `pack.json` and `dictionary.db` exist and parse. */
+  /** Packs that are fully installed: both `pack.json` and `pack.dat` exist and parse. */
   fun installedPacks(): List<CatalogPack> = packDirs().mapNotNull(::installedIn)
 
   /**
@@ -131,7 +131,7 @@ class PackInstaller(private val downloader: PackDownloader, private val baseDir:
   private fun installedIn(dir: File): CatalogPack? =
     runCatching { json.decodeFromString<CatalogPack>(File(dir, PACK_JSON).readText()) }
       .getOrNull()
-      ?.takeIf { it.id == dir.name && File(dir, DB_NAME).isFile }
+      ?.takeIf { it.id == dir.name && File(dir, DATA_NAME).isFile }
 
   private fun gunzip(source: File, target: File) = storage {
     GZIPInputStream(source.inputStream()).use { input ->

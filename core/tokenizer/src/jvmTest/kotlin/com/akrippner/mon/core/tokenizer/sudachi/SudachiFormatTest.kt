@@ -18,7 +18,7 @@ class SudachiFormatTest {
     dir.deleteRecursively()
   }
 
-  private fun file(name: String = "dictionary.db") = dir.resolve(name)
+  private fun file(name: String = "pack.dat") = dir.resolve(name)
 
   @Test
   fun acceptsASystemDictionaryOfTheDeclaredSize() {

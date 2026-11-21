@@ -27,7 +27,7 @@ internal fun testPack(
 ): TestPack {
   val dir = Files.createTempDirectory("pack-build")
   try {
-    val db = dir.resolve("dictionary.db")
+    val db = dir.resolve("pack.dat")
     JmdictWriter(db.toString(), Language.JAPANESE).use { writer ->
       writer.insert(
         JmdictRecord(1, true, listOf(Sense(listOf("gloss"))), listOf(Headword(word, "あけて")))

@@ -373,8 +373,10 @@ sequenceDiagram
 
 - **Room** (`MonDatabase`) stores readings and their tokens. A reading records the id of the
   tokenizer that produced its tokens (`tokenizedWith`); `null` means pending. Schemas are exported
-  to `core/database/schemas/`. Every version after 2 needs a `Migration`, covered by a test.
-- **Pack files** live in `<base>/<packId>/dictionary.db` plus `pack.json`. The base is
+  to `core/database/schemas/`. Before the first release a schema change edits version 1 in place
+  (no migrations); after it, every schema change bumps the version and needs a `Migration`,
+  covered by a test.
+- **Pack files** live in `<base>/<packId>/pack.dat` plus `pack.json`. The base is
   `noBackupFilesDir/dictionaries` on Android and `~/.mon/dictionaries` on desktop. The folder name
   is historical and must not change.
 - **Catalog**: the app reads the `catalog.json` of the latest release of `mon-data` and offers only
@@ -394,4 +396,4 @@ Koin. Each module registers its own Koin module, and all of them are listed in `
 | A screen | A feature module with a contract, view model and screen; register its Koin module in `initKoin`; add a `MonNavKey`, register it in `MonNavConfiguration`, add an `entry<...>` in `MonNavHost`. |
 | A word source or language | A `PackSource` in `:tools:pack-converter`, added to `SOURCES`; a new `Language` if needed. |
 | A new kind of pack data | A format in its module, a capability interface extending `PackReader`, a provider that retries on `PackClosedException`, a use case, and the UI. |
-| A database change | Update entities and the `MonDatabase` version, add a `Migration` and a migration test. |
+| A database change | Before release: update entities and `1.json`, delete the local database. After release: bump the `MonDatabase` version, add a `Migration` and a migration test. |

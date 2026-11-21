@@ -275,7 +275,7 @@ classDiagram
     +remove(packId) Boolean
     +installedPacks() List~CatalogPack~
     +sweep()
-    +databaseFile(packId) File
+    +dataFile(packId) File
   }
   class PackDownloader {
     <<public interface>>
