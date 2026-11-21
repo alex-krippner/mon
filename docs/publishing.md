@@ -2,8 +2,8 @@
 
 How to publish dictionary and tokenizer packs to the `mon-data` repository. This is a release
 runbook; the rules that matter when changing code (catalog fields, key normalization, adding a
-source) are in `AGENTS.md` under "Dictionary packs". Do not read `*.db`, `jmdict-*.json` or
-`system_core.dic` files; they are large.
+source) are in `AGENTS.md` under "Dictionary packs". Do not read `pack.dat`, `*.db`,
+`jmdict-*.json` or `system_core.dic` files; they are large.
 
 ## Catalog and release rules
 
@@ -14,8 +14,16 @@ every source.
   in the catalog and keeps everything else. So always convert all of a source's packs in one run
   (for JMdict: all languages); the converter refuses a run that would drop one, unless it gets
   `--allow-drop`. No source id may be `<another id>-…`; the converter checks this.
-- Never delete an old `mon-data` release or its files. Pack URLs are absolute, and the current
-  catalog points to other sources' archives in earlier releases.
+- Never delete a `mon-data` release or file that the latest catalog points to. Pack URLs are
+  absolute, and the catalog points to other sources' archives in earlier releases. Until the first
+  app release, `mon-data` is also the development repository: a release that the latest catalog no
+  longer references can be deleted (`gh release delete <tag> --cleanup-tag -y`), and a release can
+  be rewritten in place with `gh release upload <tag> <files> --clobber`. From the first app
+  release on, never delete or rewrite any release: shipped apps hold the URLs. During development
+  `mon-data` keeps one release per source: delete a source's previous release after publishing its
+  new one (the last step of each publishing section below).
+- Rewriting a pack under the same version does not update installed copies: remove and reinstall
+  the pack, or delete its folder.
 - Every release marked latest must contain `catalog.json`, or the app gets a 404.
 - Never remove or rename a `CatalogPack` field, and every pack carries every field with a valid
   value. The app decodes the whole catalog before it filters, so one pack with a missing field
@@ -56,6 +64,10 @@ The licence requires keeping the data current, so do this regularly, at least mo
    … --latest`), which uploads every `.db.gz` and the `catalog.json`. Do this before converting
    another source: the merge reads the *published* catalog, so two conversions without a release in
    between lose the first one's packs.
+4. Until the first app release, delete the previous JMdict release
+   (`gh release delete jmdict-<old dictDate> --repo alex-krippner/mon-data --cleanup-tag -y`). The
+   new catalog no longer points to it. Delete only the previous release of this source: the catalog
+   still points to other sources' archives in their own releases.
 
 ## Publishing the Sudachi dictionary
 
@@ -70,9 +82,18 @@ Only when a new SudachiDict release is wanted.
    create it as for JMdict, before converting another source.
 3. The attribution text is `ATTRIBUTION` in `SudachiSource.kt`; check it against the LEGAL file of
    the SudachiDict release.
+4. Until the first app release, delete the previous Sudachi release
+   (`gh release delete sudachi-<old version> --repo alex-krippner/mon-data --cleanup-tag -y`),
+   under the same rule as for JMdict: only this source's previous release.
 
 The format is `sudachi-system`, schema 1. A different Sudachi library version that can't read the
 file needs a new `schema`, so that older apps hide the pack.
+
+The app embeds Sudachi 0.7.5 (`sudachi` in `gradle/libs.versions.toml`), which reads the older
+dictionary format. SudachiDict 20261015 uses the newer "V1" dictionary format, and the converter
+rejects it ("not a Sudachi system dictionary (wrong header)"). The published `sudachi-core` is
+therefore 20260428. Publishing a newer SudachiDict means upgrading the Sudachi library (0.8.x)
+first, and that needs a new `schema`.
 
 ## Licence
 
