@@ -10,8 +10,12 @@ Design decisions:
 - The app is tied to no dictionary and no language. `MonDictionary` is an interface; entries are
   data classes; labels are a sealed hierarchy.
 - The app is tied to no kind of data either. Every installed pack opens into a `PackReader`, and
-  what a reader can answer is a capability on top of it. `MonDictionary` (word lookup) is the only
-  capability today; a kanji or example-sentence pack would add its own.
+  what a reader can answer is a capability interface that the reader implements next to it (it does
+  not extend `PackReader`). `MonDictionary` (word lookup, `:core:dictionary`) and `Tokenizer`
+  (`:core:tokenizer`) are the two today; a kanji or example-sentence pack would add its own.
+- The pack system is its own module, `:core:packs`. It knows no file format and no capability:
+  `:core:dictionary` and `:core:tokenizer` each plug a `PackFormat` into it and offer their readers
+  through a provider (`DictionaryProvider`, `TokenizerProvider`).
 - JMdict is the first dictionary, published as one pack per gloss language (English and German).
   Its file format, `jmdict-sqlite`, is the word-list format for any source and language pair.
 - The converter is one tool with a subcommand per source. Packaging and the catalog are shared, and
@@ -47,8 +51,9 @@ flowchart TB
     domain[":core:domain<br/>AddReadingUseCase<br/>LookupWordUseCase"]
     data[":core:data"]
     db[":core:database (Room)"]
-    tok[":core:tokenizer (Sudachi)"]
-    dict[":core:dictionary<br/>PackReader, MonDictionary, packs, JMdict reader"]
+    tok[":core:tokenizer<br/>Tokenizer, TokenizerProvider, Sudachi pack"]
+    dict[":core:dictionary<br/>MonDictionary, DictionaryProvider, JMdict reader"]
+    packs[":core:packs<br/>PackManager, PackReader, PackFormat,<br/>catalog, download, install"]
     model[":core:model<br/>DictionaryEntry, Label, LookupQuery"]
   end
 
@@ -56,7 +61,7 @@ flowchart TB
     conv[":tools:pack-converter<br/>PackSource per source, publish"]
   end
 
-  mondata[("GitHub: alex-krippner/mon-data<br/>catalog.json + jmdict-*.db.gz")]
+  mondata[("GitHub: alex-krippner/mon-data<br/>catalog.json + jmdict-*.db.gz, sudachi-core.db.gz")]
 
   androidApp --> shared
   desktopApp --> shared
@@ -64,47 +69,43 @@ flowchart TB
   shared --> library & addreading & dictionaries & nav
   library --> data
   addreading --> domain & data & tok
-  dictionaries --> dict
+  dictionaries --> packs
   library & addreading & dictionaries --> ds & arch
   ui --> ds
   domain --> data & tok & dict & model
   data --> db & model
-  dict --> model
-  conv --> dict
+  dict --> packs & model
+  tok --> packs & model
+  packs --> model
+  conv --> dict & tok & packs
   conv -. "reads the previous catalog, publishes" .-> mondata
-  dict -. "HTTPS (Ktor)" .-> mondata
-  shared -. "dictionaryModule (Koin)" .-> dict
+  packs -. "HTTPS (Ktor)" .-> mondata
+  shared -. "packsModule, dictionaryModule, tokenizerModule (Koin)" .-> packs
 ```
 
 The module rule still holds: features never depend on `:core:database` or on each other.
-`:feature:dictionaries` talks to the `PackManager` interface directly and does not use
-`:core:domain`. No feature uses `:core:ui` yet; the lookup sheet in it waits for the Reader. `:shared`
+`:feature:dictionaries` talks to the `PackManager` interface of `:core:packs` directly and does not
+use `:core:domain`, `:core:dictionary` or `:core:tokenizer`. No feature uses `:core:ui` yet; the lookup sheet in it waits for the Reader. `:shared`
 wires everything together.
 
 ## 2. Classes
 
-The stereotype names the visibility and, for classes outside `:core:dictionary`, the module.
+The stereotype names the visibility and, for classes outside `:core:packs`, the module.
 
 ```mermaid
 classDiagram
   direction LR
 
-  %% ---------- :core:dictionary commonMain (public contract) ----------
+  %% ---------- :core:packs commonMain (public contract) ----------
   class PackReader {
     <<interface>>
-    +source: DictionarySource
-    +sourceLanguage: Language
-    +glossLanguage: Language
-  }
-  class MonDictionary {
-    <<interface>>
-    +lookup(query: LookupQuery) List~DictionaryEntry~
+    +pack: CatalogPack
   }
   class PackClosedException {
     <<exception>>
   }
   class CloseableReader {
-    <<internal interface>>
+    <<interface>>
     +close()
   }
   class PackManager {
@@ -114,10 +115,6 @@ classDiagram
     +install(packId)
     +remove(packId)
     +readers() List~PackReader~
-  }
-  class installedExt["PackManager.installed()"] {
-    <<extension>>
-    readers().filterIsInstance~MonDictionary~()
   }
   class Pack {
     <<data>>
@@ -160,6 +157,59 @@ classDiagram
     INVALID
   }
 
+  %% ---------- :core:dictionary commonMain ----------
+  class MonDictionary {
+    <<interface :core:dictionary>>
+    +source: DictionarySource
+    +sourceLanguage: Language
+    +glossLanguage: Language
+    +lookup(query: LookupQuery) List~DictionaryEntry~
+  }
+  class DictionaryProvider {
+    <<interface :core:dictionary>>
+    +dictionariesFor(source, gloss) List~MonDictionary~
+  }
+  class PackDictionaryProvider {
+    <<internal :core:dictionary>>
+  }
+  class ReplacingDictionary {
+    <<private :core:dictionary>>
+    retries on PackClosedException
+  }
+  class installedExt["PackManager.installed()"] {
+    <<internal extension :core:dictionary>>
+    readers().filterIsInstance~MonDictionary~()
+  }
+  class DictionaryUnavailableException {
+    <<exception :core:dictionary>>
+  }
+
+  %% ---------- :core:tokenizer ----------
+  class Tokenizer {
+    <<interface :core:tokenizer>>
+    +language: Language
+    +id: String
+    +tokenize(text) List~MonToken~
+  }
+  class TokenizerProvider {
+    <<interface :core:tokenizer>>
+    +tokenizerFor(language) Tokenizer?
+    +changes: Flow~Unit~
+  }
+  class PackTokenizerProvider {
+    <<internal :core:tokenizer>>
+  }
+  class TokenizerUnavailableException {
+    <<exception :core:tokenizer>>
+  }
+  class SudachiFormat {
+    <<internal object :core:tokenizer>>
+    sudachi-system, schema 1
+  }
+  class SudachiReader {
+    <<internal :core:tokenizer>>
+  }
+
   %% ---------- :core:model ----------
   class DictionaryEntry {
     <<data :core:model>>
@@ -188,9 +238,9 @@ classDiagram
     lemma, surface, reading
   }
 
-  %% ---------- :core:dictionary jvmAndAndroidMain: packs ----------
+  %% ---------- :core:packs jvmAndAndroidMain ----------
   class FilePackManager {
-    <<internal>>
+    <<public>>
     -current: State
     -files: Mutex
     -opened: Map~String, CloseableReader~
@@ -206,18 +256,19 @@ classDiagram
     toPacks() List~Pack~
   }
   class PackFormats {
-    <<internal>>
+    <<public>>
+    PackFormats(formats: List~PackFormat~)
     +formatOf(pack) PackFormat?
   }
   class PackFormat {
-    <<internal interface>>
+    <<public interface>>
     +format: String
     +schema: Int
     +verify(file, pack) Boolean
     +open(file, pack) CloseableReader
   }
   class PackInstaller {
-    <<internal>>
+    <<public>>
     -baseDir: File
     +download(pack, verify, onProgress) File
     +commit(pack, database)
@@ -227,12 +278,12 @@ classDiagram
     +databaseFile(packId) File
   }
   class PackDownloader {
-    <<internal interface>>
+    <<public interface>>
     +fetchText(url) String
     +download(url, target, fallbackBytes, onProgress)
   }
   class KtorPackDownloader {
-    <<internal>>
+    <<public>>
     -client: HttpClient
   }
   class PackException {
@@ -291,6 +342,7 @@ classDiagram
   %% ---------- :core:domain ----------
   class LookupWordUseCase {
     <<public :core:domain>>
+    -dictionaries: DictionaryProvider
     +execute(token, source, gloss) LookupResult
   }
   class LookupResult {
@@ -378,10 +430,14 @@ classDiagram
   }
 
   %% ---------- inheritance ----------
-  MonDictionary --|> PackReader
   CloseableReader --|> PackReader
   JmdictDictionary ..|> MonDictionary
   JmdictDictionary ..|> CloseableReader
+  SudachiReader ..|> Tokenizer
+  SudachiReader ..|> CloseableReader
+  PackDictionaryProvider ..|> DictionaryProvider
+  PackTokenizerProvider ..|> TokenizerProvider
+  SudachiFormat ..|> PackFormat
   FilePackManager ..|> PackManager
   KtorPackDownloader ..|> PackDownloader
   JmdictFormat ..|> PackFormat
@@ -391,14 +447,13 @@ classDiagram
   PackManager --> Pack
   PackManager ..> CatalogError : refreshCatalog returns
   PackManager ..> PackReader : readers returns
-  installedExt ..> PackManager : readers()
-  installedExt ..> MonDictionary : keeps only
   Pack --> CatalogPack
   Pack --> PackState
   PackState --> PackError
   Catalog --> CatalogPack
-  PackReader --> DictionarySource
+  PackReader --> CatalogPack
   PackReader ..> PackClosedException : any call throws
+  MonDictionary --> DictionarySource
   MonDictionary ..> LookupQuery
   MonDictionary ..> DictionaryEntry
   DictionaryEntry --> DictionarySource
@@ -422,6 +477,19 @@ classDiagram
   KtorPackDownloader ..> PackException : throws
   PackException --> PackError
 
+  %% ---------- capabilities over packs ----------
+  PackDictionaryProvider --> PackManager
+  PackDictionaryProvider --> installedExt
+  PackDictionaryProvider *-- ReplacingDictionary
+  ReplacingDictionary ..> PackClosedException : retries on
+  ReplacingDictionary ..> DictionaryUnavailableException : throws
+  installedExt ..> PackManager : readers()
+  installedExt ..> MonDictionary : keeps only
+  PackTokenizerProvider --> PackManager
+  PackTokenizerProvider ..> TokenizerUnavailableException : throws
+  Tokenizer ..> MonToken
+  SudachiFormat ..> SudachiReader : creates
+
   %% ---------- JMdict ----------
   JmdictFormat ..> JmdictDictionary : creates
   JmdictFormat ..> JmdictSchema
@@ -434,9 +502,9 @@ classDiagram
   JmdictWriter ..> JmdictSchema
 
   %% ---------- users ----------
-  LookupWordUseCase --> installedExt
+  LookupWordUseCase --> DictionaryProvider
   LookupWordUseCase ..> LookupResult
-  LookupWordUseCase ..> PackClosedException : retries on
+  LookupWordUseCase ..> DictionaryUnavailableException : skips that dictionary
   LookupResult --> DictionaryEntry
   DictionariesViewModel --> PackManager
   DictionariesViewModel --> DictionariesState
@@ -462,17 +530,26 @@ classDiagram
 
 ## How to read it
 
-- **Boundary:** the public contract (`PackReader`, `MonDictionary`, `PackManager`, `Pack`,
-  `PackState`, `CatalogPack`) is in `commonMain` and has no `java.*`, which keeps iOS and web open.
-  `PackInstaller`, `PackDownloader`, `JmdictDictionary` and the other classes that use
-  `java.io.File` stay in `jvmAndAndroidMain`.
+- **Module split:** `:core:packs` is the generic pack system (catalog, download, install, remove,
+  `PackManager`, `PackReader`, `CloseableReader`, `PackFormat`) and knows no file format.
+  `:core:dictionary` and `:core:tokenizer` depend on it, never the other way round; each registers
+  its `PackFormat` in Koin with `bind PackFormat::class`, and `FilePackManager` collects them with
+  `getAll<PackFormat>()`.
+- **Boundary:** the public contract (`PackReader`, `PackManager`, `Pack`, `PackState`,
+  `CatalogPack` in `:core:packs`; `MonDictionary` in `:core:dictionary`) is in `commonMain` and has
+  no `java.*`, which keeps iOS and web open. `PackInstaller`, `PackDownloader`, `PackFormat`,
+  `JmdictDictionary` and the other classes that use `java.io.File` stay in `jvmAndAndroidMain`.
 - **Ktor seam:** only `KtorPackDownloader` knows Ktor. Replacing it (for example with WorkManager)
   touches that one class.
 - **Capability seam:** the manager hands out `PackReader`s and knows nothing about what they can
-  answer. `MonDictionary` is one capability, and `installed()` is the extension that picks it out
-  of `readers()`. A new kind of data (kanji, example sentences) adds a capability interface, an
-  extension like `installed()` and a use case; the manager, the installer and the Dictionaries
-  screen stay as they are. `DictionaryManagerTest` proves this with a test-only pack kind.
+  answer. `MonDictionary` and `Tokenizer` are capabilities; each is a plain interface next to
+  `PackReader`, and a provider picks the readers that implement it (`installed()` in
+  `:core:dictionary`). A new kind of data (kanji, example sentences) adds a capability interface, a
+  provider that retries on `PackClosedException` and a use case; the manager, the installer and the
+  Dictionaries screen stay as they are. `NotesFormat`, a test-only pack kind, proves this.
+- **Provider seam:** code above the capability modules asks `DictionaryProvider` or
+  `TokenizerProvider` and never assumes a pack. "Can't answer right now" is an exception
+  (`DictionaryUnavailableException`, `TokenizerUnavailableException`), never an empty result.
 - **Format seam:** `PackFormat` and `PackFormats` are the only link between a catalog
   `format` string and a reader. A new storage format adds one `PackFormat` and no change to
   the manager. `open` must not touch the file, because `readers()` opens every installed pack.
@@ -482,10 +559,12 @@ classDiagram
   are byte-identical to the ones published before the rule existed.
 - **State:** `FilePackManager` keeps one private `State` and derives `packs` from it on every
   change. `PackInstaller` keeps no state; it only does the file work.
-- **UI path:** `LookupWordUseCase`, `DictionariesViewModel` and `PackDetailViewModel` depend only on
-  the `PackManager` interface. They never see files, Ktor or SQLite.
-- **Converter:** `JmdictWriter`, `JmdictRecord`, `JmdictSchema` and `sha256Hex` are public only
-  because `:tools:pack-converter` uses them; the app itself only reads.
+- **UI path:** `LookupWordUseCase` depends only on `DictionaryProvider`, and `DictionariesViewModel`
+  and `PackDetailViewModel` only on the `PackManager` interface. They never see files, Ktor or
+  SQLite.
+- **Converter:** `JmdictWriter`, `JmdictRecord` and `JmdictSchema` (`:core:dictionary`) and
+  `sha256Hex` (`:core:packs`) are public only because `:tools:pack-converter` uses them; the app
+  itself only reads. The converter's Sudachi source (`sudachi-core`) is not drawn above.
 - **Converter split:** a `PackSource` only turns its input files into uncompressed pack files
   (`BuiltPack`). `publish` does what is the same for every source: gzip, sha256, sizes, URL, the
   release tag and the catalog. A source owns the pack ids with its prefix (`jmdict-…`): `publish`

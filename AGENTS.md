@@ -11,312 +11,186 @@ The project uses the Gradle wrapper (`./gradlew`, or `gradlew.bat` on Windows).
 Kotlin Multiplatform with AGP 9.1.1 / Kotlin 2.3.21 / Compose Multiplatform 1.11.1.
 All targets compile with JVM target 17.
 
-- Build and run the Android app:
-  `./gradlew :androidApp:assembleDebug`
-- Run the desktop app:
-  `./gradlew :desktopApp:run`
-- Run the iOS app: open the `iosApp/` directory in Xcode (it is an Xcode project,
-  not built by the Gradle build).
-- Check formatting without changing files:
-  `./gradlew spotlessCheck`
-- Fix formatting:
-  `./gradlew spotlessApply`
-- Run the JVM tests:
-  `./gradlew :core:database:jvmTest :core:data:jvmTest :core:domain:jvmTest :core:model:jvmTest :core:dictionary:jvmTest :core:tokenizer:jvmTest :feature:addreading:jvmTest :feature:dictionaries:jvmTest :feature:library:jvmTest`
-- Test the pack converter (a plain JVM module, so the task is `test`):
-  `./gradlew :tools:pack-converter:test`
+- Build and run the Android app: `./gradlew :androidApp:assembleDebug`
+- Run the desktop app: `./gradlew :desktopApp:run`
+- Run the iOS app: open `iosApp/` in Xcode (an Xcode project, not built by Gradle).
+- Check formatting: `./gradlew spotlessCheck`; fix it: `./gradlew spotlessApply`
+- Run all JVM tests: `./gradlew jvmTest :tools:pack-converter:test`. The `jvmTest` selector
+  runs every module that has one, so a new module needs no change here. The pack converter is a
+  plain JVM module, so its task is `test`.
 
 Notes:
 
 - `spotless` (ktfmt, google style) is the only code-quality check configured.
   There is no `detekt` task despite what `README.md` suggests — do not run it.
-- Each library module has both `android` and `jvm` targets, so a module task is
-  usually named after the target and the task, for example
-  `:core:database:jvmTest`.
-- Gradle is configured with the configuration cache and build caching, so the
-  first build after changing configuration re-runs configuration.
-- `local.properties` points at the local Android SDK and must not be committed
-  (it is gitignored).
+- Each library module has `android` and `jvm` targets, so tasks are named after the target, for
+  example `:core:database:jvmTest`.
+- Gradle uses the configuration cache and build caching, so the first build after changing
+  configuration re-runs configuration.
+- `local.properties` points at the local Android SDK and must not be committed (it is gitignored).
 
 ## Project layout
 
-The app is a reading/learning app ("Mon") that shows readings with furigana and
-dictionary lookups, using a Japanese tokenizer.
+A reading/learning app ("Mon"): readings with furigana and dictionary lookups, using a Japanese
+tokenizer. Diagrams (module graph, classes, runtime flows) are in `docs/architecture.md`; the pack
+and dictionary system is in `docs/dictionary-architecture.md`. Read them when a task spans modules.
 
-- `:shared` — the shared/common code used by all platforms. Contains the app's
-  single `App()` composable, the navigation host (`MonNavHost`), the Koin
-  bootstrap (`initKoin`) and Compose resources.
-- `:core:model` — data models (`Reading`, `ReadingSummary`, `MonToken`, ...).
-- `:core:domain` — business logic: use cases such as `AddReadingUseCase`, which
-  validates input, tokenizes it with the `Tokenizer` that `TokenizerProvider` offers for the
-  reading's language (none, it can't answer, or it fails: it stores the reading without tokens, as
-  *pending*, and calls `PendingTokenization.request()` so a pack that arrived meanwhile is not missed) and stores it through a repository, `TokenizePendingReadingsUseCase`, which gives the
-  pending readings their tokens as far as a tokenizer is available, `PendingTokenization`, which
-  runs that once at start (from `initKoin`) and again on every `TokenizerProvider.changes`, one run
-  at a time, and `LookupWordUseCase`, which looks a `MonToken` up in every dictionary
-  `DictionaryProvider` offers for a language pair and returns `LookupResult` (`Found`, `NotFound` or `NoDictionaryInstalled`, which the UI
-  turns into a "download a dictionary" prompt).
-- `:core:tokenizer` — the `Tokenizer` capability (`language`, `id`, suspending `tokenize`, which
-  returns `MonToken`s), `TokenizerProvider` (`tokenizerFor(language)`, and `changes`, which emits
-  when the available tokenizers may have changed) and the Sudachi pack.
-  `TokenizerUnavailableException` means "can't answer right now", not "no tokens".
-  Code above this module asks the provider and never assumes where a tokenizer comes from.
-  `PackTokenizerProvider` offers the `Tokenizer` readers of the installed packs, repeats a call with
-  the reader of the same version (same `Tokenizer.id`) when it was closed, and throws
-  `TokenizerUnavailableException` if that version is gone, so a reading never records a wrong id. It
-  emits `changes` only when the set of installed tokenizer packs changes (not when collected). The Sudachi pack (`sudachi/`, in
-  `jvmAndAndroidMain`) is `SudachiFormat` (`sudachi-system`, schema 1; `verify` checks the size and
-  the header) and `SudachiReader`, a `Tokenizer` and `CloseableReader` that loads the dictionary on
-  the first `tokenize` call, on its own dispatcher. Only the Koin format registration is
-  `expect`/`actual`. With no Sudachi pack installed Japanese readings are stored as pending.
-- `:core:packs` — the generic pack system, which knows no file format: `PackManager` (catalog, download,
-  install, remove, `packs: StateFlow<List<Pack>>`), `PackReader`/`CloseableReader` (what an installed
-  pack opens into) and the `PackFormat` interface that other modules implement. The contract
-  (`PackManager`, `Pack`, `PackState`, `CatalogPack`, `PackReader`) is in `commonMain` and free of
-  `java.*`; the file, SQLite-free installer and Ktor code is in the shared `jvmAndAndroidMain` source
-  set, and only the Koin module (`packsModule`) is `expect`/`actual`. It collects every `PackFormat`
-  registered in Koin with `getAll<PackFormat>()`, so a module that owns a format only registers it
-  (`single { JmdictFormat } bind PackFormat::class`). Installed packs live in a folder called
-  `dictionaries` (see "Dictionary packs"); the name is historical and must not change.
-- `:core:dictionary` — the dictionary: the `MonDictionary` capability (word lookup in some language
-  pair; it does not extend `PackReader`, so an online dictionary can implement it too),
-  `DictionaryProvider` (`dictionariesFor(source, gloss)`), the JMdict reader and file format and
-  `PackDictionaryProvider`, which offers the `MonDictionary` readers of the installed packs and
-  repeats a lookup with the pack's current reader when it was closed by an update or removal. A
-  lookup that can't be answered throws `DictionaryUnavailableException`. It plugs `JmdictFormat`
-  into `:core:packs` (`dictionaryModule`). See "Dictionary packs" below.
-  The architecture diagrams are in `docs/dictionary-architecture.md`.
-- `:tools:pack-converter` — command-line tool (not part of the app) that turns dictionary source
-  files into packs and writes the catalog. One subcommand per source (`PackSource`): `jmdict` (jmdict-simplified JSON
-  files) and `sudachi` (one `system_core.dic`, published as the pack `sudachi-core`). The packaging and the catalog merge (`publish`)
-  are shared by all sources. It is the only user of `JmdictWriter`.
-- `:core:database` — Room database (`MonDatabase`) and DAOs, with KSP codegen.
-- `:core:data` — repository layer: the `ReadingRepository` interface and its Room-backed
-  implementation, and `UserRepository`. A reading stores the id of the tokenizer that produced its
-  tokens (`reading.tokenizedWith`, in `TokenAnalysis`); null means it is pending, shown as
-  `isTokenized = false` on `Reading` and `ReadingSummary`. `saveAnalysis` only writes to a pending
-  reading, so tokenizing the same reading twice is harmless. It only maps between Room entities and `:core:model`.
-- `:core:ui` — reusable Compose UI that knows about content, including the kanji lookup
-  screens and `VocabEntryItem`.
-- `:core:designsystem` — Compose design system: theme, components, modifiers, icon catalog.
-  It holds no domain models, only primitives and component parameters.
-- `:core:navigation` — the Navigation 3 keys (`MonNavKey`: `Library`, `AddReading`, `Dictionaries`, `Reader`) and
-  `MonNavConfiguration`, the one place that registers them for back-stack serialization.
-- `:core:arch` — small shared building blocks: `BaseViewModel<State, Intent, Effect>`.
-- `:feature:library` — the library feature: list of saved readings.
-- `:feature:addreading` — the add-reading feature: a form that creates a reading and its tokens.
-- `:feature:dictionaries` — the Dictionaries screen (a bottom-bar tab): lists the
-  packs of `PackManager` with download, progress, update, retry and remove, and shows each
-  pack's licence attribution. It talks to the `PackManager` interface directly; downloads run
-  in the manager's own scope, so leaving the screen does not cancel them.
-- `:androidApp`, `:desktopApp`, `:iosApp` — platform entrypoints. All three embed
-  `:shared`; the iOS app is an Xcode project that bridges into it.
+- `:shared` — the single `App()` composable, `MonNavHost`, the Koin bootstrap (`initKoin`),
+  Compose resources.
+- `:core:model` — data models.
+- `:core:domain` — use cases (`AddReadingUseCase`, `TokenizePendingReadingsUseCase`,
+  `LookupWordUseCase`) and `PendingTokenization`.
+- `:core:data` — repositories; only maps between Room entities and `:core:model`.
+- `:core:database` — Room database and DAOs, with KSP codegen.
+- `:core:tokenizer` — `Tokenizer`, `TokenizerProvider`, and the Sudachi pack.
+- `:core:dictionary` — `MonDictionary`, `DictionaryProvider`, the JMdict reader and file format.
+- `:core:packs` — the generic pack system (catalog, download, install, remove). Knows no file format.
+- `:core:ui` — reusable Compose UI that knows about content.
+- `:core:designsystem` — theme, components, icon catalog. No domain models.
+- `:core:navigation` — Navigation 3 keys (`MonNavKey`) and `MonNavConfiguration`.
+- `:core:arch` — `BaseViewModel<State, Intent, Effect>`.
+- `:feature:library`, `:feature:addreading`, `:feature:dictionaries` — one screen each.
+- `:tools:pack-converter` — command-line tool (not in the app) that turns dictionary source files
+  into packs and writes the catalog.
+- `:androidApp`, `:desktopApp`, `:iosApp` — platform entrypoints; all embed `:shared`.
 
-Dependency direction: `:shared` depends on all `core:*` and `feature:*`
-modules, which depend on lower layers. Platform-specific implementations live in
-the `*Main` source sets (`androidMain`, `jvmMain`).
+Dependency direction: `:shared` depends on all `core:*` and `feature:*` modules, which depend on
+lower layers. Platform-specific code lives in the `*Main` source sets.
 
-Layering rule: a feature may read through a repository directly for a simple query, for
-example the library list uses `ReadingRepository.observeReadingSummaries()`. Writes, and logic
-that combines repositories or the tokenizer, go through a use case in `:core:domain`, for
-example `AddReadingUseCase`. Screens and view models never touch `:core:database` or
-`:core:tokenizer` implementations. Lists use light summary models (`ReadingSummary`), and
-the full `Reading` with its tokens is loaded only for one reading (`getReading`).
+Layering rules:
 
-Dependency injection is Koin. All modules register their Koin modules in
-`:shared` (`Koin.kt`, `initKoin`); new modules must be added there.
+- A feature may read through a repository directly for a simple query (for example
+  `ReadingRepository.observeReadingSummaries()`). Writes, and logic that combines repositories or
+  the tokenizer, go through a use case in `:core:domain`.
+- Screens and view models never touch `:core:database` or `:core:tokenizer` implementations.
+- Lists use light summary models (`ReadingSummary`); the full `Reading` with tokens is loaded only
+  for one reading (`getReading`).
+- Code above `:core:tokenizer` and `:core:dictionary` asks a provider and never assumes where a
+  tokenizer or dictionary comes from. A provider that can't answer throws
+  `TokenizerUnavailableException` / `DictionaryUnavailableException`; that means "can't answer right
+  now", not "no tokens" or "not found".
 
-Presentation and navigation:
+Tokenization:
+
+- `AddReadingUseCase` stores a reading without tokens (*pending*) when no tokenizer is available,
+  it can't answer, or it fails, and calls `PendingTokenization.request()`.
+- `PendingTokenization` runs `TokenizePendingReadingsUseCase` at start (from `initKoin`) and on
+  every `TokenizerProvider.changes`, one run at a time.
+- A reading stores the id of the tokenizer that produced its tokens (`tokenizedWith`); null means
+  pending. `saveAnalysis` only writes to a pending reading, so tokenizing twice is harmless.
+- Only a Japanese Sudachi pack exists today, so readings in other languages stay pending.
+
+Dependency injection is Koin. Every module registers its Koin module in `:shared` (`Koin.kt`,
+`initKoin`); new modules must be added there.
+
+## Presentation and navigation
 
 - A feature has a `*Contract.kt` (state, sealed intents, effects), a view model extending
   `BaseViewModel<State, Intent, Effect>`, and a stateless screen `Screen(state, onIntent)`.
-  Intents are input from the UI through `onIntent`. State is what is rendered. Effects are
-  one-off events (navigation, snackbars) sent with `sendEffect` and delivered once through
-  `effects`; never signal them through state. Use `NoEffect` when a screen has none.
-- View models expose typed errors (an enum or sealed type such as `LibraryError`), never
-  exception messages. The screen maps them to string resources.
-- Features do not depend on `:core:navigation`. They emit their own effects (for example
-  `LibraryEffect.OpenReader`), and `MonNavHost` in `:shared` collects them and maps them to nav
-  keys. To add a destination: add the key to `MonNavKey`, register it in `MonNavConfiguration`
-  (the only place; forgetting it crashes on back-stack restore), and add an `entry<…>` to
-  `MonNavHost`. `Reader` is still a stub entry.
-- The bottom bar is rendered by `MonNavHost`, not by the features, and only while a tab's screen is
-  on top. Its tabs (`Library`, `Dictionaries`) are the `tabs` list there; `MonAppNavigator.switchTab`
-  keeps `Library` at the bottom of the back stack. The visual spec is `docs/design/mon-handoff-spec.md`.
-- Strings live in each feature's `src/commonMain/composeResources/values/strings.xml`. The
-  `mon.feature` convention plugin gives each feature its own resource package, derived from the
-  module path (`:feature:library` → `com.akrippner.mon.feature.library.generated.resources`).
-  Do not hardcode UI strings.
+- Intents are UI input through `onIntent`; state is what is rendered; effects are one-off events
+  (navigation, snackbars) sent with `sendEffect`. Never signal effects through state. Use
+  `NoEffect` when a screen has none.
+- View models expose typed errors (an enum or sealed type such as `LibraryError`), never exception
+  messages. The screen maps them to string resources.
+- Features do not depend on `:core:navigation`. They emit their own effects and `MonNavHost` in
+  `:shared` maps them to nav keys. To add a destination: add the key to `MonNavKey`, register it in
+  `MonNavConfiguration` (the only place; forgetting it crashes on back-stack restore), and add an
+  `entry<…>` to `MonNavHost`. `Reader` is still a stub entry.
+- The bottom bar is rendered by `MonNavHost`, only while a tab's screen is on top. Its tabs are the
+  `tabs` list there. The visual spec is `docs/design/mon-handoff-spec.md`.
+- Strings live in each feature's `src/commonMain/composeResources/values/strings.xml`; the
+  `mon.feature` plugin gives each feature its own resource package. Do not hardcode UI strings.
 
 ## Quirks and gotchas
 
-- Module builds use the convention plugins in the included `build-logic` build: `mon.kmp.library`
-  (targets, Android library setup), `mon.kmp.compose` (Compose) and `mon.feature` (both, plus the
-  shared feature dependencies and per-feature resource package). A module's `build.gradle.kts`
-  declares only its own dependencies, using the `projects.*` accessors. `mon.feature` also fails
-  configuration when a feature directly depends on `:core:database` or on another feature; reach
-  persistence through `:core:data`, and wire features together in `:shared`.
-
-- Icon catalog is generated code. `core:designsystem` has a manual
-  `generateIconCatalog` task that produces `IconIds.generated.kt` and
-  `IconCatalog.generated.kt`, and those generated files are checked in.
-  The task is **not** wired into the build, so run it manually after changing
-  icon vector XMLs and commit the regenerated files.
-- Room schema exports live in `core/database/schemas/` and are regenerated by
-  KSP. If you change the database entities, update the schema files and the
-  `MonDatabase` version accordingly. Every version after 2 needs a `Migration` in
-  `Migrations.kt` (or an `AutoMigration`) and a test in `MonDatabaseMigrationTest`; only version 1
-  may still be dropped, so a missing migration fails instead of wiping user data.
-- Tests live in `commonTest` of `:core:database`, `:core:data`, `:core:domain`, `:core:model`,
-  `:feature:addreading`, `:feature:dictionaries` and `:feature:library`, plus `jvmTest` in `:core:database` for the migration test (it reads the
-  exported schemas), `jvmTest` in `:core:dictionary` and `:core:tokenizer` and `test` in `:tools:pack-converter`; other
-  modules have no test source sets. Database tests run
-  against an in-memory database with the bundled SQLite driver. Domain and view model
-  tests use hand-written fakes of `ReadingRepository`, `TokenizerProvider` and `DictionaryProvider`, and view model
-  tests use `Dispatchers.setMain`. The dictionary tests build tiny real packs with `JmdictWriter`
-  and use a hand-written `FakePackDownloader` plus Ktor's `MockEngine`; `NotesFormat` is a test-only
-  pack kind that is not a word dictionary. The converter tests use a fake `PackSource`, and
-  `PreviousCatalogTest` talks to an HTTP server it starts on the loopback address. No emulator or
-  outside server is needed.
-- `system_core.dic` — the Sudachi system dictionary — is no longer in the repository: it is the
-  downloadable pack `sudachi-core`. The converter's input is the `system_core.dic` of a SudachiDict
-  release (the 'core' one); an old copy is in git history (`272df57`, git-LFS). Do not read it.
-  `*.dic` stays in `.gitattributes` as an LFS pattern.
-- The iOS targets in `:shared/build.gradle.kts` are commented out. The iOS app
-  only builds via the Xcode project in `iosApp/`.
+- Module builds use the convention plugins in `build-logic`: `mon.kmp.library`, `mon.kmp.compose`
+  and `mon.feature`. A module's `build.gradle.kts` declares only its own dependencies, using the
+  `projects.*` accessors. `mon.feature` fails configuration when a feature depends directly on
+  `:core:database` or on another feature; reach persistence through `:core:data` and wire features
+  together in `:shared`.
+- The icon catalog is generated code. Run `generateIconCatalog` in `:core:designsystem` manually
+  after changing icon vector XMLs and commit the regenerated `*.generated.kt` files. The task is
+  not wired into the build.
+- Room schema exports live in `core/database/schemas/` and are regenerated by KSP. If you change
+  the entities, update the schema and the `MonDatabase` version. Every version after 2 needs a
+  `Migration` in `Migrations.kt` (or an `AutoMigration`) and a test in `MonDatabaseMigrationTest`;
+  only version 1 may be dropped, so a missing migration fails instead of wiping user data.
+- Tests: `commonTest` in most modules, plus `jvmTest` for the migration test (it reads the exported
+  schemas) and the dictionary and tokenizer modules. Database tests use an in-memory database with
+  the bundled SQLite driver. Domain and view model tests use hand-written fakes (`ReadingRepository`,
+  `TokenizerProvider`, `DictionaryProvider`) and `Dispatchers.setMain`. The pack tests build tiny
+  real packs and use a hand-written `FakePackDownloader` plus Ktor's `MockEngine`. The converter
+  tests use a fake `PackSource`. No emulator or outside server is needed.
+- `system_core.dic` (the Sudachi dictionary) is not in the repository; it is the downloadable pack
+  `sudachi-core`. An old copy is in git history (`272df57`, git-LFS). Do not read it. `*.dic` stays
+  in `.gitattributes` as an LFS pattern.
+- The iOS targets in `:shared/build.gradle.kts` are commented out. The iOS app builds only via the
+  Xcode project in `iosApp/`.
 - `compileSdk` is 37 because Ktor's OkHttp engine pulls in OkHttp 5.5, which requires it.
   `targetSdk` stays 36. AGP downloads the missing platform on first build.
 
 ## Dictionary packs
 
-The app is tied to no dictionary or language: `MonDictionary` is an interface, and dictionaries are
-downloadable packs, not bundled, and so is the Sudachi tokenizer dictionary. The app works without any
-pack: a Japanese reading is stored without tokens until `sudachi-core` is installed. Do not read `*.db` or `jmdict-*.json` files; they are large.
+The app is tied to no dictionary or language. Dictionaries and the Sudachi tokenizer dictionary are
+downloadable packs, not bundled. The app works without any pack: a Japanese reading is stored
+without tokens until `sudachi-core` is installed. Do not read `*.db` or `jmdict-*.json` files.
+Publishing packs is a release task: see `docs/publishing.md`.
 
-- **Readers and capabilities.** Every installed pack opens into a `PackReader` (only `pack: CatalogPack`).
-  What a reader can answer is a capability interface that the reader implements next to it:
-  `MonDictionary` (`lookup`, `:core:dictionary`) and `Tokenizer` (`tokenize`, `:core:tokenizer`) are the
-  ones today. Capabilities do not extend `PackReader`.
-  `PackManager.readers()` returns the readers of all kinds, sorted by pack id; the `internal`
-  extension `installed()` in `:core:dictionary` keeps the `MonDictionary` ones. The manager, the installer and the Dictionaries screen do not care what
-  kind a pack is. `PackFormat.open` must stay cheap (no file access), because `readers()`
-  opens every installed pack; a reader opens its file on the first real call.
+- **Readers and capabilities.** Every installed pack opens into a `PackReader` (only
+  `pack: CatalogPack`). What a reader can answer is a capability interface it implements next to it:
+  `MonDictionary` and `Tokenizer` today. Capabilities do not extend `PackReader`.
+  `PackManager.readers()` returns the readers of all kinds. The manager, installer and Dictionaries
+  screen do not care what kind a pack is. `PackFormat.open` must stay cheap (no file access),
+  because `readers()` opens every installed pack; a reader opens its file on the first real call.
+- **Closed readers.** A reader must be closed before its file is replaced or deleted; the manager
+  does that under its `files` lock. A closed reader throws `PackClosedException`, and the provider
+  (`PackDictionaryProvider`, `PackTokenizerProvider`) fetches the readers again and repeats the
+  call, or throws the module's `*UnavailableException` if the pack is gone.
 - **Where it lives.** A pack is `<base>/<packId>/dictionary.db` plus `pack.json` (the installed
   `CatalogPack`). `pack.json` is written last, and an update deletes the old one before it replaces
-  the database, so a half-finished install or update never counts as installed. `<base>` is
-  `noBackupFilesDir/dictionaries` on Android and `~/.mon/dictionaries` on desktop. On its first
-  scan the manager calls `PackInstaller.sweep()`, which deletes what a killed install left behind:
-  temporary files and pack folders without a `pack.json`.
-- **Catalog.** The app hard-codes one URL, `CATALOG_URL` in `PackManagers.kt` (`:core:packs`): the
-  `catalog.json` of the latest GitHub release of the public repo `alex-krippner/mon-data`. The
-  catalog points to the `.db.gz` files and carries size, `unpackedSizeBytes`, sha256 and the licence
-  attribution. The app offers only packs whose `format`, `schema` and languages it supports, and
-  each id once. `refreshCatalog()` never throws; it returns a `CatalogError` (or null), which the
-  Dictionaries screen shows.
-- **Installing.** `FilePackManager` keeps the state (`packs: StateFlow<List<Pack>>`);
-  `PackInstaller` does the file work (https only, ids must match `[a-z0-9-]+`, free-space check,
-  sha256, gunzip, validate with `PackFormat.verify`, then commit). Ktor is used only in
-  `KtorPackDownloader`, behind the `PackDownloader` interface. A reader must be closed before its
-  file is replaced or deleted; the manager does that under its `files` lock. A closed reader throws
-  `PackClosedException`, and `PackDictionaryProvider` then fetches the readers again and repeats
-  the lookup (or throws `DictionaryUnavailableException` if the pack is gone). The sha256 of a pack is computed by `sha256Hex`, shared by the app and the converter.
+  the database, so a half-finished install never counts as installed. `<base>` is
+  `noBackupFilesDir/dictionaries` on Android and `~/.mon/dictionaries` on desktop. The folder name
+  is historical and must not change. On its first scan the manager calls `PackInstaller.sweep()`.
+- **Catalog.** The app hard-codes one URL, `CATALOG_URL` in `PackManagers.kt`: the `catalog.json` of
+  the latest release of `alex-krippner/mon-data`. The app offers only packs whose `format`,
+  `schema` and languages it supports, each id once. `refreshCatalog()` never throws; it returns a
+  `CatalogError` (or null).
+- **Catalog compatibility.** Never remove or rename a `CatalogPack` field, and every pack carries
+  every field with a valid value. A new field must have a default value, or installed `pack.json`
+  files stop decoding. A change that old readers can't read needs a new `schema`.
+- **Installing.** `PackInstaller` does the file work: https only, ids must match `[a-z0-9-]+`,
+  free-space check, sha256, gunzip, `PackFormat.verify`, then commit. Ktor is used only in
+  `KtorPackDownloader`, behind `PackDownloader`. `sha256Hex` is shared by the app and the converter.
 - **The word-list format.** `jmdict-sqlite` is Mon's format for any word list in any language pair,
-  not only JMdict: every source that maps to `JmdictRecord` (headwords, senses, labels, `common`)
-  uses it. The wire id and the Kotlin names keep "jmdict"; renaming the id would hide installed
-  packs.
-  - `lookup_key.key` is matched exactly, so the file itself says how its keys are normalized, in
-    the meta row `keyNormalization` (`KeyNormalization` in `LookupKeys.kt`). `JmdictWriter(path,
-    sourceLanguage)` picks the rule from the language (the only place a language decides it),
-    normalizes each key and writes the row. `JmdictDictionary` reads the row and applies the same
-    rule to each query; it never derives the rule from the pack's language.
-  - No row means `NONE`: Japanese, and every pack published so far. Other languages get
-    `nfc-lower` (Unicode NFC, then lower case). That is not case folding: "STRASSE" does not find
-    "Straße".
+  not only JMdict: every source that maps to `JmdictRecord` uses it. The wire id and the Kotlin
+  names keep "jmdict"; renaming the id would hide installed packs.
+  - `lookup_key.key` is matched exactly, so the file says how its keys are normalized, in the meta
+    row `keyNormalization` (`KeyNormalization` in `LookupKeys.kt`). `JmdictWriter(path,
+    sourceLanguage)` picks the rule from the language and writes the row. `JmdictDictionary` reads
+    the row and applies the same rule to each query; it never derives it from the pack's language.
+  - No row means `NONE`: Japanese, and every pack published so far. Other languages get `nfc-lower`
+    (Unicode NFC, then lower case). That is not case folding: "STRASSE" does not find "Straße".
   - **Never change what an existing `KeyNormalization` value does;** a new rule is a new value.
     `verify` rejects a file with a value the app does not know. Moving a language that already has
-    published packs to a new value also needs a new `schema`, so that older apps hide the pack
-    instead of failing after the download.
-  - Normalization is not lemmatization: "Häuser" → "Haus" is the tokenizer's job. Today the only
-    tokenizer is the Sudachi pack, which is Japanese-only, so a reading in another language is stored
-    without tokens, and a pack whose source language is not Japanese can be installed but is not
-    reached from a reading yet.
+    published packs to a new value also needs a new `schema`.
+  - Normalization is not lemmatization: "Häuser" → "Haus" is the tokenizer's job.
 - **Adding a source or a format.**
   - *A new word source, any language pair* (e.g. JMnedict, Wadoku): a package in
     `:tools:pack-converter` with a parser, a mapper to `JmdictRecord` and a `PackSource` that passes
-    its source language to `JmdictWriter`; add it to `SOURCES` in `Main.kt`; add any new language
-    to `Language` (`:core:model`). No other app change, unless the language needs its own key rule:
-    then add a `KeyNormalization` value and return it from `forLanguage`, before the language's
-    first pack is published.
+    its source language to `JmdictWriter`; add it to `SOURCES` in `Main.kt`; add any new language to
+    `Language` (`:core:model`). If the language needs its own key rule, add a `KeyNormalization`
+    value and return it from `forLanguage`, before the language's first pack is published.
   - *A new storage format for words:* in `:core:dictionary/<format>/`, a schema with
-    `FORMAT`/`VERSION`, a writer (used by the converter) and a reader that is
-    `MonDictionary, CloseableReader`; a `PackFormat`, registered in
-    its module's Koin module with `bind PackFormat::class` (there is no list in `createPackManager`);
-    then the converter source. The manager does not change.
+    `FORMAT`/`VERSION`, a writer and a reader that is `MonDictionary, CloseableReader`; a
+    `PackFormat`, registered in its module's Koin module with `bind PackFormat::class`; then the
+    converter source. The manager does not change.
   - *A new kind of data* (kanji, example sentences, pitch accent): as a new storage format, but the
-    reader implements a new capability interface `: PackReader` in `commonMain` instead of
-    `MonDictionary`. Add its models to `:core:model`, a provider like
-    `PackDictionaryProvider` that retries on `PackClosedException`, a use case in `:core:domain`
-    that asks that provider, and the UI.
+    reader implements a new capability interface in `commonMain` instead of `MonDictionary`. Add its
+    models to `:core:model`, a provider that retries on `PackClosedException`, a use case in
+    `:core:domain`, and the UI.
   - *Another JMdict gloss language:* add it to `GlossLanguage` (converter) and to `Language`
     (`:core:model`), or the app hides the pack. `JmdictSourceTest` fails if the second is missing.
-- **Publishing the Sudachi dictionary** (only when a new SudachiDict release is wanted):
-  download `sudachi-dictionary-<date>-core.zip` from
-  https://github.com/WorksApplications/SudachiDict/releases, unpack it, and run
-  `./gradlew :tools:pack-converter:run --args="sudachi <outDir> <path>/system_core.dic"`. The
-  version is the date in the file's header description (or its build date). The run carries the
-  JMdict packs over from the latest release, so the release it prints covers every source; create it
-  as for JMdict, before converting another source. The attribution text is `ATTRIBUTION` in
-  `SudachiSource.kt`; check it against the LEGAL file of the SudachiDict release. The format is
-  `sudachi-system`, schema 1: a different Sudachi library version that can't read the file needs a
-  new `schema`, so that older apps hide the pack.
-- **Publishing a data update** (the licence requires keeping the data current, so do this regularly,
-  at least monthly):
-  1. From the same release at https://github.com/scriptin/jmdict-simplified/releases, download the
-     full single-language files you publish (`jmdict-eng-<version>.json.tgz`,
-     `jmdict-ger-<version>.json.tgz`; not the `common` or `all` variants) and unpack them. The
-     languages the converter knows are the entries of `GlossLanguage`. Every file must come from
-     the same release, because all packs of a run share one `dictDate` and release tag.
-  2. `./gradlew :tools:pack-converter:run --args="jmdict <outDir> <path>/jmdict-eng-<version>.json <path>/jmdict-ger-<version>.json"`
-     The first argument is the source. The language is read from each file. It writes one
-     `jmdict-<lang>-<dictDate>.db.gz` per file plus a single `catalog.json`, and prints the release
-     command. Options go between the source and `<outDir>`:
-     - `--repo <owner/repo>` names the repository that will hold the release.
-     - By default the converter first downloads the `catalog.json` of that repository's latest
-       release and carries the other sources' packs over. If that fails, it stops before
-       converting. `--previous-catalog <file>` reads a local file instead.
-     - `--no-previous` starts a catalog with only this run's packs. Use it only for a repository's
-       very first release: it drops every other source's packs.
-     - If the previous catalog has a pack of this source that the run does not build (a forgotten
-       language file, for example), the run fails before it writes anything. `--allow-drop`
-       publishes anyway and removes that pack from the catalog on purpose.
-  3. Create the release in `mon-data` with the printed command (`gh release create jmdict-<dictDate>
-     … --latest`), which uploads every `.db.gz` and the `catalog.json`. Do this before converting
-     another source: the merge reads the *published* catalog, so two conversions without a release
-     in between lose the first one's packs.
-- **Catalog and release rules.** The app reads only the latest release's `catalog.json`, so that
-  one file must list every pack of every source.
-  - A pack id is `<source id>-<…>`, and a source owns that prefix: its run replaces all of its packs
-    in the catalog and keeps everything else. So always convert all of a source's packs in one run
-    (for JMdict: all languages); the converter refuses a run that would drop one, unless it gets
-    `--allow-drop`. No source id may be `<another id>-…`; the converter checks this.
-  - Never delete an old `mon-data` release or its files. Pack URLs are absolute, and the current
-    catalog points to other sources' archives in earlier releases.
-  - Every release marked latest must contain `catalog.json`, or the app gets a 404.
-  - Never remove or rename a `CatalogPack` field, and every pack carries every field with a valid
-    value. The app decodes the whole catalog before it filters, so one pack with a missing field
-    makes the whole catalog `CatalogError.INVALID` for older apps. A kind without a gloss language
-    repeats its source language.
-  - A new `CatalogPack` field must have a default value. Otherwise the installed `pack.json` files
-    stop decoding and the packs vanish, while `sweep()` keeps their folders. The converter reads
-    the previous catalog strictly, so an older converter stops instead of dropping the new field.
-  - New formats, and new fields old apps can ignore, are fine: an app hides packs whose format,
-    schema or language it does not know.
-  - A change that old readers can't read needs a new `schema`. Known limit: older apps then get no
-    more updates for that pack, because `publish` lists each id once.
-- **Licence.** JMdict is © the EDRDG, CC BY-SA 4.0. The app must show the pack's `attribution` text
-  on a separate screen (`:feature:dictionaries`, done), and `mon-data` carries the
-  licence in its README. The `common` flag of an entry is a column; the reader adds the
-  `Frequency("common")` label, so the converter must not.
 
 ## Library and API documentation
+
 - When you need to search docs, use Context7.
