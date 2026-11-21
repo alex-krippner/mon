@@ -20,13 +20,21 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
                 implementation(libs.koin.core)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kermit)
                 api(projects.core.model)
+                implementation(projects.core.packs)
         }
 
         val jvmAndAndroidMain by getting {
             dependencies {
                 implementation(libs.sudachi.core)
             }
+        }
+
+        jvmTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

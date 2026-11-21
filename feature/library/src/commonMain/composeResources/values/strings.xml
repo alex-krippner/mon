@@ -3,5 +3,6 @@
     <string name="library_title">Library</string>
     <string name="library_all_texts">All texts</string>
     <string name="library_word_count">%1$d words</string>
+    <string name="library_waiting_for_analysis">Waiting for analysis</string>
     <string name="library_error_load_failed">Could not load readings.</string>
 </resources>

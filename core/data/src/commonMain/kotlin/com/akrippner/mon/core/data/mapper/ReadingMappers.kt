@@ -1,10 +1,12 @@
 package com.akrippner.mon.core.data.mapper
 
+import com.akrippner.mon.core.database.entity.PendingReadingRow
 import com.akrippner.mon.core.database.entity.ReadingSummaryRow
 import com.akrippner.mon.core.database.entity.ReadingTokenEntity
 import com.akrippner.mon.core.database.entity.ReadingWithTokens
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.model.data.PendingReading
 import com.akrippner.mon.core.model.data.Reading
 import com.akrippner.mon.core.model.data.ReadingSummary
 
@@ -20,6 +22,7 @@ internal fun ReadingWithTokens.toDomainOrNull(): Reading? {
     sourceLanguage = sourceLanguage,
     translationLanguage = translationLanguage,
     tokens = tokens.sortedBy { it.tokenIndex }.map { it.toDomain() },
+    isTokenized = reading.tokenizedWith != null,
     createdAt = reading.createdAt,
   )
 }
@@ -53,5 +56,10 @@ internal fun ReadingSummaryRow.toDomainOrNull(): ReadingSummary? {
     translationLanguage = translationLanguage,
     createdAt = createdAt,
     tokenCount = tokenCount,
+    isTokenized = isTokenized,
   )
 }
+
+/** Returns null if the stored language is not supported, so one bad row cannot hide the rest. */
+internal fun PendingReadingRow.toDomainOrNull(): PendingReading? =
+  Language.fromTagOrNull(sourceLanguage)?.let { PendingReading(id, text, it) }

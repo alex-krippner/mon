@@ -1,8 +1,10 @@
 package com.akrippner.mon.core.dictionary.pack
 
-import com.akrippner.mon.core.dictionary.DictionaryClosedException
+import com.akrippner.mon.core.dictionary.installed
 import com.akrippner.mon.core.dictionary.jmdict.JmdictFormat
 import com.akrippner.mon.core.model.data.LookupQuery
+import com.akrippner.mon.core.packs.*
+import com.akrippner.mon.core.packs.PackClosedException
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -32,10 +34,10 @@ class DictionaryManagerTest {
   private val manager = newManager()
 
   private fun newManager() =
-    FileDictionaryManager(
+    FilePackManager(
       downloader,
       PackInstaller(downloader, dir),
-      DictionaryFactory(listOf(JmdictFormat, notesFormat)),
+      PackFormats(listOf(JmdictFormat, notesFormat)),
       catalogUrl,
       scope,
     )
@@ -57,8 +59,7 @@ class DictionaryManagerTest {
   private suspend fun awaitState(test: (PackState) -> Boolean) =
     manager.packs.first { packs -> packs.any { test(it.state) } }
 
-  private fun stateOf(manager: DictionaryManager = this.manager) =
-    manager.packs.value.single().state
+  private fun stateOf(manager: PackManager = this.manager) = manager.packs.value.single().state
 
   @Test
   fun installsAndServesLookups() = runTest {
@@ -121,8 +122,8 @@ class DictionaryManagerTest {
     val pack = testPack()
     publish(pack)
     val packDir = File(dir, pack.info.id).also { it.mkdirs() }
-    File(packDir, "dictionary.db.gz.tmp").writeText("x")
-    File(packDir, "dictionary.db.tmp").writeText("x")
+    File(packDir, "pack.dat.gz.tmp").writeText("x")
+    File(packDir, "pack.dat.tmp").writeText("x")
 
     manager.refreshCatalog()
 
@@ -379,7 +380,7 @@ class DictionaryManagerTest {
     assertEquals(PackState.Installed, stateOf())
     assertEquals("2", manager.packs.value.single().info.version)
     // The old reader must stay closed, and say so instead of "not found".
-    assertFailsWith<DictionaryClosedException> { old.lookup(LookupQuery("開けて")) }
+    assertFailsWith<PackClosedException> { old.lookup(LookupQuery("開けて")) }
     assertEquals(1, manager.installed().single().lookup(LookupQuery("飲んで")).size)
   }
 
@@ -437,7 +438,7 @@ class DictionaryManagerTest {
     manager.install(words.info.id)
     manager.install(notes.info.id)
 
-    assertEquals(listOf(words.info.id, notes.info.id), manager.readers().map { it.source.id })
+    assertEquals(listOf(words.info.id, notes.info.id), manager.readers().map { it.pack.id })
     assertIs<NotesReader>(manager.readers().last())
     assertEquals(listOf(words.info.id), manager.installed().map { it.source.id })
   }
@@ -457,7 +458,7 @@ class DictionaryManagerTest {
     manager.remove(notes.info.id)
 
     assertTrue(reader.closed)
-    assertEquals(listOf(words.info.id), manager.readers().map { it.source.id })
+    assertEquals(listOf(words.info.id), manager.readers().map { it.pack.id })
     assertFalse(File(dir, notes.info.id).exists())
   }
 
@@ -471,6 +472,6 @@ class DictionaryManagerTest {
     manager.refreshCatalog()
     ids.forEach { manager.install(it) }
 
-    assertEquals(ids.sorted(), manager.readers().map { it.source.id })
+    assertEquals(ids.sorted(), manager.readers().map { it.pack.id })
   }
 }

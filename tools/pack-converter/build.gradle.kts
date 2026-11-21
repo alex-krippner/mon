@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // Command-line tool, not part of the app: turns dictionary source files into dictionary packs.
-// Today the only source is JMdict (jmdict-simplified JSON files).
+// Sources: JMdict (jmdict-simplified JSON files) and the Sudachi system dictionary.
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.kotlinSerialization)
@@ -26,6 +26,8 @@ application {
 
 dependencies {
     implementation(projects.core.dictionary)
+    implementation(projects.core.packs)
+    implementation(projects.core.tokenizer)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(kotlin("test"))

@@ -1,15 +1,15 @@
 package com.akrippner.mon.feature.dictionaries
 
-import com.akrippner.mon.core.dictionary.PackReader
-import com.akrippner.mon.core.dictionary.pack.CatalogError
-import com.akrippner.mon.core.dictionary.pack.CatalogPack
-import com.akrippner.mon.core.dictionary.pack.DictionaryManager
-import com.akrippner.mon.core.dictionary.pack.Pack
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.CatalogError
+import com.akrippner.mon.core.packs.CatalogPack
+import com.akrippner.mon.core.packs.Pack
+import com.akrippner.mon.core.packs.PackManager
+import com.akrippner.mon.core.packs.PackReader
+import com.akrippner.mon.core.packs.PackState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class FakeDictionaryManager : DictionaryManager {
+class FakeDictionaryManager : PackManager {
   override val packs = MutableStateFlow<List<Pack>>(emptyList())
 
   /** When set, refreshCatalog() waits until it is completed. */

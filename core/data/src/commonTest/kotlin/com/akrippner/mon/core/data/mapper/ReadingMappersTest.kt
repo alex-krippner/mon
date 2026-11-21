@@ -1,10 +1,12 @@
 package com.akrippner.mon.core.data.mapper
 
+import com.akrippner.mon.core.database.entity.PendingReadingRow
 import com.akrippner.mon.core.database.entity.ReadingEntity
 import com.akrippner.mon.core.database.entity.ReadingSummaryRow
 import com.akrippner.mon.core.database.entity.ReadingTokenEntity
 import com.akrippner.mon.core.database.entity.ReadingWithTokens
 import com.akrippner.mon.core.model.data.Language
+import com.akrippner.mon.core.model.data.PendingReading
 import com.akrippner.mon.core.model.data.ReadingSummary
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,6 +17,7 @@ class ReadingMappersTest {
     sourceLanguage: String = "ja",
     translationLanguage: String = "en",
     tokens: List<ReadingTokenEntity> = emptyList(),
+    tokenizedWith: String? = "test-tokenizer",
   ) =
     ReadingWithTokens(
       reading =
@@ -28,6 +31,7 @@ class ReadingMappersTest {
           translationLanguage = translationLanguage,
           createdAt = 5,
           updatedAt = 5,
+          tokenizedWith = tokenizedWith,
         ),
       tokens = tokens,
     )
@@ -47,6 +51,26 @@ class ReadingMappersTest {
   }
 
   @Test
+  fun toDomainOrNull_aReadingWithoutATokenizerIsNotTokenized() {
+    assertEquals(false, readingWithTokens(tokenizedWith = null).toDomainOrNull()?.isTokenized)
+    assertEquals(true, readingWithTokens().toDomainOrNull()?.isTokenized)
+  }
+
+  @Test
+  fun summaryRow_carriesIsTokenized() {
+    assertEquals(false, summaryRow(isTokenized = false).toDomainOrNull()?.isTokenized)
+  }
+
+  @Test
+  fun pendingReadingRow_toDomainOrNull_mapsTheLanguage() {
+    assertEquals(
+      PendingReading("r1", "私は", Language.JAPANESE),
+      PendingReadingRow("r1", "私は", "ja").toDomainOrNull(),
+    )
+    assertNull(PendingReadingRow("r1", "私は", "xx").toDomainOrNull())
+  }
+
+  @Test
   fun toDomainOrNull_acceptsRegionTags() {
     assertEquals(
       Language.JAPANESE,
@@ -60,7 +84,11 @@ class ReadingMappersTest {
     assertNull(readingWithTokens(translationLanguage = "xx").toDomainOrNull())
   }
 
-  private fun summaryRow(sourceLanguage: String = "ja", translationLanguage: String = "en") =
+  private fun summaryRow(
+    sourceLanguage: String = "ja",
+    translationLanguage: String = "en",
+    isTokenized: Boolean = true,
+  ) =
     ReadingSummaryRow(
       id = "r1",
       title = "Title",
@@ -68,6 +96,7 @@ class ReadingMappersTest {
       translationLanguage = translationLanguage,
       createdAt = 5,
       tokenCount = 3,
+      isTokenized = isTokenized,
     )
 
   @Test
@@ -79,6 +108,7 @@ class ReadingMappersTest {
         sourceLanguage = Language.JAPANESE,
         translationLanguage = Language.ENGLISH,
         tokenCount = 3,
+        isTokenized = true,
         createdAt = 5,
       ),
       summaryRow().toDomainOrNull(),

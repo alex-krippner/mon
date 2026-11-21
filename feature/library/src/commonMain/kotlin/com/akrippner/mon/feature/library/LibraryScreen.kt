@@ -27,6 +27,7 @@ import com.akrippner.mon.feature.library.generated.resources.Res
 import com.akrippner.mon.feature.library.generated.resources.library_all_texts
 import com.akrippner.mon.feature.library.generated.resources.library_error_load_failed
 import com.akrippner.mon.feature.library.generated.resources.library_title
+import com.akrippner.mon.feature.library.generated.resources.library_waiting_for_analysis
 import com.akrippner.mon.feature.library.generated.resources.library_word_count
 import org.jetbrains.compose.resources.stringResource
 
@@ -83,7 +84,12 @@ fun LibraryScreen(state: LibraryState, onIntent: (LibraryIntent) -> Unit) {
         items(state.readings, key = { it.id }) { reading ->
           TextListItem(
             title = reading.title,
-            meta = stringResource(Res.string.library_word_count, reading.tokenCount),
+            meta =
+              if (reading.isTokenized) {
+                stringResource(Res.string.library_word_count, reading.tokenCount)
+              } else {
+                stringResource(Res.string.library_waiting_for_analysis)
+              },
             onClick = { onIntent(LibraryIntent.OpenReading(reading.id)) },
           )
         }
