@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
 
@@ -44,19 +43,20 @@ class PendingTokenization(
    */
   fun start(scope: CoroutineScope): Job =
     scope.launch {
-      merge(retryingChanges(), requests).onStart { emit(Unit) }.conflate().collect { runOnce() }
+      // [TokenizerProvider.changes] emits when collected, which is the run at start.
+      merge(retryingChanges(), requests).conflate().collect { runOnce() }
     }
 
   /**
    * [TokenizerProvider.changes] can fail (it reads the installed packs from disk). Collecting it
-   * again after a pause, with a run to catch up on what was missed, keeps the loop alive.
+   * again after a pause keeps the loop alive. Collecting it again emits the current state, which
+   * catches up on what was missed.
    */
   private fun retryingChanges(): Flow<Unit> =
     tokenizers.changes.retryWhen { cause, _ ->
       if (cause is CancellationException) return@retryWhen false
       log.e(cause) { "Watching the tokenizers failed; trying again in $RETRY_DELAY" }
       delay(RETRY_DELAY)
-      emit(Unit)
       true
     }
 

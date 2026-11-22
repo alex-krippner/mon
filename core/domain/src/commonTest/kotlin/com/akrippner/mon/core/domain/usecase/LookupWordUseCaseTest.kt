@@ -150,9 +150,17 @@ class LookupWordUseCaseTest {
   }
 
   @Test
-  fun onlyUnavailableDictionariesGiveNotFound() = runTest {
+  fun onlyUnavailableDictionariesGiveUnavailable() = runTest {
     val unavailable = FakeDictionary(failure = DictionaryUnavailableException("replaced"))
 
-    assertEquals(LookupResult.NotFound, lookup(dictionaryForm, unavailable))
+    assertEquals(LookupResult.Unavailable, lookup(dictionaryForm, unavailable))
+  }
+
+  @Test
+  fun anUnavailableDictionaryNextToAnEmptyOneGivesUnavailable() = runTest {
+    val unavailable = FakeDictionary("gone", failure = DictionaryUnavailableException("replaced"))
+    val empty = FakeDictionary("empty")
+
+    assertEquals(LookupResult.Unavailable, lookup(dictionaryForm, unavailable, empty))
   }
 }

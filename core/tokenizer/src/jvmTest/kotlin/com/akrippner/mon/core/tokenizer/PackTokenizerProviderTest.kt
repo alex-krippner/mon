@@ -163,33 +163,33 @@ class PackTokenizerProviderTest {
         PackTokenizerProvider(manager).changes.toList(emitted)
       }
     val base = pack("sudachi-core")
-    assertEquals(0, emitted.size) // collecting is not a change
+    assertEquals(1, emitted.size) // collecting emits the current state
 
     manager.setPacks(Pack(base, PackState.NotInstalled))
     manager.setPacks(Pack(base, PackState.Downloading(0.5f)))
     manager.setPacks(Pack(base, PackState.Downloading(0.9f)))
-    assertEquals(0, emitted.size) // listed or downloading for the first time: nothing installed
+    assertEquals(1, emitted.size) // listed or downloading for the first time: nothing installed
 
     manager.readers = listOf(FakeTokenizer("sudachi-core"))
     manager.setPacks(Pack(base, PackState.Installed))
-    assertEquals(1, emitted.size) // installed
+    assertEquals(2, emitted.size) // installed
 
     val newer = pack("sudachi-core", sha = "newer")
     manager.setPacks(Pack(newer, PackState.UpdateAvailable(base)))
-    assertEquals(1, emitted.size) // the old version is still the installed one
+    assertEquals(2, emitted.size) // the old version is still the installed one
 
     manager.readers = listOf(FakeTokenizer("sudachi-core", version = "2"))
     manager.setPacks(Pack(newer, PackState.Installed))
-    assertEquals(2, emitted.size) // updated
+    assertEquals(3, emitted.size) // updated
 
     val notes = pack("notes")
     manager.readers = manager.readers + NotATokenizer("notes")
     manager.setPacks(Pack(newer, PackState.Installed), Pack(notes, PackState.Installed))
-    assertEquals(2, emitted.size) // another kind of pack is no change
+    assertEquals(3, emitted.size) // another kind of pack is no change
 
     manager.readers = emptyList()
     manager.setPacks(Pack(newer, PackState.NotInstalled), Pack(notes, PackState.NotInstalled))
-    assertEquals(3, emitted.size) // removed
+    assertEquals(4, emitted.size) // removed
     job.cancel()
   }
 }

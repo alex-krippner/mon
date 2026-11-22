@@ -23,22 +23,22 @@ class TokenizePendingReadingsUseCase(
   suspend fun execute(): Int {
     var done = 0
     val unavailable = mutableSetOf<Language>()
-    for (reading in repository.getPendingReadings()) {
-      if (reading.sourceLanguage in unavailable) continue
-      val tokenizer = tokenizers.tokenizerFor(reading.sourceLanguage) ?: continue
+    for ((id, text, language) in repository.getPendingReadings()) {
+      if (language in unavailable) continue
       try {
-        val analysis = TokenAnalysis(tokenizer.tokenize(reading.text), tokenizer.id)
-        if (repository.saveAnalysis(reading.id, analysis)) done++
+        val tokenizer = tokenizers.tokenizerFor(language) ?: continue
+        val analysis = TokenAnalysis(tokenizer.tokenize(text), tokenizer.id)
+        if (repository.saveAnalysis(id, analysis)) done++
       } catch (e: CancellationException) {
         throw e
       } catch (e: TokenizerUnavailableException) {
         // It can't answer right now, so the other readings of its language would fail too. The
         // readings of other languages go on. The next trigger tries again.
-        log.w(e) { "Tokenizer '${tokenizer.id}' is unavailable; leaving the readings pending" }
-        unavailable += reading.sourceLanguage
+        log.w(e) { "No tokenizer for $language; leaving its readings pending" }
+        unavailable += language
       } catch (e: Exception) {
         // One reading that can't be tokenized must not block the others.
-        log.e(e) { "Could not tokenize reading ${reading.id}" }
+        log.e(e) { "Could not tokenize reading $id" }
       }
     }
     return done

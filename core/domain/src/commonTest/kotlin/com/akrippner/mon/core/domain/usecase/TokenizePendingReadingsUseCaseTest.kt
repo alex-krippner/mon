@@ -7,9 +7,13 @@ import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.PendingReading
 import com.akrippner.mon.core.model.data.TokenAnalysis
+import com.akrippner.mon.core.tokenizer.Tokenizer
+import com.akrippner.mon.core.tokenizer.TokenizerProvider
 import com.akrippner.mon.core.tokenizer.TokenizerUnavailableException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 
 class TokenizePendingReadingsUseCaseTest {
@@ -83,6 +87,26 @@ class TokenizePendingReadingsUseCaseTest {
 
     assertEquals(1, done)
     assertEquals(listOf("text a"), unavailable.tokenizedTexts)
+    assertEquals(listOf("a", "c"), repository.pending.map { it.id })
+  }
+
+  @Test
+  fun aProviderThatCannotAnswerDoesNotBlockOtherLanguages() = runTest {
+    repository.pending += listOf(pending("a"), pending("b", Language.GERMAN), pending("c"))
+    val german = FakeTokenizer(tokens, language = Language.GERMAN)
+    val provider =
+      object : TokenizerProvider {
+        override suspend fun tokenizerFor(language: Language): Tokenizer? =
+          if (language == Language.JAPANESE)
+            throw TokenizerUnavailableException("cannot read packs")
+          else german
+
+        override val changes: Flow<Unit> = emptyFlow()
+      }
+
+    val done = TokenizePendingReadingsUseCase(repository, provider).execute()
+
+    assertEquals(1, done)
     assertEquals(listOf("a", "c"), repository.pending.map { it.id })
   }
 

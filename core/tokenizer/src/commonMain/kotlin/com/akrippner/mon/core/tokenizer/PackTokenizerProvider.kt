@@ -10,7 +10,6 @@ import com.akrippner.mon.core.packs.PackManager
 import com.akrippner.mon.core.packs.PackState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 
 private const val MAX_ATTEMPTS = 3
@@ -26,9 +25,9 @@ internal class PackTokenizerProvider(private val packs: PackManager) : Tokenizer
       ?.let { ReplacingTokenizer(it, packs) }
 
   /**
-   * Emits when a tokenizer pack was installed, updated or removed; not when collected, and not for
-   * other kinds of packs. A download in progress changes nothing: the old version stays usable
-   * until the new one replaces it.
+   * Emits once when collected, for the state at that moment, and again when a tokenizer pack was
+   * installed, updated or removed; not for other kinds of packs. A download in progress changes
+   * nothing: the old version stays usable until the new one replaces it.
    */
   override val changes: Flow<Unit> =
     packs.packs
@@ -38,7 +37,6 @@ internal class PackTokenizerProvider(private val packs: PackManager) : Tokenizer
       // changed.
       .map { packs.tokenizers().map { it.id } }
       .distinctUntilChanged()
-      .drop(1) // the current state is not a change: collectors make their own first pass
       .map {}
 }
 

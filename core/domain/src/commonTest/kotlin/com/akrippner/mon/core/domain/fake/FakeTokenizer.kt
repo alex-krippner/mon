@@ -6,6 +6,7 @@ import com.akrippner.mon.core.tokenizer.Tokenizer
 import com.akrippner.mon.core.tokenizer.TokenizerProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.onStart
 
 class FakeTokenizer(
   private val tokens: List<MonToken> = emptyList(),
@@ -35,7 +36,8 @@ class FakeTokenizerProvider(
   override suspend fun tokenizerFor(language: Language): Tokenizer? =
     (listOfNotNull(tokenizer) + others).firstOrNull { it.language == language }
 
-  override val changes: Flow<Unit> = trigger
+  // Like the real providers: the current state on collection, then every change.
+  override val changes: Flow<Unit> = trigger.onStart { emit(Unit) }
 
   fun changed() {
     check(trigger.tryEmit(Unit))

@@ -40,7 +40,8 @@ class LookupWordUseCase(private val dictionaries: DictionaryProvider) {
     if (allUnavailable && dictionaries.dictionariesFor(source, gloss).isEmpty()) {
       return LookupResult.NoDictionaryInstalled
     }
-    return LookupResult.NotFound
+    // Some dictionary could not answer, so "not found" would be a claim we can't make.
+    return if (unavailable > 0) LookupResult.Unavailable else LookupResult.NotFound
   }
 
   private suspend fun MonDictionary.entriesFor(

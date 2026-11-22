@@ -81,6 +81,30 @@ class PendingTokenizationTest {
   }
 
   @Test
+  fun aTokenizerInstalledBeforeWatchingStartsIsNotMissed() = runTest {
+    repository.pending += PendingReading("a", "text", Language.JAPANESE)
+    val late =
+      object : TokenizerProvider {
+        var tokenizer: Tokenizer? = null
+
+        override suspend fun tokenizerFor(language: Language): Tokenizer? = tokenizer
+
+        // The pack lands just before the loop starts watching; the emitted state includes it.
+        override val changes: Flow<Unit> = flow {
+          tokenizer = FakeTokenizer()
+          emit(Unit)
+          awaitCancellation()
+        }
+      }
+
+    PendingTokenization(TokenizePendingReadingsUseCase(repository, late), late)
+      .start(backgroundScope)
+    testScheduler.runCurrent()
+
+    assertEquals(emptyList(), repository.pending)
+  }
+
+  @Test
   fun aFailingChangesFlowIsCollectedAgainAndCatchesUp() = runTest {
     var attempts = 0
     val failing =
@@ -91,6 +115,7 @@ class PendingTokenizationTest {
 
         override val changes: Flow<Unit> = flow {
           if (attempts++ == 0) throw IllegalStateException("cannot read the packs")
+          emit(Unit) // the current state, as the real providers emit on collection
           awaitCancellation()
         }
       }

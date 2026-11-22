@@ -32,8 +32,9 @@ interface TokenizerProvider {
   suspend fun tokenizerFor(language: Language): Tokenizer?
 
   /**
-   * Emits whenever the set of available tokenizers changed, e.g. a pack was installed. It does not
-   * emit for the current state when collected.
+   * Emits once when collected, for the current state, and again whenever the set of available
+   * tokenizers changed, e.g. a pack was installed. The first emission means a collector never
+   * misses a change that happened before it started collecting.
    */
   val changes: Flow<Unit>
 }
