@@ -190,7 +190,7 @@ internal fun PackTile(
         PackStatusRow(
           pack = pack,
           kind = k,
-          iconSize = 14.dp,
+          iconSize = MonTheme.sizes.iconTiny,
           style = MonTheme.typography.labelSmall,
           modifier = Modifier.padding(top = 6.dp),
         )

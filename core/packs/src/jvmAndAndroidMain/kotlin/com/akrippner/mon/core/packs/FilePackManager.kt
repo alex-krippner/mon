@@ -68,6 +68,14 @@ class FilePackManager(
   /** Open readers by pack id. Only touched while holding [files]. */
   private val opened = mutableMapOf<String, CloseableReader>()
 
+  /**
+   * Replaces the current [State] with the result of [block] and publishes the new [packs]. Returns
+   * the new state.
+   *
+   * Runs under a lock, so concurrent changes can't overwrite each other. [block] therefore must be
+   * quick and free of side effects other than setting a local variable: it holds up every other
+   * change, and it runs exactly once.
+   */
   private fun change(block: (State) -> State): State =
     synchronized(this) {
       current = block(current)

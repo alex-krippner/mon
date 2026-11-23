@@ -96,7 +96,7 @@ private fun PackDetail(pack: Pack, onIntent: (PackDetailIntent) -> Unit, modifie
     PackStatusRow(
       pack = pack,
       kind = kind,
-      iconSize = 16.dp,
+      iconSize = MonTheme.sizes.iconTiny,
       style = MonTheme.typography.labelMedium,
       modifier = Modifier.padding(top = MonTheme.space.spacing2),
     )
