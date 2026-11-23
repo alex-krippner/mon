@@ -33,10 +33,10 @@ import com.akrippner.mon.core.designsystem.dashedBorder
 import com.akrippner.mon.core.designsystem.icon.Icon
 import com.akrippner.mon.core.designsystem.icon.MonIcon
 import com.akrippner.mon.core.designsystem.theme.MonTheme
-import com.akrippner.mon.core.dictionary.pack.CatalogError
-import com.akrippner.mon.core.dictionary.pack.Pack
-import com.akrippner.mon.core.dictionary.pack.PackError
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.CatalogError
+import com.akrippner.mon.core.packs.Pack
+import com.akrippner.mon.core.packs.PackError
+import com.akrippner.mon.core.packs.PackState
 import com.akrippner.mon.feature.dictionaries.generated.resources.Res
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_check_again
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_check_failed_empty_invalid

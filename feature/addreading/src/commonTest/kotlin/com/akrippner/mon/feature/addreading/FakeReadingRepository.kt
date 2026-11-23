@@ -2,9 +2,10 @@ package com.akrippner.mon.feature.addreading
 
 import com.akrippner.mon.core.data.ReadingRepository
 import com.akrippner.mon.core.model.data.Language
-import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.model.data.PendingReading
 import com.akrippner.mon.core.model.data.Reading
 import com.akrippner.mon.core.model.data.ReadingSummary
+import com.akrippner.mon.core.model.data.TokenAnalysis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -20,7 +21,7 @@ class FakeReadingRepository : ReadingRepository {
     translation: String,
     sourceLanguage: Language,
     translationLanguage: Language,
-    tokens: List<MonToken>,
+    analysis: TokenAnalysis?,
   ): String {
     failure?.let { throw it }
     addedTitles += title
@@ -28,6 +29,10 @@ class FakeReadingRepository : ReadingRepository {
   }
 
   override suspend fun getReading(readingId: String): Reading? = null
+
+  override suspend fun getPendingReadings(): List<PendingReading> = emptyList()
+
+  override suspend fun saveAnalysis(readingId: String, analysis: TokenAnalysis) = false
 
   override suspend fun deleteReading(readingId: String) = Unit
 

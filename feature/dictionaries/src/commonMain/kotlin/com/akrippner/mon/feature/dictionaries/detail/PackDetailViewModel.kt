@@ -2,15 +2,15 @@ package com.akrippner.mon.feature.dictionaries.detail
 
 import androidx.lifecycle.viewModelScope
 import com.akrippner.mon.core.arch.mvi.BaseViewModel
-import com.akrippner.mon.core.dictionary.pack.DictionaryManager
-import com.akrippner.mon.core.dictionary.pack.PackError
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.PackError
+import com.akrippner.mon.core.packs.PackManager
+import com.akrippner.mon.core.packs.PackState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /** One pack's details. Follows the pack in the manager's list, so progress shows here as well. */
-class PackDetailViewModel(private val packId: String, private val manager: DictionaryManager) :
+class PackDetailViewModel(private val packId: String, private val manager: PackManager) :
   BaseViewModel<PackDetailState, PackDetailIntent, PackDetailEffect>(PackDetailState()) {
 
   /**

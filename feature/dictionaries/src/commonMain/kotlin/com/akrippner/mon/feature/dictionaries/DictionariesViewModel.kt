@@ -2,9 +2,9 @@ package com.akrippner.mon.feature.dictionaries
 
 import androidx.lifecycle.viewModelScope
 import com.akrippner.mon.core.arch.mvi.BaseViewModel
-import com.akrippner.mon.core.dictionary.pack.DictionaryManager
-import com.akrippner.mon.core.dictionary.pack.Pack
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.Pack
+import com.akrippner.mon.core.packs.PackManager
+import com.akrippner.mon.core.packs.PackState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
  * Shows the packs and starts downloads. Progress and failures arrive through the manager's `packs`;
  * downloads run in the manager's own scope, so leaving the screen does not cancel them.
  */
-class DictionariesViewModel(private val manager: DictionaryManager) :
+class DictionariesViewModel(private val manager: PackManager) :
   BaseViewModel<DictionariesState, DictionariesIntent, DictionariesEffect>(
     initialState = DictionariesState()
   ) {

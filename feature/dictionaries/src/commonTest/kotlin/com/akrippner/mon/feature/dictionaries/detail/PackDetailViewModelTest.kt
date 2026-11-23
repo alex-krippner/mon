@@ -1,7 +1,7 @@
 package com.akrippner.mon.feature.dictionaries.detail
 
-import com.akrippner.mon.core.dictionary.pack.PackError
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.PackError
+import com.akrippner.mon.core.packs.PackState
 import com.akrippner.mon.feature.dictionaries.FakeDictionaryManager
 import com.akrippner.mon.feature.dictionaries.testPack
 import kotlin.test.AfterTest

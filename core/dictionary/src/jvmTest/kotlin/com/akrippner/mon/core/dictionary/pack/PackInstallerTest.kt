@@ -1,5 +1,6 @@
 package com.akrippner.mon.core.dictionary.pack
 
+import com.akrippner.mon.core.packs.*
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -42,7 +43,7 @@ class PackInstallerTest {
     installer.commit(pack.info, file)
 
     assertEquals(listOf(pack.info), installer.installedPacks())
-    assertTrue(installer.databaseFile(pack.info.id).isFile)
+    assertTrue(installer.dataFile(pack.info.id).isFile)
     assertTrue(leftovers().isEmpty())
   }
 
@@ -161,7 +162,7 @@ class PackInstallerTest {
     assertEquals(PackError.CHECKSUM, errorOf { installer.download(v2.info, accept) {} })
 
     assertEquals(listOf(v1.info), installer.installedPacks())
-    assertTrue(installer.databaseFile(v1.info.id).isFile)
+    assertTrue(installer.dataFile(v1.info.id).isFile)
     assertTrue(leftovers().isEmpty())
   }
 
@@ -172,7 +173,7 @@ class PackInstallerTest {
     serve(v1)
     serve(v2)
     installer.commit(v1.info, installer.download(v1.info, accept) {})
-    val oldDatabase = installer.databaseFile(v1.info.id).readBytes()
+    val oldDatabase = installer.dataFile(v1.info.id).readBytes()
     val unpacked = installer.download(v2.info, accept) {}
     // A folder where the temporary pack.json goes makes writing it fail, like a full disk.
     File(File(dir, v2.info.id), "pack.json.tmp").mkdirs()
@@ -180,7 +181,7 @@ class PackInstallerTest {
     assertEquals(PackError.STORAGE, errorOf { installer.commit(v2.info, unpacked) })
 
     assertEquals(listOf(v1.info), installer.installedPacks())
-    assertTrue(oldDatabase.contentEquals(installer.databaseFile(v1.info.id).readBytes()))
+    assertTrue(oldDatabase.contentEquals(installer.dataFile(v1.info.id).readBytes()))
   }
 
   @Test
@@ -190,20 +191,20 @@ class PackInstallerTest {
     installer.commit(pack.info, installer.download(pack.info, accept) {})
     val installedDir = File(dir, pack.info.id)
     // A killed update of an installed pack.
-    File(installedDir, "dictionary.db.gz.tmp").writeText("x")
-    File(installedDir, "dictionary.db.tmp").writeText("x")
+    File(installedDir, "pack.dat.gz.tmp").writeText("x")
+    File(installedDir, "pack.dat.tmp").writeText("x")
     // A killed first download.
     val killed = File(dir, "killed").also { it.mkdirs() }
-    File(killed, "dictionary.db.tmp").writeText("x")
+    File(killed, "pack.dat.tmp").writeText("x")
     // An update killed between replacing the database and writing pack.json, or a removal that
     // deleted only pack.json.
     val orphan = File(dir, "orphan").also { it.mkdirs() }
-    File(orphan, "dictionary.db").writeText("x")
+    File(orphan, "pack.dat").writeText("x")
     // A pack.json this version of the app can't read: the data is kept, only the leftovers go.
     val unreadable = File(dir, "unreadable").also { it.mkdirs() }
-    File(unreadable, "dictionary.db").writeText("x")
+    File(unreadable, "pack.dat").writeText("x")
     File(unreadable, "pack.json").writeText("not json")
-    File(unreadable, "dictionary.db.tmp").writeText("x")
+    File(unreadable, "pack.dat.tmp").writeText("x")
     // Not a pack folder: not ours to delete.
     val foreign = File(dir, "Not A Pack").also { it.mkdirs() }
 
@@ -212,10 +213,10 @@ class PackInstallerTest {
     assertTrue(leftovers().isEmpty())
     assertFalse(killed.exists())
     assertFalse(orphan.exists())
-    assertTrue(File(unreadable, "dictionary.db").isFile)
+    assertTrue(File(unreadable, "pack.dat").isFile)
     assertTrue(foreign.exists())
     assertEquals(listOf(pack.info), installer.installedPacks())
-    assertTrue(installer.databaseFile(pack.info.id).isFile)
+    assertTrue(installer.dataFile(pack.info.id).isFile)
   }
 
   @Test
@@ -246,13 +247,13 @@ class PackInstallerTest {
     // The pack.json names a different id than the folder.
     File(dir, "other").also {
       it.mkdirs()
-      File(it, "dictionary.db").writeText("x")
+      File(it, "pack.dat").writeText("x")
       File(it, "pack.json").writeText(Json.encodeToString(pack.info))
     }
     // Not valid JSON.
     File(dir, "broken").also {
       it.mkdirs()
-      File(it, "dictionary.db").writeText("x")
+      File(it, "pack.dat").writeText("x")
       File(it, "pack.json").writeText("not json")
     }
 

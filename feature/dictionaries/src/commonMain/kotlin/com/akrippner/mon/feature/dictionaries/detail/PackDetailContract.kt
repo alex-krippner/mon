@@ -1,7 +1,7 @@
 package com.akrippner.mon.feature.dictionaries.detail
 
 import androidx.compose.runtime.Immutable
-import com.akrippner.mon.core.dictionary.pack.Pack
+import com.akrippner.mon.core.packs.Pack
 
 @Immutable
 data class PackDetailState(

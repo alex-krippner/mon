@@ -6,6 +6,7 @@ import com.akrippner.mon.core.dictionary.jmdict.JmdictWriter
 import com.akrippner.mon.core.model.data.Headword
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.Sense
+import com.akrippner.mon.core.packs.*
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -26,7 +27,7 @@ internal fun testPack(
 ): TestPack {
   val dir = Files.createTempDirectory("pack-build")
   try {
-    val db = dir.resolve("dictionary.db")
+    val db = dir.resolve("pack.dat")
     JmdictWriter(db.toString(), Language.JAPANESE).use { writer ->
       writer.insert(
         JmdictRecord(1, true, listOf(Sense(listOf("gloss"))), listOf(Headword(word, "あけて")))

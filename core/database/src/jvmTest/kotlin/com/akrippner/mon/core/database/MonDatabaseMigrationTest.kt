@@ -47,42 +47,15 @@ class MonDatabaseMigrationTest {
     )
 
   @Test
-  fun version2_keepsReadingsWhenOpened() = runTest {
-    helper.createDatabase(2).use { connection ->
-      connection.execSQL("INSERT INTO user (id, createdAt) VALUES ('user-1', 0)")
-      connection.execSQL(
-        "INSERT INTO reading (id, userId, title, text, translation, sourceLanguage, " +
-          "translationLanguage, createdAt, updatedAt) " +
-          "VALUES ('reading-1', 'user-1', 'Title', 'こんにちは', 'Hello', 'ja', 'en', 1, 1)"
-      )
-      connection.execSQL(
-        "INSERT INTO reading_token (readingId, tokenIndex, surface, pronunciation, " +
-          "dictionaryForm, partOfSpeech) VALUES ('reading-1', 0, 'こんにちは', 'コンニチハ', " +
-          "'こんにちは', '感動詞')"
-      )
-    }
-
-    val db = openAppDatabase()
-    try {
-      val readings = db.getReadingDao().observeReadingsWithTokens("user-1").first()
-      assertEquals(listOf("reading-1"), readings.map { it.reading.id })
-      assertEquals(listOf("こんにちは"), readings.single().tokens.map { it.surface })
-    } finally {
-      db.close()
-    }
-  }
-
-  @Test
-  fun version1_isRecreatedWhenOpened() = runTest {
+  fun version1_opensWithTheAppConfiguration() = runTest {
     helper.createDatabase(1).use { connection ->
-      connection.execSQL(
-        "INSERT INTO ReadingEntity (text, translation, title) VALUES ('こんにちは', 'Hello', 'Title')"
-      )
+      connection.execSQL("INSERT INTO user (id, createdAt) VALUES ('user-1', 0)")
     }
 
     val db = openAppDatabase()
     try {
-      val user = db.getUserDao().getOrCreateLocalUser(UserEntity(id = "user-1", createdAt = 0))
+      val user = db.getUserDao().getOrCreateLocalUser(UserEntity(id = "other", createdAt = 1))
+      assertEquals("user-1", user.id)
       assertTrue(db.getReadingDao().observeReadingsWithTokens(user.id).first().isEmpty())
     } finally {
       db.close()

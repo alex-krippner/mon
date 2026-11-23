@@ -4,6 +4,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 data class Sizes(
+  val iconTiny: Dp,
   val iconExtraSmall: Dp,
   val iconSmall: Dp,
   val iconMedium: Dp,
@@ -16,6 +17,7 @@ data class Sizes(
 
 val sizes =
   Sizes(
+    iconTiny = 16.dp,
     iconExtraSmall = 24.dp,
     iconSmall = 32.dp,
     iconMedium = 48.dp,

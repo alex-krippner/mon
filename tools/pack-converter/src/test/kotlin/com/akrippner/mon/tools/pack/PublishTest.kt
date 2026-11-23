@@ -1,7 +1,7 @@
 package com.akrippner.mon.tools.pack
 
-import com.akrippner.mon.core.dictionary.pack.Catalog
-import com.akrippner.mon.core.dictionary.pack.CatalogPack
+import com.akrippner.mon.core.packs.Catalog
+import com.akrippner.mon.core.packs.CatalogPack
 import java.io.File
 import java.nio.file.Files
 import java.security.MessageDigest

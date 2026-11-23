@@ -12,7 +12,9 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 
@@ -37,7 +39,12 @@ class MonDatabaseTest {
     return db.getUserDao().getOrCreateLocalUser(UserEntity(id = id, createdAt = 0))
   }
 
-  private fun reading(id: String, userId: String = "user-1", createdAt: Long = 0) =
+  private fun reading(
+    id: String,
+    userId: String = "user-1",
+    createdAt: Long = 0,
+    tokenizedWith: String? = "test-tokenizer",
+  ) =
     ReadingEntity(
       id = id,
       userId = userId,
@@ -48,6 +55,7 @@ class MonDatabaseTest {
       translationLanguage = "en",
       createdAt = createdAt,
       updatedAt = createdAt,
+      tokenizedWith = tokenizedWith,
     )
 
   private fun token(readingId: String, index: Int, surface: String = "新幹線") =
@@ -174,5 +182,71 @@ class MonDatabaseTest {
     val result = dao.observeReadingSummaries(userId = "user-1").first()
 
     assertEquals(listOf("new" to 0, "old" to 2), result.map { it.id to it.tokenCount })
+  }
+
+  @Test
+  fun getPendingReadings_returnsOnlyUntokenizedReadingsOfTheUserOldestFirst() = runTest {
+    createUser("user-1")
+    db.getUserDao().insert(UserEntity("user-2", createdAt = 0))
+    val dao = db.getReadingDao()
+    dao.insertReadingWithTokens(reading("new", createdAt = 2, tokenizedWith = null), emptyList())
+    dao.insertReadingWithTokens(reading("old", createdAt = 1, tokenizedWith = null), emptyList())
+    dao.insertReadingWithTokens(reading("done", createdAt = 0), listOf(token("done", 0)))
+    dao.insertReadingWithTokens(reading("other", "user-2", tokenizedWith = null), emptyList())
+
+    assertEquals(listOf("old", "new"), dao.getPendingReadings("user-1").map { it.id })
+  }
+
+  @Test
+  fun setTokens_givesAPendingReadingItsTokens() = runTest {
+    createUser()
+    val dao = db.getReadingDao()
+    dao.insertReadingWithTokens(reading("r1", tokenizedWith = null), emptyList())
+
+    val saved =
+      dao.setTokens("r1", listOf(token("r1", 1, "は"), token("r1", 0, "私")), "sudachi-core@1")
+
+    assertTrue(saved)
+    assertEquals(listOf("私", "は"), dao.getTokens("r1").map { it.surface })
+    assertEquals("sudachi-core@1", dao.getReadingWithTokens("r1")?.reading?.tokenizedWith)
+    assertEquals(emptyList(), dao.getPendingReadings("user-1"))
+  }
+
+  @Test
+  fun setTokens_isIdempotent_theSecondCallChangesNothing() = runTest {
+    createUser()
+    val dao = db.getReadingDao()
+    dao.insertReadingWithTokens(reading("r1", tokenizedWith = null), emptyList())
+
+    assertTrue(dao.setTokens("r1", listOf(token("r1", 0, "私")), "first"))
+    assertFalse(dao.setTokens("r1", listOf(token("r1", 0, "あなた")), "second"))
+
+    assertEquals(listOf("私"), dao.getTokens("r1").map { it.surface })
+    assertEquals("first", dao.getReadingWithTokens("r1")?.reading?.tokenizedWith)
+  }
+
+  @Test
+  fun setTokens_ofAMissingReading_returnsFalse() = runTest {
+    createUser()
+
+    assertFalse(db.getReadingDao().setTokens("missing", emptyList(), "x"))
+  }
+
+  @Test
+  fun observeReadingSummaries_saysWhetherAReadingIsTokenized() = runTest {
+    createUser()
+    val dao = db.getReadingDao()
+    dao.insertReadingWithTokens(
+      reading("pending", createdAt = 2, tokenizedWith = null),
+      emptyList(),
+    )
+    dao.insertReadingWithTokens(reading("done", createdAt = 1), listOf(token("done", 0)))
+
+    val summaries = dao.observeReadingSummaries("user-1").first()
+
+    assertEquals(
+      listOf("pending" to false, "done" to true),
+      summaries.map { it.id to it.isTokenized },
+    )
   }
 }

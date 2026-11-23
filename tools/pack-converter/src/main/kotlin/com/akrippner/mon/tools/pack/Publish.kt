@@ -1,8 +1,8 @@
 package com.akrippner.mon.tools.pack
 
-import com.akrippner.mon.core.dictionary.pack.Catalog
-import com.akrippner.mon.core.dictionary.pack.CatalogPack
-import com.akrippner.mon.core.dictionary.pack.sha256Hex
+import com.akrippner.mon.core.packs.Catalog
+import com.akrippner.mon.core.packs.CatalogPack
+import com.akrippner.mon.core.packs.sha256Hex
 import java.io.File
 import java.util.zip.GZIPOutputStream
 import kotlinx.serialization.json.Json

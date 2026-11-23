@@ -55,7 +55,9 @@ sourceSets {
         implementation(projects.core.designsystem)
         implementation(projects.core.tokenizer)
         implementation(projects.core.dictionary)
+        implementation(projects.core.packs)
         implementation(projects.core.database)
+        implementation(libs.kermit)
 
         implementation(libs.compose.runtime)
         implementation(libs.compose.foundation)
@@ -70,6 +72,7 @@ sourceSets {
         implementation(libs.navigation3.ui)
         implementation(libs.androidx.lifecycle.viewmodelNavigation3)
         implementation(libs.kotlinx.serialization.json)
+        implementation(libs.kotlinx.coroutines.core)
 
     }
 }

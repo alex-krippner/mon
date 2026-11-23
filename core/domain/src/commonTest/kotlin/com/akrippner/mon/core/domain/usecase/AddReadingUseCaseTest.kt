@@ -2,17 +2,19 @@ package com.akrippner.mon.core.domain.usecase
 
 import com.akrippner.mon.core.domain.fake.FakeReadingRepository
 import com.akrippner.mon.core.domain.fake.FakeTokenizer
+import com.akrippner.mon.core.domain.fake.FakeTokenizerProvider
 import com.akrippner.mon.core.domain.model.AddReadingInput
 import com.akrippner.mon.core.domain.model.AddReadingInputError
 import com.akrippner.mon.core.domain.model.AddReadingResult
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
+import com.akrippner.mon.core.tokenizer.TokenizerProvider
+import com.akrippner.mon.core.tokenizer.TokenizerUnavailableException
 import kotlin.collections.emptyList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 
 class AddReadingUseCaseTest {
@@ -34,11 +36,13 @@ class AddReadingUseCaseTest {
       translationLanguage = Language.ENGLISH,
     )
 
-  private fun TestScope.useCase() =
+  private var requests = 0
+
+  private fun useCase(tokenizers: TokenizerProvider = FakeTokenizerProvider(tokenizer)) =
     AddReadingUseCase(
       repository = repository,
-      tokenizer = tokenizer,
-      tokenizeDispatcher = UnconfinedTestDispatcher(testScheduler),
+      tokenizers = tokenizers,
+      requestTokenization = { requests++ },
     )
 
   @Test
@@ -90,7 +94,8 @@ class AddReadingUseCaseTest {
   fun success_carriesTheRepositoryId() = runTest {
     val result = useCase().execute(input())
 
-    assertEquals(AddReadingResult.Success("new-id"), result)
+    assertEquals(AddReadingResult.Success("new-id", tokenized = true), result)
+    assertEquals(0, requests)
   }
 
   @Test
@@ -98,5 +103,64 @@ class AddReadingUseCaseTest {
     repository.failure = IllegalStateException("disk full")
 
     assertFailsWith<IllegalStateException> { useCase().execute(input()) }
+  }
+
+  @Test
+  fun noTokenizerForTheLanguage_storesTheReadingWithoutTokens() = runTest {
+    val result = useCase(FakeTokenizerProvider(null)).execute(input())
+
+    assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
+    assertEquals(null, repository.added.single().analysis)
+    assertEquals(emptyList(), tokenizer.tokenizedTexts)
+    assertEquals(1, requests)
+  }
+
+  @Test
+  fun aTokenizerForAnotherLanguage_isNotUsed() = runTest {
+    val german = FakeTokenizer(language = Language.GERMAN)
+
+    useCase(FakeTokenizerProvider(german)).execute(input())
+
+    assertEquals(emptyList(), german.tokenizedTexts)
+    assertEquals(emptyList(), repository.added.single().tokens)
+  }
+
+  @Test
+  fun theTokenizersIdIsStoredWithTheTokens() = runTest {
+    useCase().execute(input())
+
+    assertEquals("fake-tokenizer", repository.added.single().analysis?.tokenizedWith)
+  }
+
+  @Test
+  fun anUnavailableTokenizer_storesTheReadingWithoutTokens() = runTest {
+    val unavailable = FakeTokenizer(failure = TokenizerUnavailableException("pack replaced"))
+
+    val result = useCase(FakeTokenizerProvider(unavailable)).execute(input())
+
+    assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
+    assertEquals(null, repository.added.single().analysis)
+    assertEquals(1, requests)
+  }
+
+  @Test
+  fun aFailingTokenizer_storesTheReadingWithoutTokens() = runTest {
+    val failing = FakeTokenizer(failure = IllegalStateException("cannot load"))
+
+    val result = useCase(FakeTokenizerProvider(failing)).execute(input())
+
+    assertEquals(AddReadingResult.Success("new-id", tokenized = false), result)
+    assertEquals(null, repository.added.single().analysis)
+    assertEquals(1, requests)
+  }
+
+  @Test
+  fun cancellationIsNotSwallowed() = runTest {
+    val cancelled = FakeTokenizer(failure = CancellationException("cancelled"))
+
+    assertFailsWith<CancellationException> {
+      useCase(FakeTokenizerProvider(cancelled)).execute(input())
+    }
+    assertEquals(emptyList(), repository.added)
   }
 }

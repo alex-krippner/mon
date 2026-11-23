@@ -9,11 +9,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
-import com.akrippner.mon.core.dictionary.pack.CatalogError
-import com.akrippner.mon.core.dictionary.pack.CatalogPack
-import com.akrippner.mon.core.dictionary.pack.Pack
-import com.akrippner.mon.core.dictionary.pack.PackError
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.CatalogError
+import com.akrippner.mon.core.packs.CatalogPack
+import com.akrippner.mon.core.packs.Pack
+import com.akrippner.mon.core.packs.PackError
+import com.akrippner.mon.core.packs.PackState
 import com.akrippner.mon.feature.dictionaries.generated.resources.Res
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_catalog_invalid
 import com.akrippner.mon.feature.dictionaries.generated.resources.dictionaries_error_catalog_network
@@ -53,14 +53,21 @@ private const val BYTES_PER_MB = 1024L * 1024L
 internal fun megabytes(bytes: Long): String =
   stringResource(Res.string.dictionaries_size_mb, (bytes / BYTES_PER_MB).coerceAtLeast(1L))
 
-/** "Japanese → English". A language Mon has no name for shows as its tag. */
+/**
+ * "Japanese → English", or just "Japanese" when the gloss language repeats the source language (a
+ * pack that is not a word list). A language Mon has no name for shows as its tag.
+ */
 @Composable
 internal fun languagePair(info: CatalogPack): String =
-  stringResource(
-    Res.string.dictionaries_language_pair,
-    languageName(info.sourceLanguage),
-    languageName(info.glossLanguage),
-  )
+  if (info.glossLanguage.equals(info.sourceLanguage, ignoreCase = true)) {
+    languageName(info.sourceLanguage)
+  } else {
+    stringResource(
+      Res.string.dictionaries_language_pair,
+      languageName(info.sourceLanguage),
+      languageName(info.glossLanguage),
+    )
+  }
 
 @Composable
 private fun languageName(tag: String): String =

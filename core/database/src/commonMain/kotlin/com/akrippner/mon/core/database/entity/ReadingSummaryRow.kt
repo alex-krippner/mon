@@ -7,4 +7,5 @@ data class ReadingSummaryRow(
   val translationLanguage: String,
   val createdAt: Long,
   val tokenCount: Int,
+  val isTokenized: Boolean,
 )

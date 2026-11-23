@@ -1,8 +1,8 @@
 package com.akrippner.mon.feature.dictionaries
 
-import com.akrippner.mon.core.dictionary.pack.CatalogError
-import com.akrippner.mon.core.dictionary.pack.PackError
-import com.akrippner.mon.core.dictionary.pack.PackState
+import com.akrippner.mon.core.packs.CatalogError
+import com.akrippner.mon.core.packs.PackError
+import com.akrippner.mon.core.packs.PackState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
