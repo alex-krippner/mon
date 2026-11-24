@@ -1,4 +1,4 @@
-package com.akrippner.mon.core.ui
+package com.akrippner.mon.core.ui.lookup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,7 +17,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -28,71 +28,101 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.akrippner.mon.core.designsystem.PillVariant
 import com.akrippner.mon.core.designsystem.component.YomuPillButton
 import com.akrippner.mon.core.designsystem.theme.MonTheme
-import com.akrippner.mon.core.ui.lookup.BadgeRow
-import com.akrippner.mon.core.ui.lookup.KanjiDetailLink
-import com.akrippner.mon.core.ui.lookup.LookupUiState
-import com.akrippner.mon.core.ui.lookup.SaveRow
-import com.akrippner.mon.core.ui.lookup.SenseBlock
-import com.akrippner.mon.core.ui.lookup.WordDisplay
+import com.akrippner.mon.core.ui.DisplayToken
+import com.akrippner.mon.core.ui.JmdictEntry
 
+/**
+ * The bottom sheet that shows what a dictionary says about a tapped word.
+ *
+ * Saving a word and the kanji link only appear when [onSave] / [onOpenKanji] are given, so a screen
+ * that cannot do these yet simply leaves them out.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LookupBottomSheet(
   token: DisplayToken,
   lookupState: LookupUiState,
-  onSave: (note: String) -> Unit,
+  strings: LookupStrings,
+  onRetry: () -> Unit,
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
-  sheetState: SheetState =
-    rememberModalBottomSheetState(
-      skipPartiallyExpanded = true
-    ), // TODO: Check if setting state here is correct
+  onOpenDictionaries: (() -> Unit)? = null,
+  onSave: ((note: String) -> Unit)? = null,
+  savedToVocab: Boolean = false,
+  onOpenKanji: (() -> Unit)? = null,
 ) {
   ModalBottomSheet(
     onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = MonTheme.colors.sheetBackground,
+    // The sheet is always fully open (the design has no half-open state), so it never rests partly.
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    containerColor = MonTheme.colors.lookup.background,
     contentColor = Color.White,
+    // The design: a 10% black scrim and a square top edge.
+    scrimColor = Color.Black.copy(alpha = SCRIM_ALPHA),
+    shape = RectangleShape,
     dragHandle = {
-      // Custom handle — matches 60×4dp design spec
+      // The 60×4 dp white handle of the design.
       Box(
         modifier =
           Modifier.padding(top = 12.dp, bottom = 8.dp)
             .size(width = 60.dp, height = 4.dp)
             .clip(RoundedCornerShape(2.dp))
-            .background(Color.White.copy(alpha = 0.18f))
+            .background(Color.White)
       )
     },
     modifier = modifier,
-    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
   ) {
     Column(
       modifier =
         Modifier.fillMaxWidth()
+          // The design's sheet is 465 dp high, handle included, however little it shows.
+          .heightIn(min = SHEET_HEIGHT - HANDLE_HEIGHT)
           .verticalScroll(rememberScrollState())
-          .padding(horizontal = 24.dp)
-          .padding(bottom = 32.dp) // TODO: Check if two padding modificaitons are needed
+          .padding(horizontal = MonTheme.space.screenMargin)
+          .padding(top = 12.dp, bottom = 32.dp)
           .navigationBarsPadding()
     ) {
       when (lookupState) {
-        is LookupUiState.Loading -> LookupLoadingContent()
-        is LookupUiState.NotFound -> LookupNotFoundContent(surface = token.surface)
-        is LookupUiState.Error -> LookupErrorContent(onRetry = lookupState.onRetry)
+        LookupUiState.Loading -> LookupLoadingContent()
+        is LookupUiState.NotFound ->
+          LookupMessageContent(surface = token.surface, message = strings.notFound)
+        LookupUiState.NoDictionaryInstalled ->
+          LookupMessageContent(
+            surface = token.surface,
+            message = strings.noDictionary,
+            actionLabel = strings.openDictionaries.takeIf { onOpenDictionaries != null },
+            onAction = onOpenDictionaries,
+          )
+        LookupUiState.Unavailable ->
+          LookupMessageContent(
+            surface = token.surface,
+            message = strings.unavailable,
+            actionLabel = strings.retry,
+            onAction = onRetry,
+          )
         is LookupUiState.Found ->
           LookupFoundContent(
-            entry = lookupState.entry,
-            savedToVocab = lookupState.savedToVocab,
+            entries = lookupState.entries,
+            savedToVocab = savedToVocab,
             onSave = onSave,
+            onOpenKanji = onOpenKanji,
           )
       }
     }
   }
 }
+
+private const val SCRIM_ALPHA = 0.10f
+private val SHEET_HEIGHT = 465.dp
+
+/** The drag handle with its padding above and below (12 + 4 + 8 dp). */
+private val HANDLE_HEIGHT = 24.dp
 
 @Composable
 private fun LookupLoadingContent() {
@@ -101,8 +131,14 @@ private fun LookupLoadingContent() {
   }
 }
 
+/** A centered message about [surface], with an optional action button below it. */
 @Composable
-private fun LookupNotFoundContent(surface: String) {
+private fun LookupMessageContent(
+  surface: String,
+  message: String,
+  actionLabel: String? = null,
+  onAction: (() -> Unit)? = null,
+) {
   Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
       Text(
@@ -111,64 +147,56 @@ private fun LookupNotFoundContent(surface: String) {
       )
       Spacer(Modifier.height(8.dp))
       Text(
-        text = "No dictionary entry found",
-        style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.35f)),
+        text = message,
+        style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.45f)),
         textAlign = TextAlign.Center,
       )
-    }
-  }
-}
-
-@Composable
-private fun LookupErrorContent(onRetry: () -> Unit) {
-  Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-      Text(
-        text = "Could not load entry",
-        style = MonTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.45f)),
-      )
-      Spacer(Modifier.height(12.dp))
-      YomuPillButton(label = "Retry", variant = PillVariant.Outline, onClick = onRetry)
+      if (actionLabel != null && onAction != null) {
+        Spacer(Modifier.height(12.dp))
+        YomuPillButton(label = actionLabel, variant = PillVariant.Outline, onClick = onAction)
+      }
     }
   }
 }
 
 @Composable
 private fun LookupFoundContent(
-  entry: JmdictEntry,
+  entries: List<JmdictEntry>,
   savedToVocab: Boolean,
-  onSave: (note: String) -> Unit,
+  onSave: ((note: String) -> Unit)?,
+  onOpenKanji: (() -> Unit)?,
 ) {
-  var noteText by remember { mutableStateOf("") }
-
-  WordDisplay(surface = entry.surface, reading = entry.reading)
-  Spacer(Modifier.height(8.dp))
-
-  BadgeRow(jlptLevel = entry.jlptLevel, pos = entry.senses.firstOrNull()?.posLabel)
-  Spacer(Modifier.height(16.dp))
-
-  HorizontalDivider(color = Color.White.copy(alpha = 0.10f), thickness = 0.5.dp)
-
-  entry.senses.forEachIndexed { index, sense ->
-    Spacer(Modifier.height(12.dp))
-    SenseBlock(index = index + 1, sense = sense)
-    if (index < entry.senses.lastIndex) {
-      Spacer(Modifier.height(12.dp))
-      HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
+  entries.forEachIndexed { index, entry ->
+    if (index > 0) {
+      Spacer(Modifier.height(16.dp))
+      HorizontalDivider(color = Color.White.copy(alpha = 0.18f), thickness = 1.dp)
+      Spacer(Modifier.height(16.dp))
     }
+    LookupEntryContent(entry)
   }
 
-  Spacer(Modifier.height(20.dp))
-  SaveRow(
-    noteText = noteText,
-    onNoteChange = { noteText = it },
-    savedToVocab = savedToVocab,
-    onSave = { onSave(noteText) },
-  )
-  Spacer(Modifier.height(12.dp))
-  KanjiDetailLink(
-    onClick = {
-      // TODO: Navigate to kanji detail
-    }
-  )
+  if (onSave != null) {
+    var noteText by remember { mutableStateOf("") }
+    Spacer(Modifier.height(20.dp))
+    SaveRow(
+      noteText = noteText,
+      onNoteChange = { noteText = it },
+      savedToVocab = savedToVocab,
+      onSave = { onSave(noteText) },
+    )
+  }
+  if (onOpenKanji != null) {
+    Spacer(Modifier.height(12.dp))
+    KanjiDetailLink(onClick = onOpenKanji)
+  }
+}
+
+@Composable
+private fun LookupEntryContent(entry: JmdictEntry) {
+  WordDisplay(surface = entry.surface, reading = entry.reading, jlptLevel = entry.jlptLevel)
+
+  entry.senses.forEachIndexed { index, sense ->
+    Spacer(Modifier.height(24.dp))
+    SenseBlock(index = index + 1, sense = sense)
+  }
 }

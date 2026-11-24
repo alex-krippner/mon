@@ -6,6 +6,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.akrippner.mon.core.database.entity.ReadingEntity
 import com.akrippner.mon.core.database.entity.ReadingTokenEntity
 import com.akrippner.mon.core.database.entity.ReadingUsageEntity
+import com.akrippner.mon.core.database.entity.ReadingWithTokens
 import com.akrippner.mon.core.database.entity.UserEntity
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -15,7 +16,9 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 
 class MonDatabaseTest {
@@ -223,6 +226,58 @@ class MonDatabaseTest {
 
     assertEquals(listOf("私"), dao.getTokens("r1").map { it.surface })
     assertEquals("first", dao.getReadingWithTokens("r1")?.reading?.tokenizedWith)
+  }
+
+  @Test
+  fun observeReadingWithTokens_emitsAgainWhenAPendingReadingGetsItsTokens() = runTest {
+    createUser()
+    val dao = db.getReadingDao()
+    dao.insertReadingWithTokens(reading("r1", tokenizedWith = null), emptyList())
+
+    // One collector stays subscribed: collecting a fresh flow twice would only query twice and
+    // prove nothing about Room telling an existing collector about the change.
+    val emissions = Channel<ReadingWithTokens?>(Channel.UNLIMITED)
+    val collector = launch { dao.observeReadingWithTokens("r1").collect { emissions.send(it) } }
+
+    val pending = emissions.receive()
+    assertEquals(emptyList(), pending?.tokens)
+    assertNull(pending?.reading?.tokenizedWith)
+
+    dao.setTokens("r1", listOf(token("r1", 0, "私")), "sudachi-core@1")
+
+    val tokenized = emissions.receiveMatching { it?.tokens?.isNotEmpty() == true }
+    assertEquals(listOf("私"), tokenized?.tokens?.map { it.surface })
+    assertEquals("sudachi-core@1", tokenized?.reading?.tokenizedWith)
+    collector.cancel()
+  }
+
+  @Test
+  fun observeReadingWithTokens_emitsNullWhenTheReadingIsDeleted() = runTest {
+    createUser()
+    val dao = db.getReadingDao()
+    dao.insertReadingWithTokens(reading("r1"), listOf(token("r1", 0)))
+
+    val emissions = Channel<ReadingWithTokens?>(Channel.UNLIMITED)
+    val collector = launch { dao.observeReadingWithTokens("r1").collect { emissions.send(it) } }
+    assertEquals(1, emissions.receive()?.tokens?.size)
+
+    dao.deleteById("r1")
+
+    assertNull(emissions.receiveMatching { it == null })
+    collector.cancel()
+  }
+
+  /** Skips emissions until one matches: Room may emit more than once for one change. */
+  private suspend fun <T> Channel<T>.receiveMatching(predicate: (T) -> Boolean): T {
+    while (true) {
+      val value = receive()
+      if (predicate(value)) return value
+    }
+  }
+
+  @Test
+  fun observeReadingWithTokens_ofAMissingReading_emitsNull() = runTest {
+    assertNull(db.getReadingDao().observeReadingWithTokens("missing").first())
   }
 
   @Test

@@ -49,7 +49,8 @@ and dictionary system is in `docs/dictionary-architecture.md`. Read them when a 
 - `:core:designsystem` — theme, components, icon catalog. No domain models.
 - `:core:navigation` — Navigation 3 keys (`MonNavKey`) and `MonNavConfiguration`.
 - `:core:arch` — `BaseViewModel<State, Intent, Effect>`.
-- `:feature:library`, `:feature:addreading`, `:feature:dictionaries` — one screen each.
+- `:feature:library`, `:feature:addreading`, `:feature:dictionaries`, `:feature:reader` — one screen
+  each (the reader also owns the look-up sheet's state; the sheet itself is in `:core:ui`).
 - `:tools:pack-converter` — command-line tool (not in the app) that turns dictionary source files
   into packs and writes the catalog.
 - `:androidApp`, `:desktopApp`, `:iosApp` — platform entrypoints; all embed `:shared`.
@@ -95,9 +96,14 @@ Dependency injection is Koin. Every module registers its Koin module in `:shared
 - Features do not depend on `:core:navigation`. They emit their own effects and `MonNavHost` in
   `:shared` maps them to nav keys. To add a destination: add the key to `MonNavKey`, register it in
   `MonNavConfiguration` (the only place; forgetting it crashes on back-stack restore), and add an
-  `entry<…>` to `MonNavHost`. `Reader` is still a stub entry.
-- The bottom bar is rendered by `MonNavHost`, only while a tab's screen is on top. Its tabs are the
-  `tabs` list there. The visual spec is `docs/design/mon-handoff-spec.md`.
+  `entry<…>` to `MonNavHost`.
+- The bottom bar is rendered by `MonNavHost`, while a tab's screen is on top and on the `Reader`
+  (with no tab selected, as in the design). Its tabs are the `tabs` list there. The visual spec is
+  `docs/design/mon-handoff-spec.md`; the screenshots of the reader and the look-up sheet are beside
+  it (`Reader.png`, `Look up sheet.png`).
+- The reader draws its text with `TokenizedText` in `:core:ui`: one `Text`, with the furigana and
+  the highlights drawn from the text layout, because Compose has no ruby support. Lines break
+  between any two characters, also inside a word, as in the design.
 - Strings live in each feature's `src/commonMain/composeResources/values/strings.xml`; the
   `mon.feature` plugin gives each feature its own resource package. Do not hardcode UI strings.
 

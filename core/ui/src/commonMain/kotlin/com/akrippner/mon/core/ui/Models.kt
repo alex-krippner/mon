@@ -38,7 +38,7 @@ sealed interface TokenState {
 
 /** A JMdict sense entry for display in the lookup sheet */
 data class Sense(
-  val posLabel: String, // 名詞, 動詞, etc.
+  val posLabel: String?, // 名詞, 動詞, etc.; null if the dictionary gives none
   val glosses: List<String>, // ["teacher", "master", "doctor"]
   val usageNote: String? = null,
 )

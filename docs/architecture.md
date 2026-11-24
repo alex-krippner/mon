@@ -41,6 +41,7 @@ flowchart TB
     library[":feature:library"]
     addreading[":feature:addreading"]
     dictionaries[":feature:dictionaries"]
+    reader[":feature:reader"]
   end
 
   subgraph Core
@@ -95,7 +96,7 @@ convention plugins. Platform entry points only embed `:shared`.
 | `:core:designsystem` | Theme, components, modifiers, generated icon catalog. No domain models. |
 | `:core:navigation` | Navigation 3 keys (`MonNavKey`) and `MonNavConfiguration`. |
 | `:core:arch` | `BaseViewModel<State, Intent, Effect>`. |
-| `:feature:*` | Screens: library, add reading, dictionaries (pack management). |
+| `:feature:*` | Screens: library, add reading, dictionaries (pack management), reader (text with furigana and the word look-up sheet). |
 | `:tools:pack-converter` | Turns dictionary source files into packs and writes the catalog. |
 
 ## 2. Layers and rules
@@ -297,7 +298,7 @@ sequenceDiagram
   to `MonNavKey`s (`Library`, `AddReading`, `Dictionaries`, `Reader`). A new key must be registered
   in `MonNavConfiguration`, or back-stack restore crashes.
 - The bottom bar is rendered by `MonNavHost` while a tab screen (`Library`, `Dictionaries`) is on
-  top. Strings live in each feature's `composeResources`.
+  top, and on the `Reader` with no tab selected. Strings live in each feature's `composeResources`.
 
 ## 5. Runtime flows
 
@@ -348,9 +349,16 @@ sequenceDiagram
 ### Looking up a word
 
 `LookupWordUseCase` looks a `MonToken` up in every dictionary `DictionaryProvider` offers for the
-language pair and returns `LookupResult`: `Found`, `NotFound`, or `NoDictionaryInstalled` (which the
-UI turns into a "download a dictionary" prompt). The Reader's lookup sheet that will call it is not
-built yet.
+language pair and returns `LookupResult`: `Found`, `NotFound`, `NoDictionaryInstalled` (which the
+UI turns into a "get a dictionary" prompt) or `Unavailable` (a dictionary could not answer right
+now, so "not found" would be a claim the app can't make; the sheet offers a retry).
+
+The Reader (`:feature:reader`) calls it. `ReaderViewModel` observes the reading with
+`ReadingRepository.observeReading`, so a reading stored without tokens shows its plain text and
+switches to tokens (with furigana) when `PendingTokenization` saves the analysis. A tap on a word
+cancels any running lookup, shows the sheet in its loading state, and maps the `LookupResult` to a
+`LookupUiState`; only the lookup for the latest tap can change the sheet. Opening a reading is
+recorded by the Library, which starts the Reader, not by the Reader.
 
 ### Installing a pack
 

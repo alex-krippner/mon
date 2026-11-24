@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +40,9 @@ import com.akrippner.mon.feature.dictionaries.detail.PackDetailViewModel
 import com.akrippner.mon.feature.library.LibraryEffect
 import com.akrippner.mon.feature.library.LibraryScreen
 import com.akrippner.mon.feature.library.LibraryViewModel
+import com.akrippner.mon.feature.reader.ReaderEffect
+import com.akrippner.mon.feature.reader.ReaderScreen
+import com.akrippner.mon.feature.reader.ReaderViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -52,6 +54,8 @@ fun MonNavHost() {
   // The bottom bar belongs to the app, not to a feature: features do not know about each other.
   val top = backStack.lastOrNull()
   val currentTab = tabs.firstOrNull { top != null && it.shows(top) }
+  // The reader is no tab, but the design keeps the bar there, with no tab selected.
+  val showBottomBar = currentTab != null || top is Reader
 
   Column(modifier = Modifier.fillMaxSize()) {
     NavDisplay(
@@ -67,14 +71,14 @@ fun MonNavHost() {
       modifier =
         Modifier.weight(1f)
           .then(
-            if (currentTab != null) Modifier.consumeWindowInsets(WindowInsets.navigationBars)
+            if (showBottomBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars)
             else Modifier
           ),
       entryProvider = monEntryProvider(navigator),
     )
-    if (currentTab != null) {
+    if (showBottomBar) {
       BottomNavBar(
-        selectedTab = currentTab.icon.tabId(),
+        selectedTab = currentTab?.icon?.tabId().orEmpty(),
         navTabs = tabs.map { it.icon },
         onTabSelected = { id ->
           tabs.firstOrNull { it.icon.tabId() == id }?.let { navigator.switchTab(it.key) }
@@ -158,6 +162,17 @@ private fun monEntryProvider(navigator: MonAppNavigator): (NavKey) -> NavEntry<N
       }
       PackDetailScreen(state = state, onIntent = viewModel::onIntent)
     }
-    // The reader screen does not exist yet; the key is routable so the library can link to it.
-    entry<Reader> { key -> Text(text = key.readingId) }
+    entry<Reader> { key ->
+      val viewModel = koinViewModel<ReaderViewModel> { parametersOf(key.readingId) }
+      val state by viewModel.state.collectAsStateWithLifecycle()
+      LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+          when (effect) {
+            ReaderEffect.Close -> navigator.close(key)
+            ReaderEffect.OpenDictionaries -> navigator.switchTab(Dictionaries)
+          }
+        }
+      }
+      ReaderScreen(state = state, onIntent = viewModel::onIntent)
+    }
   }

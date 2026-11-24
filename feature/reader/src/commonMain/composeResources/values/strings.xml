@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_error_not_found">This reading could not be found.</string>
+    <string name="reader_error_load_failed">Could not load this reading.</string>
+    <string name="reader_pending_title">Furigana and word look-up are not ready yet</string>
+    <string name="reader_pending_body">This text needs a tokenizer for its language. Install one in Dictionaries, and this screen updates when the analysis is done.</string>
+    <string name="reader_unsupported_title">Furigana and word look-up are not available for this language</string>
+    <string name="reader_unsupported_body">Mon can only analyse Japanese texts so far. You can still read the text below.</string>
+    <string name="reader_empty">There is no text to show in this reading.</string>
+    <string name="reader_pending_link">Open dictionaries</string>
+    <string name="reader_lookup_not_found">No dictionary entry found</string>
+    <string name="reader_lookup_unavailable">The dictionary could not answer right now.</string>
+    <string name="reader_lookup_no_dictionary">No dictionary is installed for this language pair.</string>
+    <string name="reader_lookup_open_dictionaries">Get a dictionary</string>
+    <string name="reader_lookup_retry">Retry</string>
+</resources>
