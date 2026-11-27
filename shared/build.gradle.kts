@@ -50,6 +50,7 @@ sourceSets {
         implementation(projects.feature.library)
         implementation(projects.feature.addreading)
         implementation(projects.feature.dictionaries)
+        implementation(projects.feature.reader)
         implementation(projects.core.data)
         implementation(projects.core.ui)
         implementation(projects.core.designsystem)

@@ -35,6 +35,8 @@ class FakeReadingRepository(private val newReadingId: String = "reading-1") : Re
 
   override suspend fun getReading(readingId: String): Reading? = null
 
+  override fun observeReading(readingId: String): Flow<Reading?> = flowOf(null)
+
   override suspend fun addReading(
     title: String,
     text: String,

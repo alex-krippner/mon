@@ -239,7 +239,7 @@ internal val lightMonColors =
       LookupColors(
         background = Palette.Blue80,
         title = Palette.Paper90,
-        reading = Palette.Paper90,
+        reading = Palette.Paper65,
         definition = Palette.Paper90,
         example = Palette.Paper65,
         partsOfSpeech = Palette.Paper60,

@@ -30,6 +30,8 @@ class FakeReadingRepository : ReadingRepository {
 
   override suspend fun getReading(readingId: String): Reading? = null
 
+  override fun observeReading(readingId: String): Flow<Reading?> = flowOf(null)
+
   override suspend fun getPendingReadings(): List<PendingReading> = emptyList()
 
   override suspend fun saveAnalysis(readingId: String, analysis: TokenAnalysis) = false

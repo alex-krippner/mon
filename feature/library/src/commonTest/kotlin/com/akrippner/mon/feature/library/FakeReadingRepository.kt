@@ -28,6 +28,8 @@ class FakeReadingRepository : ReadingRepository {
 
   override suspend fun getReading(readingId: String): Reading? = null
 
+  override fun observeReading(readingId: String): Flow<Reading?> = MutableStateFlow(null)
+
   override suspend fun addReading(
     title: String,
     text: String,

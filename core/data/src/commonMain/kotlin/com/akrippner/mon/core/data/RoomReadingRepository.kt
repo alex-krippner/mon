@@ -38,6 +38,9 @@ internal class RoomReadingRepository(
     return readingDao.getReadingWithTokens(readingId = readingId)?.toDomainOrNull()
   }
 
+  override fun observeReading(readingId: String): Flow<Reading?> =
+    readingDao.observeReadingWithTokens(readingId).map { it?.toDomainOrNull() }
+
   override suspend fun addReading(
     title: String,
     text: String,

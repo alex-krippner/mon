@@ -54,6 +54,11 @@ abstract class ReadingDao {
   @Query("SELECT * FROM reading WHERE id = :readingId")
   abstract suspend fun getReadingWithTokens(readingId: String): ReadingWithTokens?
 
+  /** Emits the reading again whenever it or its tokens change; null once it is deleted. */
+  @Transaction
+  @Query("SELECT * FROM reading WHERE id = :readingId")
+  abstract fun observeReadingWithTokens(readingId: String): Flow<ReadingWithTokens?>
+
   /** The user's readings that still wait for their tokens, oldest first. */
   @Query(
     "SELECT id, text, sourceLanguage FROM reading " +

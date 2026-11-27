@@ -15,6 +15,12 @@ interface ReadingRepository {
   suspend fun getReading(readingId: String): Reading?
 
   /**
+   * Emits the reading, and again whenever it changes (for example when a pending reading gets its
+   * tokens). Emits null if the reading does not exist or is gone.
+   */
+  fun observeReading(readingId: String): Flow<Reading?>
+
+  /**
    * Stores a reading with its tokens atomically and returns the id of the new reading. Without an
    * [analysis] the reading is stored as pending and gets its tokens later, see [saveAnalysis].
    */
