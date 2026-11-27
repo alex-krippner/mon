@@ -1,5 +1,6 @@
 plugins {
     id("mon.kmp.library")
+    id("mon.kmp.web")
     id("mon.kmp.compose")
 }
 

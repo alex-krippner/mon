@@ -1,3 +1,6 @@
+import com.android.build.api.withAndroid
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -23,6 +26,23 @@ kotlin {
 
     jvm()
 
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+    }
+
+    // Room has no browser target, so the database and the code on top of it are only wired in on
+    // the JVM and Android (see PlatformModules).
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvmAndAndroid") {
+                withJvm()
+                withAndroid()
+            }
+        }
+    }
+
 //    listOf(
 //        iosArm64(),
 //        iosSimulatorArm64()
@@ -35,11 +55,6 @@ kotlin {
 //
 //
 //    js {
-//        browser()
-//    }
-//
-//    @OptIn(ExperimentalWasmDsl::class)
-//    wasmJs {
 //        browser()
 //    }
 sourceSets {
@@ -58,7 +73,6 @@ sourceSets {
         implementation(projects.core.tokenizer)
         implementation(projects.core.dictionary)
         implementation(projects.core.packs)
-        implementation(projects.core.database)
         implementation(libs.kermit)
 
         implementation(libs.compose.runtime)
@@ -76,6 +90,12 @@ sourceSets {
         implementation(libs.kotlinx.serialization.json)
         implementation(libs.kotlinx.coroutines.core)
 
+    }
+
+    val jvmAndAndroidMain by getting {
+        dependencies {
+            implementation(projects.core.database)
+        }
     }
 }
 

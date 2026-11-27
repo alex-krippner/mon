@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
     id("mon.kmp.library")
+    id("mon.kmp.web")
     alias(libs.plugins.kotlinSerialization)
 }
 

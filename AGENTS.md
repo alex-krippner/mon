@@ -14,6 +14,8 @@ All targets compile with JVM target 17.
 - Build and run the Android app: `./gradlew :androidApp:assembleDebug`
 - Run the desktop app: `./gradlew :desktopApp:run`
 - Run the iOS app: open `iosApp/` in Xcode (an Xcode project, not built by Gradle).
+- Run the web demo: `./gradlew :webApp:wasmJsBrowserDevelopmentRun` (serves http://localhost:8080).
+  Build the deployable site with `./gradlew :webApp:wasmJsBrowserDistribution`.
 - Check formatting: `./gradlew spotlessCheck`; fix it: `./gradlew spotlessApply`
 - Run all JVM tests: `./gradlew jvmTest :tools:pack-converter:test`. The `jvmTest` selector
   runs every module that has one, so a new module needs no change here. The pack converter is a
@@ -51,9 +53,12 @@ and dictionary system is in `docs/dictionary-architecture.md`. Read them when a 
 - `:core:arch` — `BaseViewModel<State, Intent, Effect>`.
 - `:feature:library`, `:feature:addreading`, `:feature:dictionaries`, `:feature:reader` — one screen
   each (the reader also owns the look-up sheet's state; the sheet itself is in `:core:ui`).
+- `:core:demo` — the web demo's seed format (readings with tokens, dictionary entries) and a
+  dictionary that answers from it.
+- `:tools:demo-seed` — command-line tool that writes the seed, see "Web demo".
 - `:tools:pack-converter` — command-line tool (not in the app) that turns dictionary source files
   into packs and writes the catalog.
-- `:androidApp`, `:desktopApp`, `:iosApp` — platform entrypoints; all embed `:shared`.
+- `:androidApp`, `:desktopApp`, `:webApp`, `:iosApp` — platform entrypoints; all embed `:shared`.
 
 Dependency direction: `:shared` depends on all `core:*` and `feature:*` modules, which depend on
 lower layers. Platform-specific code lives in the `*Main` source sets.
@@ -112,6 +117,33 @@ Dependency injection is Koin. Every module registers its Koin module in `:shared
   between any two characters, also inside a word, as in the design.
 - Strings live in each feature's `src/commonMain/composeResources/values/strings.xml`; the
   `mon.feature` plugin gives each feature its own resource package. Do not hardcode UI strings.
+
+## Web demo
+
+The browser app (`:webApp`, Kotlin/Wasm) is a demo, not a port: Room, Sudachi and the pack files
+have no browser version.
+
+- Every module except `:core:database` has the `wasmJs` target, added by the `mon.kmp.web`
+  convention plugin (`mon.feature` applies it). `:core:database` stays JVM and Android only; Room
+  2.8 has no browser target (Room 3 has, with `androidx.sqlite:sqlite-web`).
+- Code that needs Room or Sudachi lives in `jvmAndAndroidMain` (`:core:data`, `:core:packs`,
+  `:core:dictionary`, `:core:tokenizer`, `:shared`). The browser's `actual`s register no pack
+  formats, and `UnavailablePackManager` has no catalog, so the Dictionaries screen shows its error.
+- `:shared` asks each platform for its Koin modules (`platformModules`). The browser provides none
+  for storage: `:webApp` supplies `InMemoryReadingRepository` and `InMemoryVocabularyRepository`
+  (both in `:core:data`, lost on reload) and a `DictionaryProvider` through `initKoin`.
+- A reading imported in the browser stays *pending*: there is no tokenizer.
+- The readings and look-ups come from `webApp/src/commonMain/composeResources/files/demo-seed.json`,
+  committed. Regenerate it after changing `tools/demo-seed/readings.json` or the look-up logic, with
+  the `sudachi-core` and `jmdict-eng` packs installed in the desktop app (the tool reads
+  `~/.mon/dictionaries`):
+  `./gradlew :tools:demo-seed:run --args="tools/demo-seed/readings.json webApp/src/commonMain/composeResources/files/demo-seed.json"`.
+  The seed keeps the dictionary's attribution, which the look-up sheet shows.
+- Compose in the browser draws only with fonts it has loaded, so `:webApp` bundles a subset of
+  Noto Sans JP (OFL, licence in `webApp/NotoSansJP-OFL.txt`): kana, ASCII and the 2,965 JIS level 1
+  kanji. A kanji outside it shows as an empty box.
+- `.github/workflows/deploy-web.yml` builds the site and deploys it to Netlify on pushes to `main`.
+  It needs the secrets `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID`.
 
 ## Quirks and gotchas
 

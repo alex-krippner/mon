@@ -21,5 +21,9 @@ gradlePlugin {
             id = "mon.feature"
             implementationClass = "FeatureConventionPlugin"
         }
+        register("kmpWeb") {
+            id = "mon.kmp.web"
+            implementationClass = "KmpWebConventionPlugin"
+        }
     }
 }

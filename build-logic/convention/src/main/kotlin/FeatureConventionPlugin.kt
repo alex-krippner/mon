@@ -19,6 +19,7 @@ class FeatureConventionPlugin : Plugin<Project> {
     with(target) {
       pluginManager.apply(KmpLibraryConventionPlugin::class.java)
       pluginManager.apply(KmpComposeConventionPlugin::class.java)
+      pluginManager.apply(KmpWebConventionPlugin::class.java)
 
       val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 

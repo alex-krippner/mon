@@ -1,5 +1,6 @@
 plugins {
     id("mon.kmp.library")
+    id("mon.kmp.web")
     id("mon.kmp.compose")
 }
 
@@ -179,8 +180,11 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(libs.compose.uiToolingPreview)
-                implementation(libs.compose.uiTooling)
             }
         }
+
+        // The tooling artifact has no browser variant.
+        androidMain.dependencies { implementation(libs.compose.uiTooling) }
+        jvmMain.dependencies { implementation(libs.compose.uiTooling) }
     }
 }

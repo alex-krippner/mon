@@ -1,13 +1,8 @@
 package com.akrippner.mon
 
 import co.touchlab.kermit.Logger
-import com.akrippner.mon.core.data.di.dataModule
-import com.akrippner.mon.core.database.di.databaseModule
-import com.akrippner.mon.core.dictionary.di.dictionaryModule
 import com.akrippner.mon.core.domain.di.domainModule
 import com.akrippner.mon.core.domain.usecase.PendingTokenization
-import com.akrippner.mon.core.packs.di.packsModule
-import com.akrippner.mon.core.tokenizer.di.tokenizerModule
 import com.akrippner.mon.feature.addreading.di.addReadingModule
 import com.akrippner.mon.feature.dictionaries.di.dictionariesModule
 import com.akrippner.mon.feature.library.di.libraryModule
@@ -26,18 +21,14 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
     startKoin {
         appDeclaration()
         modules(
-          databaseModule,
           domainModule,
-          dataModule,
           libraryModule,
           addReadingModule,
           dictionariesModule,
           readerModule,
           vocabularyModule,
-          tokenizerModule,
-          dictionaryModule,
-          packsModule,
         )
+        modules(platformModules)
       }
       .koin
 
