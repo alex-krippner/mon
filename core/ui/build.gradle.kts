@@ -14,7 +14,13 @@ kotlin {
 
                 implementation(libs.compose.uiToolingPreview)
                 implementation(projects.core.designsystem)
+                // The vocabulary composables take SavedWord and SentenceRef.
+                api(projects.core.model)
             }
+        }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }

@@ -12,6 +12,7 @@ import com.akrippner.mon.feature.addreading.di.addReadingModule
 import com.akrippner.mon.feature.dictionaries.di.dictionariesModule
 import com.akrippner.mon.feature.library.di.libraryModule
 import com.akrippner.mon.feature.reader.di.readerModule
+import com.akrippner.mon.feature.vocabulary.di.vocabularyModule
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
           addReadingModule,
           dictionariesModule,
           readerModule,
+          vocabularyModule,
           tokenizerModule,
           dictionaryModule,
           packsModule,

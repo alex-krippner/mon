@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -25,9 +26,12 @@ fun WordDisplay(
   reading: String,
   modifier: Modifier = Modifier,
   jlptLevel: String? = null,
+  /** Pushed to the right edge of the headword row, e.g. the Save toggle. */
+  trailing: (@Composable () -> Unit)? = null,
 ) {
   Column(modifier = modifier) {
     Row(
+      modifier = Modifier.fillMaxWidth(),
       horizontalArrangement = Arrangement.spacedBy(16.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -37,6 +41,10 @@ fun WordDisplay(
         color = MonTheme.colors.lookup.title,
       )
       if (jlptLevel != null) JlptBadge(level = jlptLevel)
+      if (trailing != null) {
+        Spacer(Modifier.weight(1f))
+        trailing()
+      }
     }
     if (reading.isNotBlank()) {
       Spacer(Modifier.height(4.dp))

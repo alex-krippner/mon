@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vocabulary_title">Vocabulary</string>
+    <string name="vocabulary_subtitle">%1$s · %2$d words</string>
+    <string name="vocabulary_back">Back</string>
+    <string name="vocabulary_search_placeholder">Search words…</string>
+    <string name="vocabulary_filter_all">All</string>
+    <string name="vocabulary_group_count">%1$d words</string>
+    <string name="vocabulary_see_all">See all ›</string>
+    <string name="vocabulary_more_from">+ %1$d more from %2$s</string>
+    <string name="vocabulary_empty_title">No saved words yet</string>
+    <string name="vocabulary_empty_body">Tap a word while reading and choose Save. It is kept here with the sentence it came from.</string>
+    <string name="vocabulary_no_matches">No saved words match your search.</string>
+    <string name="vocabulary_error_load_failed">Could not load your vocabulary.</string>
+    <string name="vocabulary_sheet_saved_from">Saved from %1$s</string>
+    <string name="vocabulary_sheet_note_label">Note</string>
+    <string name="vocabulary_sheet_note_placeholder">Add a note…</string>
+    <string name="vocabulary_sheet_show_in_reading">Show in reading</string>
+    <string name="vocabulary_sheet_remove">Remove from vocabulary</string>
+    <string name="vocabulary_snackbar_removed">Removed from vocabulary</string>
+    <string name="vocabulary_snackbar_undo">Undo</string>
+</resources>

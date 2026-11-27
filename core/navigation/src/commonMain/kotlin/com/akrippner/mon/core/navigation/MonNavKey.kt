@@ -14,4 +14,14 @@ import kotlinx.serialization.Serializable
 /** One dictionary pack: its details, licence and Remove. Part of the Dictionaries tab. */
 @Serializable data class DictionaryDetail(val packId: String) : MonNavKey
 
-@Serializable data class Reader(val readingId: String) : MonNavKey
+/** The Vocabulary tab: the saved words of all readings, grouped by reading. */
+@Serializable data object Vocabulary : MonNavKey
+
+/** The saved words of one reading. Pushed from the Reader and from a group in [Vocabulary]. */
+@Serializable data class ReadingVocabulary(val readingId: String) : MonNavKey
+
+/**
+ * One reading. With [focusWordId] (a saved word of the reading) the Reader opens at that word's
+ * sentence and outlines the word.
+ */
+@Serializable data class Reader(val readingId: String, val focusWordId: String? = null) : MonNavKey

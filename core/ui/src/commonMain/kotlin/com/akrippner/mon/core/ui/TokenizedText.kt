@@ -3,6 +3,7 @@ package com.akrippner.mon.core.ui
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,8 +16,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -47,6 +51,9 @@ private val LinePitch = 44.dp
 private val HighlightRadius = 5.dp
 private val HighlightPadding = 2.dp
 
+/** The stroke around the saved word that "Show in reading" points at. */
+private val OutlineWidth = 2.dp
+
 /** The share of the vermilion accent that marks the tapped word. */
 private const val SELECTED_BACKGROUND_ALPHA = 0.18f
 
@@ -62,6 +69,12 @@ private const val SELECTED_BACKGROUND_ALPHA = 0.18f
  * @param selectedIndex the index in [tokens] of the tapped word, drawn highlighted and bold.
  * @param onTokenTap called with the index in [tokens] of the tapped word. Punctuation is not
  *   tappable.
+ * @param outlinedIndex the index in [tokens] of a saved word to draw with a vermilion outline, as
+ *   the word that "Show in reading" points at.
+ * @param onOutlinedBounds called with the bounds of the outlined word, in this text's coordinates,
+ *   once it is laid out, so the caller can scroll to it.
+ * @param savedLabel the word for "saved" (for example "Saved words"). When there are saved words,
+ *   screen readers hear it with the words, so the highlight is not the only sign.
  */
 @Composable
 fun TokenizedText(
@@ -70,6 +83,9 @@ fun TokenizedText(
   selectedIndex: Int?,
   onTokenTap: (index: Int) -> Unit,
   modifier: Modifier = Modifier,
+  outlinedIndex: Int? = null,
+  onOutlinedBounds: ((Rect) -> Unit)? = null,
+  savedLabel: String? = null,
 ) {
   val density = LocalDensity.current
   val textMeasurer = rememberTextMeasurer()
@@ -123,12 +139,31 @@ fun TokenizedText(
 
   var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
+  val currentOnOutlinedBounds by rememberUpdatedState(onOutlinedBounds)
+  LaunchedEffect(layout, outlinedIndex) {
+    val textLayout = layout ?: return@LaunchedEffect
+    val index = outlinedIndex?.takeIf { it in ranges.indices } ?: return@LaunchedEffect
+    textLayout.lineBoxes(ranges[index]).firstOrNull()?.let { currentOnOutlinedBounds?.invoke(it) }
+  }
+
+  val savedWords =
+    remember(tokens) {
+      tokens.filter { it.state is TokenState.Annotated }.map { it.surface }.distinct()
+    }
+
   BasicText(
     text = text,
     style = bodyStyle,
     onTextLayout = { layout = it },
     modifier =
       modifier
+        .then(
+          if (savedLabel != null && savedWords.isNotEmpty()) {
+            Modifier.semantics { stateDescription = "$savedLabel: ${savedWords.joinToString()}" }
+          } else {
+            Modifier
+          }
+        )
         .pointerInput(tokens) {
           detectTapGestures { position ->
             val tapped = layout?.tokenAt(position, ranges)
@@ -146,22 +181,39 @@ fun TokenizedText(
           val spacing = BodyLetterSpacing.toPx()
           val padding = HighlightPadding.toPx()
 
-          // Behind the text: the tapped word and the saved words.
+          // Behind the text: the tapped word and the saved words, and the outline of the word that
+          // "Show in reading" points at.
           tokens.forEachIndexed { index, token ->
             val background =
               when {
                 index == selectedIndex -> accent.copy(alpha = SELECTED_BACKGROUND_ALPHA)
-                token.state is TokenState.Annotated || token.state is TokenState.Noted ->
-                  annotatedBackground
-                else -> return@forEachIndexed
+                token.state is TokenState.Annotated -> annotatedBackground
+                else -> null
               }
+            val outlined = index == outlinedIndex
+            if (background == null && !outlined) return@forEachIndexed
+
             textLayout.lineBoxes(ranges[index]).forEach { box ->
-              drawRoundRect(
-                color = background,
-                topLeft = Offset(box.left - padding, box.bottom - glyphHeight - padding),
-                size = Size(box.width - spacing + 2 * padding, glyphHeight + 2 * padding),
-                cornerRadius = CornerRadius(HighlightRadius.toPx()),
-              )
+              val topLeft = Offset(box.left - padding, box.bottom - glyphHeight - padding)
+              val size = Size(box.width - spacing + 2 * padding, glyphHeight + 2 * padding)
+              val corners = CornerRadius(HighlightRadius.toPx())
+              if (background != null) {
+                drawRoundRect(
+                  color = background,
+                  topLeft = topLeft,
+                  size = size,
+                  cornerRadius = corners,
+                )
+              }
+              if (outlined) {
+                drawRoundRect(
+                  color = accent,
+                  topLeft = topLeft,
+                  size = size,
+                  cornerRadius = corners,
+                  style = Stroke(width = OutlineWidth.toPx()),
+                )
+              }
             }
           }
 

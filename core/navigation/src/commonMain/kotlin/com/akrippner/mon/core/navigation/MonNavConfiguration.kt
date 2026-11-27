@@ -18,6 +18,8 @@ val MonNavConfiguration = SavedStateConfiguration {
       subclass(Dictionaries::class)
       subclass(DictionaryDetail::class)
       subclass(Reader::class)
+      subclass(Vocabulary::class)
+      subclass(ReadingVocabulary::class)
     }
   }
 }

@@ -27,4 +27,10 @@ data class TypographyTokens(
   val headlineSmall: TextStyle,
   val headlineMedium: TextStyle,
   val headlineLarge: TextStyle,
+  /** 11 sp regular: kana and sentences on a vocabulary card. */
+  val caption: TextStyle,
+  /** 13 sp bold: the text of a full-width pill button. */
+  val labelButton: TextStyle,
+  /** 16 sp bold: the title of a pushed screen's header. */
+  val titleCompact: TextStyle,
 )

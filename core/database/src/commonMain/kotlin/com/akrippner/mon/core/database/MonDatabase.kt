@@ -9,16 +9,24 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.akrippner.mon.core.database.converter.StringListConverter
 import com.akrippner.mon.core.database.dao.ReadingDao
 import com.akrippner.mon.core.database.dao.ReadingUsageDao
+import com.akrippner.mon.core.database.dao.SavedWordDao
 import com.akrippner.mon.core.database.dao.UserDao
 import com.akrippner.mon.core.database.entity.ReadingEntity
 import com.akrippner.mon.core.database.entity.ReadingTokenEntity
 import com.akrippner.mon.core.database.entity.ReadingUsageEntity
+import com.akrippner.mon.core.database.entity.SavedWordEntity
 import com.akrippner.mon.core.database.entity.UserEntity
 import kotlinx.coroutines.Dispatchers
 
 @Database(
   entities =
-    [UserEntity::class, ReadingEntity::class, ReadingTokenEntity::class, ReadingUsageEntity::class],
+    [
+      UserEntity::class,
+      ReadingEntity::class,
+      ReadingTokenEntity::class,
+      ReadingUsageEntity::class,
+      SavedWordEntity::class,
+    ],
   version = 1,
 )
 @TypeConverters(StringListConverter::class)
@@ -29,6 +37,8 @@ abstract class MonDatabase : RoomDatabase() {
   abstract fun getReadingDao(): ReadingDao
 
   abstract fun getReadingUsageDao(): ReadingUsageDao
+
+  abstract fun getSavedWordDao(): SavedWordDao
 }
 
 @Suppress("KotlinNoActualForExpect")
