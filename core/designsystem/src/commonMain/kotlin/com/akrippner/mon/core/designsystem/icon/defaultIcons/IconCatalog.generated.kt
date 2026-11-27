@@ -22,6 +22,9 @@ abstract class IconCatalog {
   open fun coreChevronRight(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.ChevronRight(primaryColor)
 
+  open fun coreClose(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.Close(primaryColor)
+
   open fun coreDictionaries(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Dictionaries(primaryColor)
 
@@ -49,6 +52,9 @@ abstract class IconCatalog {
   open fun coreSettings(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Settings(primaryColor)
 
+  open fun coreUpload(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.Upload(primaryColor)
+
   open fun coreVocabulary(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Vocabulary(primaryColor)
 
@@ -62,6 +68,7 @@ abstract class IconCatalog {
       Icon.Core.CheckCircle -> coreCheckCircle(primaryColor)
       Icon.Core.ChevronLeft -> coreChevronLeft(primaryColor)
       Icon.Core.ChevronRight -> coreChevronRight(primaryColor)
+      Icon.Core.Close -> coreClose(primaryColor)
       Icon.Core.Dictionaries -> coreDictionaries(primaryColor)
       Icon.Core.ErrorCircle -> coreErrorCircle(primaryColor)
       Icon.Core.Furigana -> coreFurigana(primaryColor)
@@ -71,6 +78,7 @@ abstract class IconCatalog {
       Icon.Core.Refresh -> coreRefresh(primaryColor)
       Icon.Core.Search -> coreSearch(primaryColor)
       Icon.Core.Settings -> coreSettings(primaryColor)
+      Icon.Core.Upload -> coreUpload(primaryColor)
       Icon.Core.Vocabulary -> coreVocabulary(primaryColor)
       else -> error("Unknown icon: ${id.category}:${id.name}")
     }

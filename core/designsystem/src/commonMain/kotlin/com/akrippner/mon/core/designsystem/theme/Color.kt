@@ -50,7 +50,6 @@ internal object Palette {
 
   val White = Color(0xFFFFFFFF)
   val Red70 = Color(0xFFBA1A1A)
-  val Grey = Color(0xFFCCCCCC)
 }
 
 interface BaseComponentColor {
@@ -126,6 +125,8 @@ data class MonColors(
   // Components
   val buttonPrimary: ButtonColors,
   val buttonSecondary: ButtonColors,
+  /** Any button that cannot be pressed right now; keeps the button's shape. */
+  val buttonDisabled: ButtonColors,
   val filterPillDefault: FilterPillColors,
   val filterPillSelected: FilterPillColors,
   val input: InputColors,
@@ -198,6 +199,8 @@ internal val lightMonColors =
       ),
     buttonSecondary =
       ButtonColors(background = Palette.Blue80, text = Palette.Paper90, icon = Palette.Paper90),
+    buttonDisabled =
+      ButtonColors(background = Palette.Paper70, text = Palette.Paper60, icon = Palette.Paper60),
     filterPillDefault =
       FilterPillColors(
         background = Palette.Paper70,
@@ -215,9 +218,10 @@ internal val lightMonColors =
     input =
       InputColors(
         background = Palette.White,
-        border = Palette.Grey,
+        // Ink at 55% reaches 3:1 against white; ink at 70% reaches 4.5:1 for placeholders.
+        border = Palette.Ink50.copy(alpha = 0.55f),
         cursor = Palette.Vermilion50,
-        placeholder = Palette.Paper65,
+        placeholder = Palette.Ink50.copy(alpha = 0.70f),
         text = Palette.Paper60,
       ),
     tag =

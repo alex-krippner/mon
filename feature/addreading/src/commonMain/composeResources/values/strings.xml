@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="add_reading_title">Add reading</string>
-    <string name="add_reading_field_title">Title</string>
-    <string name="add_reading_field_text">Text</string>
-    <string name="add_reading_field_translation">Translation (optional)</string>
-    <string name="add_reading_save">Save</string>
-    <string name="add_reading_saving">Saving…</string>
+    <string name="add_reading_title">Import text</string>
+    <string name="add_reading_field_title">Enter title…</string>
+    <string name="add_reading_area_placeholder">Paste or type a text to read</string>
+    <string name="add_reading_area_placeholder_drop">Paste, type or drop a .txt file</string>
+    <string name="add_reading_area_reading">Reading %1$s…</string>
+    <string name="add_reading_add_file">Add file</string>
+    <string name="add_reading_add_file_reading">Reading file…</string>
+    <string name="add_reading_add_file_dialog">Add file</string>
+    <string name="add_reading_import">Import</string>
+    <string name="add_reading_importing">Importing…</string>
+    <string name="add_reading_hint_title">Add a title to import.</string>
     <string name="add_reading_error_missing_title">Enter a title.</string>
     <string name="add_reading_error_missing_text">Enter the text to read.</string>
     <string name="add_reading_error_save_failed">Could not save the reading. Try again.</string>
+    <string name="add_reading_error_file_not_text">Only .txt files can be added.</string>
+    <string name="add_reading_error_file_too_large">That file is too large. Choose a text file under 2 MB.</string>
+    <string name="add_reading_error_file_empty">That file is empty.</string>
+    <string name="add_reading_error_file_unreadable">That file could not be read. Save it as UTF-8 text and try again.</string>
+    <string name="add_reading_drop_title">Drop to add the file</string>
+    <string name="add_reading_drop_detail">.txt only · replaces the text</string>
+    <string name="add_reading_discard_title">Discard this text?</string>
+    <string name="add_reading_discard_body">The text in the area and the title will not be saved.</string>
+    <string name="add_reading_discard_keep">Keep editing</string>
+    <string name="add_reading_discard_confirm">Discard</string>
 </resources>

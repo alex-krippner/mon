@@ -19,6 +19,7 @@ object Icon {
     val CheckCircle: IconId = IconIdImpl("Core", "CheckCircle")
     val ChevronLeft: IconId = IconIdImpl("Core", "ChevronLeft")
     val ChevronRight: IconId = IconIdImpl("Core", "ChevronRight")
+    val Close: IconId = IconIdImpl("Core", "Close")
     val Dictionaries: IconId = IconIdImpl("Core", "Dictionaries")
     val ErrorCircle: IconId = IconIdImpl("Core", "ErrorCircle")
     val Furigana: IconId = IconIdImpl("Core", "Furigana")
@@ -28,6 +29,7 @@ object Icon {
     val Refresh: IconId = IconIdImpl("Core", "Refresh")
     val Search: IconId = IconIdImpl("Core", "Search")
     val Settings: IconId = IconIdImpl("Core", "Settings")
+    val Upload: IconId = IconIdImpl("Core", "Upload")
     val Vocabulary: IconId = IconIdImpl("Core", "Vocabulary")
   }
 }
