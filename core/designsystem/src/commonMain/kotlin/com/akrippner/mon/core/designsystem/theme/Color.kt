@@ -50,6 +50,14 @@ internal object Palette {
 
   val White = Color(0xFFFFFFFF)
   val Red70 = Color(0xFFBA1A1A)
+
+  // Vocabulary: gloss and counts on cards (4.5:1 on Paper70, unlike Paper60 at about 2.5:1), and
+  // the labels, fields and accent text on the sheets.
+  val InkSoft = Color(0xFF6F6760)
+  val SheetLabel = Color(0xFFB9B3C9)
+  val SheetField = Color(0xFF2A2A3C)
+  val SheetFieldBorder = Color(0xFF6B6B86)
+  val SheetAccentText = Color(0xFFF0A196)
 }
 
 interface BaseComponentColor {
@@ -172,6 +180,18 @@ data class MonColors(
   val sheetDivider: Color,
   val sheetInputBg: Color,
   val sheetInputBorder: Color,
+  // Vocabulary
+  /** Gloss, counts and subtitles on a card or on the paper; 4.5:1 on the card. */
+  val inkSoft: Color,
+  /** Small labels on a sheet. */
+  val sheetLabel: Color,
+  /** Note field and sentence box on a sheet. */
+  val sheetField: Color,
+  val sheetFieldBorder: Color,
+  /** The saved word in the sheet's sentence, and the Remove button. */
+  val sheetAccentText: Color,
+  /** Behind the saved-word sheet; the look-up sheet keeps its lighter scrim. */
+  val scrimStrong: Color,
   val isDark: Boolean,
 )
 
@@ -293,5 +313,11 @@ internal val lightMonColors =
     sheetDivider = Palette.White.copy(alpha = 0.08f),
     sheetInputBg = Palette.White.copy(alpha = 0.08f),
     sheetInputBorder = Palette.White.copy(alpha = 0.12f),
+    inkSoft = Palette.InkSoft,
+    sheetLabel = Palette.SheetLabel,
+    sheetField = Palette.SheetField,
+    sheetFieldBorder = Palette.SheetFieldBorder,
+    sheetAccentText = Palette.SheetAccentText,
+    scrimStrong = Color.Black.copy(alpha = 0.35f),
     isDark = false,
   )

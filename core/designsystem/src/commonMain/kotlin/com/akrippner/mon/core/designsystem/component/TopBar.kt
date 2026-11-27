@@ -2,6 +2,7 @@
 
 package com.akrippner.mon.core.designsystem.component
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -9,7 +10,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.akrippner.mon.core.designsystem.icon.Icon
 import com.akrippner.mon.core.designsystem.icon.IconId
@@ -25,18 +31,44 @@ fun MonTopAppBar(
   actions: @Composable (RowScope.() -> Unit) = {},
   onNavigationClick: () -> Unit = {},
   onActionClick: () -> Unit = {},
+  /** Read by screen readers for the navigation icon, e.g. "Back to vocabulary". */
+  navigationDescription: String? = null,
+  /** A smaller line under the title. The title is then smaller too, as on a pushed list. */
+  subtitle: String? = null,
 ) {
   CenterAlignedTopAppBar(
     title = {
-      Text(
-        text = title,
-        style = MonTheme.typography.titleMedium,
-        color = MonTheme.colors.navigation.text,
-      )
+      if (subtitle == null) {
+        Text(
+          text = title,
+          style = MonTheme.typography.titleMedium,
+          color = MonTheme.colors.navigation.text,
+        )
+      } else {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+          Text(
+            text = title,
+            style = MonTheme.typography.titleCompact,
+            color = MonTheme.colors.navigation.text,
+          )
+          Text(
+            text = subtitle,
+            style = MonTheme.typography.labelSmall,
+            color = MonTheme.colors.inkSoft,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
+      }
     },
     navigationIcon = {
       if (navigationIconId != null) {
-        IconButton(onClick = onNavigationClick) {
+        IconButton(
+          onClick = onNavigationClick,
+          modifier =
+            if (navigationDescription == null) Modifier
+            else Modifier.semantics { contentDescription = navigationDescription },
+        ) {
           MonIcon(
             id = navigationIconId,
             primaryColor = MonTheme.colors.navigation.text,

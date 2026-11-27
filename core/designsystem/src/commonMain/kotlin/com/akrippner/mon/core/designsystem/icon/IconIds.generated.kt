@@ -16,6 +16,8 @@ private data class IconIdImpl(override val category: String, override val name: 
 object Icon {
   object Core {
     val Block: IconId = IconIdImpl("Core", "Block")
+    val Bookmark: IconId = IconIdImpl("Core", "Bookmark")
+    val BookmarkFilled: IconId = IconIdImpl("Core", "BookmarkFilled")
     val CheckCircle: IconId = IconIdImpl("Core", "CheckCircle")
     val ChevronLeft: IconId = IconIdImpl("Core", "ChevronLeft")
     val ChevronRight: IconId = IconIdImpl("Core", "ChevronRight")

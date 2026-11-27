@@ -1,5 +1,6 @@
 package com.akrippner.mon.feature.reader
 
+import com.akrippner.mon.core.domain.vocabulary.vocabularyForm
 import com.akrippner.mon.core.model.data.DictionaryEntry
 import com.akrippner.mon.core.model.data.Label
 import com.akrippner.mon.core.model.data.Language
@@ -26,20 +27,29 @@ internal fun Language.hasTokenizerPack(): Boolean = this == Language.JAPANESE
 /** Punctuation and whitespace are drawn but cannot be looked up. */
 internal fun MonToken.isPunctuation(): Boolean = partOfSpeech.firstOrNull() in NON_WORD_POS
 
-internal fun MonToken.toDisplayToken(): DisplayToken =
+/** [saved] marks the token as a saved word, drawn highlighted. Punctuation is never saved. */
+internal fun MonToken.toDisplayToken(saved: Boolean = false): DisplayToken =
   DisplayToken(
     surface = surface,
     reading = furigana(surface, pronunciation),
     dictionaryForm = dictionaryForm,
-    state = if (isPunctuation()) TokenState.Punctuation else TokenState.Default,
+    state =
+      when {
+        isPunctuation() -> TokenState.Punctuation
+        saved -> TokenState.Annotated
+        else -> TokenState.Default
+      },
   )
 
 /**
  * Groups the tokens into paragraphs. A whitespace token with a line break ends a paragraph and is
  * not drawn; a [ReaderToken] keeps the index of its token in [tokens]. Blank paragraphs are left
- * out.
+ * out. Tokens whose vocabulary form is in [savedForms] are drawn as saved words.
  */
-internal fun buildParagraphs(tokens: List<MonToken>): List<List<ReaderToken>> {
+internal fun buildParagraphs(
+  tokens: List<MonToken>,
+  savedForms: Set<String> = emptySet(),
+): List<List<ReaderToken>> {
   val paragraphs = mutableListOf<List<ReaderToken>>()
   var current = mutableListOf<ReaderToken>()
 
@@ -52,7 +62,7 @@ internal fun buildParagraphs(tokens: List<MonToken>): List<List<ReaderToken>> {
     if (token.surface.isBlank() && token.surface.any { it in LINE_BREAKS }) {
       endParagraph()
     } else {
-      current += ReaderToken(index, token.toDisplayToken())
+      current += ReaderToken(index, token.toDisplayToken(token.vocabularyForm() in savedForms))
     }
   }
   endParagraph()

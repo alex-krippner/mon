@@ -21,8 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,16 +30,20 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.akrippner.mon.core.designsystem.PillVariant
+import com.akrippner.mon.core.designsystem.component.SaveWordToggle
 import com.akrippner.mon.core.designsystem.component.YomuPillButton
 import com.akrippner.mon.core.designsystem.theme.MonTheme
 import com.akrippner.mon.core.ui.DisplayToken
 import com.akrippner.mon.core.ui.JmdictEntry
+import com.akrippner.mon.core.ui.vocabulary.SheetNoteField
 
 /**
  * The bottom sheet that shows what a dictionary says about a tapped word.
  *
- * Saving a word and the kanji link only appear when [onSave] / [onOpenKanji] are given, so a screen
- * that cannot do these yet simply leaves them out.
+ * The Save toggle and the note field only appear when [save] is given, and the kanji link when
+ * [onOpenKanji] is, so a screen that cannot do these simply leaves them out. The note is reported
+ * with [onNoteChange] as it is typed, and [onNoteCommit] when the field loses focus; the screen
+ * also commits it when the sheet closes.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,8 +55,10 @@ fun LookupBottomSheet(
   onDismiss: () -> Unit,
   modifier: Modifier = Modifier,
   onOpenDictionaries: (() -> Unit)? = null,
-  onSave: ((note: String) -> Unit)? = null,
-  savedToVocab: Boolean = false,
+  save: LookupSave? = null,
+  onToggleSave: () -> Unit = {},
+  onNoteChange: (String) -> Unit = {},
+  onNoteCommit: () -> Unit = {},
   onOpenKanji: (() -> Unit)? = null,
 ) {
   ModalBottomSheet(
@@ -109,8 +113,11 @@ fun LookupBottomSheet(
         is LookupUiState.Found ->
           LookupFoundContent(
             entries = lookupState.entries,
-            savedToVocab = savedToVocab,
-            onSave = onSave,
+            strings = strings,
+            save = save,
+            onToggleSave = onToggleSave,
+            onNoteChange = onNoteChange,
+            onNoteCommit = onNoteCommit,
             onOpenKanji = onOpenKanji,
           )
       }
@@ -162,8 +169,11 @@ private fun LookupMessageContent(
 @Composable
 private fun LookupFoundContent(
   entries: List<JmdictEntry>,
-  savedToVocab: Boolean,
-  onSave: ((note: String) -> Unit)?,
+  strings: LookupStrings,
+  save: LookupSave?,
+  onToggleSave: () -> Unit,
+  onNoteChange: (String) -> Unit,
+  onNoteCommit: () -> Unit,
   onOpenKanji: (() -> Unit)?,
 ) {
   entries.forEachIndexed { index, entry ->
@@ -172,17 +182,37 @@ private fun LookupFoundContent(
       HorizontalDivider(color = Color.White.copy(alpha = 0.18f), thickness = 1.dp)
       Spacer(Modifier.height(16.dp))
     }
-    LookupEntryContent(entry)
+    // The toggle saves the tapped word, described by the first entry, so only that entry has it.
+    val toggle: (@Composable () -> Unit)? =
+      if (index == 0 && save != null) {
+        {
+          SaveWordToggle(
+            saved = save.saved,
+            onToggle = onToggleSave,
+            savedLabel = strings.saved,
+            unsavedLabel = strings.save,
+            description = save.description,
+          )
+        }
+      } else {
+        null
+      }
+    LookupEntryContent(entry, trailing = toggle)
   }
 
-  if (onSave != null) {
-    var noteText by remember { mutableStateOf("") }
-    Spacer(Modifier.height(20.dp))
-    SaveRow(
-      noteText = noteText,
-      onNoteChange = { noteText = it },
-      savedToVocab = savedToVocab,
-      onSave = { onSave(noteText) },
+  if (save != null && save.saved) {
+    Spacer(Modifier.height(22.dp))
+    SheetNoteField(
+      value = save.note,
+      onValueChange = onNoteChange,
+      onCommit = onNoteCommit,
+      label = strings.noteLabel,
+      placeholder = strings.notePlaceholder,
+    )
+    Text(
+      text = save.helper,
+      style = MonTheme.typography.labelSmall.copy(color = MonTheme.colors.sheetLabel),
+      modifier = Modifier.padding(top = 10.dp),
     )
   }
   if (onOpenKanji != null) {
@@ -192,8 +222,13 @@ private fun LookupFoundContent(
 }
 
 @Composable
-private fun LookupEntryContent(entry: JmdictEntry) {
-  WordDisplay(surface = entry.surface, reading = entry.reading, jlptLevel = entry.jlptLevel)
+private fun LookupEntryContent(entry: JmdictEntry, trailing: (@Composable () -> Unit)? = null) {
+  WordDisplay(
+    surface = entry.surface,
+    reading = entry.reading,
+    jlptLevel = entry.jlptLevel,
+    trailing = trailing,
+  )
 
   entry.senses.forEachIndexed { index, sense ->
     Spacer(Modifier.height(24.dp))

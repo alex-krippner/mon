@@ -13,6 +13,12 @@ abstract class IconCatalog {
   open fun coreBlock(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.Block(primaryColor)
 
+  open fun coreBookmark(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.Bookmark(primaryColor)
+
+  open fun coreBookmarkFilled(primaryColor: Color = Color(0xFF000000)): ImageVector =
+    Icons.Core.BookmarkFilled(primaryColor)
+
   open fun coreCheckCircle(primaryColor: Color = Color(0xFF000000)): ImageVector =
     Icons.Core.CheckCircle(primaryColor)
 
@@ -65,6 +71,8 @@ abstract class IconCatalog {
   ): ImageVector =
     when (id) {
       Icon.Core.Block -> coreBlock(primaryColor)
+      Icon.Core.Bookmark -> coreBookmark(primaryColor)
+      Icon.Core.BookmarkFilled -> coreBookmarkFilled(primaryColor)
       Icon.Core.CheckCircle -> coreCheckCircle(primaryColor)
       Icon.Core.ChevronLeft -> coreChevronLeft(primaryColor)
       Icon.Core.ChevronRight -> coreChevronRight(primaryColor)

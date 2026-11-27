@@ -26,11 +26,8 @@ sealed interface TokenState {
   /** Currently tapped — red highlight + underline */
   data object Selected : TokenState
 
-  /** Word saved to vocab (red dot + dashed underline) */
+  /** A word saved to the vocabulary: drawn on the highlight fill. */
   data object Annotated : TokenState
-
-  /** Word saved with a custom note (subtle bg + underline) */
-  data object Noted : TokenState
 
   /** Punctuation — renders but is not tappable */
   data object Punctuation : TokenState
@@ -41,17 +38,6 @@ data class Sense(
   val posLabel: String?, // 名詞, 動詞, etc.; null if the dictionary gives none
   val glosses: List<String>, // ["teacher", "master", "doctor"]
   val usageNote: String? = null,
-)
-
-/** A saved vocabulary word */
-data class VocabEntry(
-  val id: Long,
-  val surface: String, // TODO: Rename to vocab?
-  val reading: String,
-  val definition: String,
-  val jlptLevel: String?,
-  val sourceTitle: String?,
-  val userNote: String? = null,
 )
 
 data class JmdictEntry(

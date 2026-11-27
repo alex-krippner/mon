@@ -58,5 +58,11 @@ val MonTypography: TypographyTokens
         TextStyle(fontFamily = RobotoMono, fontSize = 28.sp, fontWeight = FontWeight.Normal),
       headlineLarge =
         TextStyle(fontFamily = RobotoMono, fontSize = 32.sp, fontWeight = FontWeight.Normal),
+      caption =
+        TextStyle(fontFamily = RobotoMono, fontSize = 11.sp, fontWeight = FontWeight.Normal),
+      labelButton =
+        TextStyle(fontFamily = RobotoMono, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+      titleCompact =
+        TextStyle(fontFamily = RobotoMono, fontSize = 16.sp, fontWeight = FontWeight.Bold),
     )
   }

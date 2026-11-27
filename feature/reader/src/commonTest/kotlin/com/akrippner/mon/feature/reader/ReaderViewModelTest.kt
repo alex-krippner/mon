@@ -2,13 +2,19 @@ package com.akrippner.mon.feature.reader
 
 import com.akrippner.mon.core.dictionary.DictionaryUnavailableException
 import com.akrippner.mon.core.domain.usecase.LookupWordUseCase
+import com.akrippner.mon.core.domain.usecase.RemoveSavedWordUseCase
+import com.akrippner.mon.core.domain.usecase.RestoreSavedWordUseCase
+import com.akrippner.mon.core.domain.usecase.SaveWordUseCase
+import com.akrippner.mon.core.domain.usecase.SetSavedWordNoteUseCase
 import com.akrippner.mon.core.model.data.DictionaryEntry
 import com.akrippner.mon.core.model.data.DictionarySource
 import com.akrippner.mon.core.model.data.Headword
 import com.akrippner.mon.core.model.data.Language
 import com.akrippner.mon.core.model.data.MonToken
 import com.akrippner.mon.core.model.data.Reading
+import com.akrippner.mon.core.model.data.SavedWord
 import com.akrippner.mon.core.model.data.Sense
+import com.akrippner.mon.core.model.data.SentenceRef
 import com.akrippner.mon.core.ui.TokenState
 import com.akrippner.mon.core.ui.lookup.LookupUiState
 import kotlin.test.AfterTest
@@ -31,6 +37,7 @@ import kotlinx.coroutines.test.setMain
 class ReaderViewModelTest {
   private val testDispatcher = StandardTestDispatcher()
   private val repository = FakeReadingRepository()
+  private val vocabulary = FakeVocabularyRepository()
   private val dictionary = FakeDictionary(entries = listOf(entry()))
 
   @BeforeTest
@@ -81,11 +88,20 @@ class ReaderViewModelTest {
       senses = listOf(Sense(listOf("teacher"))),
     )
 
-  private fun viewModel(vararg dictionaries: FakeDictionary = arrayOf(dictionary)) =
+  private fun viewModel(
+    vararg dictionaries: FakeDictionary = arrayOf(dictionary),
+    focusWordId: String? = null,
+  ) =
     ReaderViewModel(
       readingId = "r1",
+      focusWordId = focusWordId,
       readings = repository,
+      vocabulary = vocabulary,
       lookupWord = LookupWordUseCase(FakeDictionaryProvider(dictionaries.toList())),
+      saveWord = SaveWordUseCase(repository, vocabulary),
+      removeWord = RemoveSavedWordUseCase(vocabulary),
+      restoreWord = RestoreSavedWordUseCase(vocabulary),
+      setNote = SetSavedWordNoteUseCase(vocabulary),
     )
 
   @Test
@@ -390,5 +406,243 @@ class ReaderViewModelTest {
 
       val states = viewModel.state.value.paragraphs[0].map { it.display.state }
       assertEquals(listOf(TokenState.Default, TokenState.Default, TokenState.Punctuation), states)
+    }
+
+  @Test
+  fun savingAWord_highlightsItAndCountsIt() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      val viewModel = viewModel()
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.TokenTapped(0))
+      advanceUntilIdle()
+      assertTrue(viewModel.state.value.selection!!.canSave)
+      assertNull(viewModel.state.value.selection!!.saved)
+
+      viewModel.onIntent(ReaderIntent.ToggleSave)
+      advanceUntilIdle()
+
+      val state = viewModel.state.value
+      assertEquals(1, state.savedCount)
+      assertEquals("先生", state.selection!!.saved?.dictionaryForm)
+      assertEquals(TokenState.Annotated, state.paragraphs[0][0].display.state)
+      assertEquals(TokenState.Default, state.paragraphs[0][1].display.state)
+      val saved = vocabulary.words.value.single()
+      assertEquals("先生は。", saved.sentence.text)
+      assertEquals("teacher", saved.gloss)
+    }
+
+  @Test
+  fun aWordWithoutAnEntry_cannotBeSaved() =
+    runTest(testDispatcher) {
+      dictionary.entries = emptyList()
+      repository.reading.value = reading(tokens)
+      val viewModel = viewModel()
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.TokenTapped(0))
+      advanceUntilIdle()
+
+      viewModel.onIntent(ReaderIntent.ToggleSave)
+      advanceUntilIdle()
+
+      assertFalse(viewModel.state.value.selection!!.canSave)
+      assertTrue(vocabulary.words.value.isEmpty())
+    }
+
+  @Test
+  fun removingAWord_sendsAnEffectWithTheNote_andUndoRestoresIt() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      val viewModel = viewModel()
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.TokenTapped(0))
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.ToggleSave)
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.NoteChanged("my note"))
+
+      viewModel.onIntent(ReaderIntent.ToggleSave)
+      advanceUntilIdle()
+
+      val removed = assertIs<ReaderEffect.ShowRemoved>(viewModel.effects.first()).word
+      assertEquals("my note", removed.note)
+      assertEquals(0, viewModel.state.value.savedCount)
+      assertEquals(TokenState.Default, viewModel.state.value.paragraphs[0][0].display.state)
+
+      viewModel.onIntent(ReaderIntent.UndoRemove(removed))
+      advanceUntilIdle()
+
+      assertEquals(1, viewModel.state.value.savedCount)
+      assertEquals("my note", viewModel.state.value.selection!!.noteDraft)
+      assertEquals("my note", vocabulary.words.value.single().note)
+    }
+
+  @Test
+  fun theNote_isStoredWhenTheSheetCloses_notOnEveryKey() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      val viewModel = viewModel()
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.TokenTapped(0))
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.ToggleSave)
+      advanceUntilIdle()
+
+      viewModel.onIntent(ReaderIntent.NoteChanged("a"))
+      viewModel.onIntent(ReaderIntent.NoteChanged("ab"))
+      advanceUntilIdle()
+      assertTrue(vocabulary.noteWrites.isEmpty())
+
+      viewModel.onIntent(ReaderIntent.DismissLookup)
+      advanceUntilIdle()
+
+      assertEquals(listOf<Pair<String, String?>>("word-1" to "ab"), vocabulary.noteWrites)
+      assertNull(viewModel.state.value.selection)
+    }
+
+  @Test
+  fun aNoteIsCutToTheLimit() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      val viewModel = viewModel()
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.TokenTapped(0))
+      advanceUntilIdle()
+      viewModel.onIntent(ReaderIntent.ToggleSave)
+      advanceUntilIdle()
+
+      viewModel.onIntent(ReaderIntent.NoteChanged("あ".repeat(600)))
+
+      assertEquals(500, viewModel.state.value.selection!!.noteDraft.length)
+    }
+
+  @Test
+  fun aSavedWord_showsItsNote_whenTappedAgain() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      vocabulary.words.value =
+        listOf(
+          SavedWord(
+            id = "w",
+            readingId = "r1",
+            dictionaryForm = "先生",
+            surface = "先生",
+            kana = "せんせい",
+            gloss = "teacher",
+            jlpt = null,
+            jmdictSeq = 1,
+            sentence = SentenceRef("先生は。", 0, 2, 0),
+            note = "kept",
+            savedAt = 1,
+          )
+        )
+      val viewModel = viewModel()
+      advanceUntilIdle()
+      assertEquals(1, viewModel.state.value.savedCount)
+
+      viewModel.onIntent(ReaderIntent.TokenTapped(0))
+      advanceUntilIdle()
+
+      assertEquals("kept", viewModel.state.value.selection!!.noteDraft)
+      assertEquals("w", viewModel.state.value.selection!!.saved?.id)
+    }
+
+  @Test
+  fun theVocabularyButton_opensTheListOfThisReading() =
+    runTest(testDispatcher) {
+      val viewModel = viewModel()
+      advanceUntilIdle()
+
+      viewModel.onIntent(ReaderIntent.OpenVocabulary)
+
+      assertEquals(ReaderEffect.OpenVocabulary("r1"), viewModel.effects.first())
+    }
+
+  private fun savedBookWord(id: String = "w", readingId: String = "r1") =
+    SavedWord(
+      id = id,
+      readingId = readingId,
+      dictionaryForm = "本",
+      surface = "本",
+      kana = "ほん",
+      gloss = "book",
+      jlpt = null,
+      jmdictSeq = null,
+      // "先生は。\n本": the word is the fifth token, at text offset 5.
+      sentence = SentenceRef("本", 0, 1, 5),
+      note = null,
+      savedAt = 1,
+    )
+
+  @Test
+  fun openingAtASavedWord_focusesItsToken_andActivatesTheVocabularyButton() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      vocabulary.words.value = listOf(savedBookWord())
+      val viewModel = viewModel(focusWordId = "w")
+      assertTrue(viewModel.state.value.openedFromVocabulary)
+      advanceUntilIdle()
+
+      assertEquals(ReaderFocus(tokenIndex = 4, outlined = true), viewModel.state.value.focus)
+    }
+
+  @Test
+  fun theFocus_waitsForThePendingReadingToGetItsTokens() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(emptyList(), tokenized = false)
+      vocabulary.words.value = listOf(savedBookWord())
+      val viewModel = viewModel(focusWordId = "w")
+      advanceUntilIdle()
+      assertNull(viewModel.state.value.focus)
+
+      repository.reading.value = reading(tokens)
+      advanceUntilIdle()
+
+      assertEquals(4, viewModel.state.value.focus?.tokenIndex)
+    }
+
+  @Test
+  fun theOutline_endsWhenTheUserScrollsOrTaps_butTheFocusStays() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      vocabulary.words.value = listOf(savedBookWord())
+      val viewModel = viewModel(focusWordId = "w")
+      advanceUntilIdle()
+
+      viewModel.onIntent(ReaderIntent.ClearOutline)
+      assertEquals(ReaderFocus(4, outlined = false), viewModel.state.value.focus)
+
+      // A tap clears it too, and never brings it back.
+      val other = viewModel(focusWordId = "w")
+      advanceUntilIdle()
+      other.onIntent(ReaderIntent.TokenTapped(0))
+      assertFalse(other.state.value.focus!!.outlined)
+    }
+
+  @Test
+  fun aSavedWordThatIsGone_orFromAnotherReading_opensTheReaderAsUsual() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      vocabulary.words.value = listOf(savedBookWord(id = "other", readingId = "r2"))
+
+      val missing = viewModel(focusWordId = "nope")
+      val foreign = viewModel(focusWordId = "other")
+      advanceUntilIdle()
+
+      assertNull(missing.state.value.focus)
+      assertNull(foreign.state.value.focus)
+      assertFalse(missing.state.value.isLoading)
+    }
+
+  @Test
+  fun aNormalOpening_hasNoFocus() =
+    runTest(testDispatcher) {
+      repository.reading.value = reading(tokens)
+      vocabulary.words.value = listOf(savedBookWord())
+      val viewModel = viewModel()
+      advanceUntilIdle()
+
+      assertNull(viewModel.state.value.focus)
+      assertFalse(viewModel.state.value.openedFromVocabulary)
     }
 }

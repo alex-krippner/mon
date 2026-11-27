@@ -19,6 +19,9 @@ fun Scaffold(
   navigationIcon: IconId? = null,
   onNavigationClick: () -> Unit = {},
   topBarActions: @Composable RowScope.() -> Unit = {},
+  navigationDescription: String? = null,
+  subtitle: String? = null,
+  snackbarHost: @Composable () -> Unit = {},
   floatingActionButton: @Composable () -> Unit = {},
   floatingActionButtonPosition: FabPosition = FabPosition.END,
   selectedTab: String = "",
@@ -35,8 +38,11 @@ fun Scaffold(
         navigationIconId = navigationIcon,
         onNavigationClick = onNavigationClick,
         actions = topBarActions,
+        navigationDescription = navigationDescription,
+        subtitle = subtitle,
       )
     },
+    snackbarHost = snackbarHost,
     bottomBar = {
       if (navTabs.isNotEmpty()) {
         BottomNavBar(
