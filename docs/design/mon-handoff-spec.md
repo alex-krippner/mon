@@ -7,7 +7,7 @@ Source of truth: `mon.penpot` (keep it beside this file). Screens are 360×800 d
 | Screen | Purpose | Navigates to |
 |---|---|---|
 | Library | Featured text card, "ALL TEXTS" list, add FAB | Reader (tap a text), Import (FAB) |
-| Import | Add file, paste text area, title field, Import button | Library (close X) |
+| Import | Add file (.txt), paste text area, title field, Import button | Reader (after Import; back goes to Library), Library (close X). Full spec: `docs/design/import/` |
 | Reader | Japanese text with furigana, highlighted vocab, furigana toggle | Look up sheet (tap highlighted word), Library (back) |
 | Look up sheet | Bottom sheet over Reader with dictionary entry | Reader (tap scrim) |
 | Vocabulary | Search, JLPT filter chips, saved word cards | none |

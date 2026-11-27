@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -21,6 +24,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.akrippner.mon.core.designsystem.component.BottomNavBar
 import com.akrippner.mon.core.designsystem.icon.Icon
 import com.akrippner.mon.core.designsystem.icon.IconId
+import com.akrippner.mon.core.designsystem.isKeyboardOpen
 import com.akrippner.mon.core.navigation.AddReading
 import com.akrippner.mon.core.navigation.Dictionaries
 import com.akrippner.mon.core.navigation.DictionaryDetail
@@ -29,6 +33,7 @@ import com.akrippner.mon.core.navigation.MonNavConfiguration
 import com.akrippner.mon.core.navigation.MonNavKey
 import com.akrippner.mon.core.navigation.Reader
 import com.akrippner.mon.feature.addreading.AddReadingEffect
+import com.akrippner.mon.feature.addreading.AddReadingIntent
 import com.akrippner.mon.feature.addreading.AddReadingScreen
 import com.akrippner.mon.feature.addreading.AddReadingViewModel
 import com.akrippner.mon.feature.dictionaries.DictionariesEffect
@@ -43,6 +48,8 @@ import com.akrippner.mon.feature.library.LibraryViewModel
 import com.akrippner.mon.feature.reader.ReaderEffect
 import com.akrippner.mon.feature.reader.ReaderScreen
 import com.akrippner.mon.feature.reader.ReaderViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -54,8 +61,14 @@ fun MonNavHost() {
   // The bottom bar belongs to the app, not to a feature: features do not know about each other.
   val top = backStack.lastOrNull()
   val currentTab = tabs.firstOrNull { top != null && it.shows(top) }
-  // The reader is no tab, but the design keeps the bar there, with no tab selected.
-  val showBottomBar = currentTab != null || top is Reader
+  // The reader is no tab, but the design keeps the bar there, with no tab selected. The keyboard
+  // covers the bottom of a phone, so the bar steps aside while it is open.
+  val showBottomBar = (currentTab != null || top is Reader) && !isKeyboardOpen()
+
+  // A tab tap must not drop text typed on the Import screen. While it holds text, the tap asks the
+  // screen to close instead, which shows its discard dialog.
+  var importHasText by remember { mutableStateOf(false) }
+  val importCloseRequests = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
 
   Column(modifier = Modifier.fillMaxSize()) {
     NavDisplay(
@@ -74,14 +87,23 @@ fun MonNavHost() {
             if (showBottomBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars)
             else Modifier
           ),
-      entryProvider = monEntryProvider(navigator),
+      entryProvider =
+        monEntryProvider(
+          navigator = navigator,
+          importCloseRequests = importCloseRequests,
+          onImportHasText = { importHasText = it },
+        ),
     )
     if (showBottomBar) {
       BottomNavBar(
         selectedTab = currentTab?.icon?.tabId().orEmpty(),
         navTabs = tabs.map { it.icon },
         onTabSelected = { id ->
-          tabs.firstOrNull { it.icon.tabId() == id }?.let { navigator.switchTab(it.key) }
+          if (top is AddReading && importHasText) {
+            importCloseRequests.tryEmit(Unit)
+          } else {
+            tabs.firstOrNull { it.icon.tabId() == id }?.let { navigator.switchTab(it.key) }
+          }
         },
       )
     }
@@ -102,7 +124,8 @@ private class Tab(
 
 private val tabs =
   listOf(
-    Tab(Library, Icon.Core.Library),
+    // The Import screen keeps the bar, with Library selected, as in the design.
+    Tab(Library, Icon.Core.Library, children = { it is AddReading }),
     Tab(Dictionaries, Icon.Core.Dictionaries, children = { it is DictionaryDetail }),
   )
 
@@ -110,7 +133,11 @@ private val tabs =
 private fun IconId.tabId() = category + name
 
 @Composable
-private fun monEntryProvider(navigator: MonAppNavigator): (NavKey) -> NavEntry<NavKey> =
+private fun monEntryProvider(
+  navigator: MonAppNavigator,
+  importCloseRequests: Flow<Unit>,
+  onImportHasText: (Boolean) -> Unit,
+): (NavKey) -> NavEntry<NavKey> =
   entryProvider<NavKey> {
     entry<Library> {
       val viewModel = koinViewModel<LibraryViewModel>()
@@ -131,11 +158,23 @@ private fun monEntryProvider(navigator: MonAppNavigator): (NavKey) -> NavEntry<N
       LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
           when (effect) {
-            is AddReadingEffect.Saved -> navigator.close(AddReading)
+            // Import leaves the back stack before the reader opens, so back from the reader goes
+            // to Library, where the new text is on top.
+            is AddReadingEffect.Imported -> {
+              navigator.close(AddReading)
+              navigator.navigateTo(Reader(effect.readingId))
+            }
+            AddReadingEffect.Closed -> navigator.close(AddReading)
           }
         }
       }
-      AddReadingScreen(state = state, onIntent = viewModel::onIntent, onBack = navigator::back)
+      LaunchedEffect(viewModel) {
+        importCloseRequests.collect { viewModel.onIntent(AddReadingIntent.Close) }
+      }
+      val hasText = state.text.isNotBlank()
+      LaunchedEffect(hasText) { onImportHasText(hasText) }
+      DisposableEffect(Unit) { onDispose { onImportHasText(false) } }
+      AddReadingScreen(state = state, onIntent = viewModel::onIntent)
     }
     entry<Dictionaries> {
       val viewModel = koinViewModel<DictionariesViewModel>()

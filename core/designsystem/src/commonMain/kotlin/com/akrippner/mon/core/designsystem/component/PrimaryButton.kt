@@ -10,17 +10,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.akrippner.mon.core.designsystem.conditional
@@ -40,6 +46,10 @@ enum class ButtonSize {
   Large,
 }
 
+/**
+ * The screen's main action: a flat, full-width button. While [busy] it shows a progress ring and
+ * does not react to taps, but keeps its colours so the label still reads as the action in progress.
+ */
 @Composable
 fun PrimaryButton(
   label: String,
@@ -47,21 +57,10 @@ fun PrimaryButton(
   modifier: Modifier = Modifier,
   subtitle: String? = null,
   enabled: Boolean = true,
+  busy: Boolean = false,
 ) {
-  val bg =
-    if (enabled) {
-      Brush.horizontalGradient(
-        colors = listOf(MonTheme.colors.secondary, MonTheme.colors.accentGradientEnd)
-      )
-    } else {
-      Brush.horizontalGradient(
-        colors =
-          listOf(
-            MonTheme.colors.backgroundSecondary.copy(alpha = 0.13f),
-            MonTheme.colors.backgroundSecondary.copy(alpha = 0.13f),
-          )
-      )
-    }
+  val colors =
+    if (enabled || busy) MonTheme.colors.buttonPrimary else MonTheme.colors.buttonDisabled
 
   Box(
     modifier =
@@ -69,40 +68,45 @@ fun PrimaryButton(
         .fillMaxWidth()
         .height(if (subtitle != null) 56.dp else 48.dp)
         .clip(RoundedCornerShape(16.dp)) // TODO: Define universal sizes
-        .background(bg)
-        .clickable(enabled = enabled, onClick = onClick),
+        .background(colors.background)
+        .clickable(enabled = enabled && !busy, onClick = onClick)
+        .semantics { if (busy) stateDescription = label },
     contentAlignment = Alignment.Center,
   ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-      Text(
-        text = label,
-        style =
-          MonTheme.typography.bodyMedium.copy(
-            fontSize = 15.sp,
-            color =
-              if (enabled) MonTheme.colors.sheetTextPrimary
-              else MonTheme.colors.textPrimary.copy(alpha = 0.25f),
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp,
-          ),
-      )
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+      ) {
+        if (busy) ProgressRing(color = colors.text, size = 18.dp)
+        Text(text = label, style = MonTheme.typography.titleMedium.copy(color = colors.text))
+      }
       if (subtitle != null) {
         Spacer(Modifier.height(2.dp))
         Text(
           text = subtitle,
-          style =
-            MonTheme.typography.bodyMedium.copy(
-              color =
-                if (enabled) Color.White.copy(alpha = 0.65f)
-                else MonTheme.colors.textPrimary.copy(alpha = 0.20f),
-              fontSize = 9.sp,
-            ),
+          style = MonTheme.typography.bodyMedium.copy(color = colors.text, fontSize = 9.sp),
         )
       }
     }
   }
 }
 
+@Composable
+private fun ProgressRing(color: Color, size: Dp) {
+  CircularProgressIndicator(
+    modifier = Modifier.size(size),
+    color = color,
+    trackColor = color.copy(alpha = 0.35f),
+    strokeWidth = 2.dp,
+  )
+}
+
+/**
+ * A button in the design's three sizes. A [Small] button is a 24 dp pill inside a touch target of
+ * at least 48 dp. While [loading] it shows a progress ring and keeps its colours; otherwise a
+ * disabled button turns grey. [shape] defaults to fully rounded.
+ */
 @Composable
 fun Button(
   onClick: () -> Unit,
@@ -115,20 +119,15 @@ fun Button(
   startIcon: IconId? = null,
   endIcon: IconId? = null,
   iconColor: Color? = null,
+  shape: Shape = RoundedCornerShape(MonTheme.radii.button),
 ) {
-
-  val isIconOnly = label == null
-  val backgroundColor =
-    when (variant) {
-      ButtonVariant.Primary -> MonTheme.colors.buttonPrimary.background
-      ButtonVariant.Secondary -> MonTheme.colors.buttonSecondary.background
+  val colors =
+    when {
+      !enabled && !loading -> MonTheme.colors.buttonDisabled
+      variant == ButtonVariant.Primary -> MonTheme.colors.buttonPrimary
+      else -> MonTheme.colors.buttonSecondary
     }
-
-  val contentColor =
-    when (variant) {
-      ButtonVariant.Primary -> MonTheme.colors.buttonPrimary.text
-      ButtonVariant.Secondary -> MonTheme.colors.buttonSecondary.text
-    }
+  val contentColor = colors.text
 
   val buttonHeight =
     when (size) {
@@ -144,53 +143,59 @@ fun Button(
       ButtonSize.Large -> MonTheme.space.spacing6
     }
 
-  val verticalPadding =
+  val labelStyle =
     when (size) {
-      ButtonSize.Small -> MonTheme.space.spacing4
-      ButtonSize.Medium -> MonTheme.space.spacing4
-      ButtonSize.Large -> MonTheme.space.spacing5
+      ButtonSize.Small -> MonTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+      else -> MonTheme.typography.labelLarge
     }
 
-  val shape = RoundedCornerShape(MonTheme.radii.button)
-
-  val buttonModifier =
-    modifier
-      .clip(shape)
-      .conditional(isIconOnly) { height(buttonHeight) }
-      .background(backgroundColor)
-      .padding(horizontal = horizontalPadding, vertical = verticalPadding)
-      .conditional(enabled) { clickable(onClick = onClick) }
-
-  Box(modifier = buttonModifier, contentAlignment = Alignment.Center) {
-    Row(
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.Center,
+  // The clickable area is the outer box, so it can be larger than the drawn button.
+  Box(
+    modifier =
+      modifier
+        .minimumInteractiveComponentSize()
+        .conditional(enabled && !loading) { clickable(onClick = onClick) }
+        .semantics { if (loading) stateDescription = label.orEmpty() },
+    contentAlignment = Alignment.Center,
+  ) {
+    Box(
+      modifier =
+        Modifier.height(buttonHeight)
+          .clip(shape)
+          .background(colors.background)
+          .padding(horizontal = horizontalPadding),
+      contentAlignment = Alignment.Center,
     ) {
-      startIcon?.let { id ->
-        MonIcon(
-          id = id,
-          contentDescription = null,
-          primaryColor = iconColor ?: contentColor,
-          size = IconSize.Small,
-        )
-      }
-      label?.let { text ->
-        Text(
-          text = text,
-          color = contentColor,
-          style = MonTheme.typography.labelLarge,
-          maxLines = 1,
-          textAlign = TextAlign.Center,
-          modifier = Modifier.padding(horizontal = MonTheme.space.spacing3),
-        )
-      }
-      endIcon?.let { id ->
-        MonIcon(
-          id = id,
-          contentDescription = null,
-          primaryColor = iconColor ?: contentColor,
-          size = IconSize.Small,
-        )
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        if (loading) ProgressRing(color = contentColor, size = 14.dp)
+        startIcon?.let { id ->
+          MonIcon(
+            id = id,
+            contentDescription = null,
+            primaryColor = iconColor ?: contentColor,
+            size = IconSize.Small,
+          )
+        }
+        label?.let { text ->
+          Text(
+            text = text,
+            color = contentColor,
+            style = labelStyle,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+          )
+        }
+        endIcon?.let { id ->
+          MonIcon(
+            id = id,
+            contentDescription = null,
+            primaryColor = iconColor ?: contentColor,
+            size = IconSize.Small,
+          )
+        }
       }
     }
   }

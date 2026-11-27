@@ -10,6 +10,12 @@ kotlin {
       implementation(libs.compose.foundation)
       implementation(libs.compose.material3)
       implementation(libs.compose.ui)
+      implementation(libs.navigationevent.compose)
+    }
+
+    // The system file picker is platform code: see file/TextFilePicker.kt.
+    androidMain.dependencies {
+      implementation(libs.androidx.activity.compose)
     }
 
     commonTest.dependencies {

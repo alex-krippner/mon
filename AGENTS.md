@@ -97,8 +97,14 @@ Dependency injection is Koin. Every module registers its Koin module in `:shared
   `:shared` maps them to nav keys. To add a destination: add the key to `MonNavKey`, register it in
   `MonNavConfiguration` (the only place; forgetting it crashes on back-stack restore), and add an
   `entry<…>` to `MonNavHost`.
-- The bottom bar is rendered by `MonNavHost`, while a tab's screen is on top and on the `Reader`
-  (with no tab selected, as in the design). Its tabs are the `tabs` list there. The visual spec is
+- The bottom bar is rendered by `MonNavHost`, while a tab's screen is on top, on the `Reader`
+  (with no tab selected, as in the design) and on `AddReading` (Library selected). It hides while
+  the on-screen keyboard is open (`isKeyboardOpen()` in `:core:designsystem`). Its tabs are the
+  `tabs` list there.
+- The import screen (`:feature:addreading`) reads `.txt` files through `expect`/`actual` code in
+  `file/`: the system picker on Android and desktop, and a file drop target on desktop only. Common
+  code only sees a `PickedFile`; the checks and decoding (`TextFileDecoder.kt`) are plain Kotlin.
+  A successful import opens the Reader and leaves the screen out of the back stack. The visual spec is
   `docs/design/mon-handoff-spec.md`; the screenshots of the reader and the look-up sheet are beside
   it (`Reader.png`, `Look up sheet.png`).
 - The reader draws its text with `TokenizedText` in `:core:ui`: one `Text`, with the furigana and
