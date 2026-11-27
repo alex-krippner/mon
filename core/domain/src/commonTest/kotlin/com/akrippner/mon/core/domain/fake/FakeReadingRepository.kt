@@ -33,7 +33,10 @@ class FakeReadingRepository(private val newReadingId: String = "reading-1") : Re
 
   override fun observeReadingSummaries(): Flow<List<ReadingSummary>> = flowOf(emptyList())
 
-  override suspend fun getReading(readingId: String): Reading? = null
+  /** The readings [getReading] finds, by id. */
+  val readings = mutableMapOf<String, Reading>()
+
+  override suspend fun getReading(readingId: String): Reading? = readings[readingId]
 
   override fun observeReading(readingId: String): Flow<Reading?> = flowOf(null)
 
