@@ -3,13 +3,18 @@ name: Deploy web demo
 # Builds the browser app and uploads it to Netlify. Needs two repository secrets:
 #   NETLIFY_AUTH_TOKEN  a personal access token from Netlify (User settings > Applications)
 #   NETLIFY_SITE_ID     the site's "Project ID" (Site configuration > General)
+#
+# A push to main replaces the production site. Any other branch can be deployed by running this
+# workflow by hand (Actions > Deploy web demo > Run workflow, then pick the branch). It goes to its
+# own URL, <branch>--<site name>.netlify.app, and leaves production alone.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# One deploy at a time per branch, so a branch deploy never cancels a production one.
 concurrency:
-  group: deploy-web
+  group: deploy-web-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +43,18 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: >
-          npx --yes netlify-cli@17 deploy --prod --no-build
-          --dir=webApp/build/dist/wasmJs/productionExecutable
-          --site="$NETLIFY_SITE_ID"
+          # Through the environment, not pasted into the script: a branch name is user input.
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_NAME" = "main" ]; then
+            target=(--prod)
+          else
+            # A Netlify alias is a subdomain label: lower case letters, digits and hyphens, and the
+            # whole name must stay under 63 characters.
+            branch_alias=$(printf '%s' "$REF_NAME" | tr '[:upper:]' '[:lower:]' \
+              | sed 's/[^a-z0-9]/-/g' | cut -c1-30 | sed 's/^-*//; s/-*$//')
+            target=(--alias="$branch_alias")
+          fi
+          npx --yes netlify-cli@17 deploy --no-build \
+            --dir=webApp/build/dist/wasmJs/productionExecutable \
+            --site="$NETLIFY_SITE_ID" "${target[@]}"

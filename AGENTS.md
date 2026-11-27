@@ -142,7 +142,7 @@ have no browser version.
 - Compose in the browser draws only with fonts it has loaded, so `:webApp` bundles a subset of
   Noto Sans JP (OFL, licence in `webApp/NotoSansJP-OFL.txt`): kana, ASCII and the 2,965 JIS level 1
   kanji. A kanji outside it shows as an empty box.
-- `.github/workflows/deploy-web.yml` builds the site and deploys it to Netlify on pushes to `main`.
+- `.github/workflows/deploy-web.yml` builds the site and deploys it to Netlify: production on pushes to `main`, and any other branch under its own URL when the workflow is run by hand.
   It needs the secrets `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID`.
 
 ## Quirks and gotchas
